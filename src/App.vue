@@ -24,7 +24,20 @@
             服务列表</el-menu-item
           >
         </el-submenu>
-
+        <el-submenu index="/code/change">
+          <template slot="title">
+            <i class="el-icon-s-help"></i>
+            <span slot="title">流水线管理</span>
+          </template>
+          <el-menu-item index="/code/change">
+            <i class="el-icon-s-unfold"></i>
+            变更列表</el-menu-item
+          >
+          <el-menu-item index="/pipeline">
+            <i class="el-icon-s-unfold"></i>
+            Pipeline</el-menu-item
+          >
+        </el-submenu>
         <el-submenu index="/">
           <template slot="title">
             <i class="el-icon-s-promotion"></i>
@@ -55,24 +68,24 @@ export default {
   data() {
     return {
       isStartCollapse: false,
-      selectIndex: '/',
-    }
+      selectIndex: "/",
+    };
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse
+      this.isStartCollapse = !this.isStartCollapse;
     },
   },
   computed: {
     toggleButton() {
       if (this.isStartCollapse) {
-        return 'minMargin'
+        return "minMargin";
       } else {
-        return 'maxMargin'
+        return "maxMargin";
       }
     },
   },
-}
+};
 </script>
 <style>
 body {

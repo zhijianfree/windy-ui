@@ -16,7 +16,8 @@
     "monaco-editor-vue": "^1.0.10",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "vue-json-viewer": "^2.2.22",
-    "vuedraggable": "^2.24.3"
+    "vuedraggable": "^2.24.3",
+    "vue-pipeline": "^1.0.12"
   },
   "devDependencies": {
     "@vue/cli-plugin-eslint": "~4.5.13",

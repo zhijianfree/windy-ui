@@ -194,7 +194,7 @@
               :key="uuid"
               v-if="
                 currentPipeline.pipelineConfig &&
-                  currentPipeline.pipelineConfig.length > 0
+                currentPipeline.pipelineConfig.length > 0
               "
               ref="pipeline"
               :x="50"
@@ -324,8 +324,8 @@
         v-if="!this.isView"
         icon="el-icon-edit"
         @click="
-          dialogVisible = !dialogVisible
-          operateType = 1
+          dialogVisible = !dialogVisible;
+          operateType = 1;
         "
         >添加节点</el-button
       >
@@ -386,29 +386,29 @@
   </div>
 </template>
 <script>
-import json from '../../assets/data.json'
-import draggable from 'vuedraggable'
-import bind from './bindgit.vue'
-import pipelineApi from '../../http/Pipeline'
-import serviceApi from '../../http/Service'
-import historyApi from '../../http/PipelineHistory'
-import utils from '../../lib/pipeline'
+import json from "../../assets/data.json";
+import draggable from "vuedraggable";
+import bind from "./bindgit.vue";
+import pipelineApi from "../../http/Pipeline";
+import serviceApi from "../../http/Service";
+import historyApi from "../../http/PipelineHistory";
+import utils from "../../lib/pipeline";
 export default {
   components: { draggable, bind },
   data() {
     return {
       nodes: [],
       startIndex: 1,
-      nodeForm: { name: '1111', hint: 'ssadsa' },
-      formLabelWidth: '80px',
+      nodeForm: { name: "1111", hint: "ssadsa" },
+      formLabelWidth: "80px",
       dialogVisible: false,
       stepOptions: [],
-      selectNodeType: 'build',
+      selectNodeType: "build",
       itemList: [],
       StepConfigs: [],
       configForm: {},
       loading: false,
-      activePipelines: ['1', '2', '3'],
+      activePipelines: ["1", "2", "3"],
       pipelines: [],
       operateType: 1,
       rootList: [],
@@ -430,112 +430,112 @@ export default {
       piplienOperate: 0,
       prenodeId: [],
       chosedConfigItem: [],
-      serviceId: '',
-      titleName: '新增流水线',
+      serviceId: "",
+      titleName: "新增流水线",
       showGitConfig: false,
       startMove: false,
       editPipelines: [],
       uuid: 1,
-    }
+    };
   },
   methods: {
     leftMove() {
-      utils.moveLeft(this.editPipelines, this.nodeForm)
-      this.uuid++
+      utils.moveLeft(this.editPipelines, this.nodeForm);
+      this.uuid++;
     },
     rightMove() {
-      utils.moveRight(this.editPipelines, this.nodeForm)
-      this.uuid++
+      utils.moveRight(this.editPipelines, this.nodeForm);
+      this.uuid++;
     },
     removeNode() {
-      let array = utils.removeNode(this.editPipelines, this.nodeForm)
-      console.log('移除结果', array)
-      this.editPipelines = array
-      this.uuid++
+      let array = utils.removeNode(this.editPipelines, this.nodeForm);
+      console.log("移除结果", array);
+      this.editPipelines = array;
+      this.uuid++;
     },
     selectService() {
-      this.getPipelineList()
+      this.getPipelineList();
     },
     choosePipeItem(node) {
-      this.nodeForm = node
+      this.nodeForm = node;
       if (node.disable || this.startMove) {
-        return
+        return;
       }
-      this.dialogVisible = true
-      this.operateType = 2
-      this.selectNodeType = node.nodeType
-      this.itemList = node.list
+      this.dialogVisible = true;
+      this.operateType = 2;
+      this.selectNodeType = node.nodeType;
+      this.itemList = node.list;
     },
     selectStep(step) {
-      this.itemList = json.pipeline_config[step]
+      this.itemList = json.pipeline_config[step];
     },
     chooseStep(item) {
-      let temp = item.config
+      let temp = item.config;
       temp.forEach((e) => {
-        this.configForm[e.name] = e.value
-      })
-      this.StepConfigs = item.config
-      this.chosedConfigItem = item
-      this.$forceUpdate()
+        this.configForm[e.name] = e.value;
+      });
+      this.StepConfigs = item.config;
+      this.chosedConfigItem = item;
+      this.$forceUpdate();
     },
     submitConfig() {
-      let pipeArray = this.editPipelines
+      let pipeArray = this.editPipelines;
       if (this.operateType == 1) {
-        let subNodes = []
-        console.log('新增的节点', this.nodeForm, '列表', this.itemList)
+        let subNodes = [];
+        console.log("新增的节点", this.nodeForm, "列表", this.itemList);
         this.itemList.forEach((e) => {
           subNodes.push({
             name: e.name,
             hint: e.name,
-            status: 'success',
+            status: "success",
             originData: JSON.parse(JSON.stringify(e)),
             next: [],
-          })
-        })
+          });
+        });
 
-        let temp = JSON.parse(JSON.stringify(pipeArray))
-        let rootId = temp.length
+        let temp = JSON.parse(JSON.stringify(pipeArray));
+        let rootId = temp.length;
         let newNode = {
           name: this.nodeForm.name,
           hint: this.nodeForm.hint,
-          status: 'success',
+          status: "success",
           nodeType: this.selectNodeType,
           list: [],
           id: rootId,
           root: true,
-        }
+        };
 
-        utils.addNode(pipeArray, newNode, subNodes)
-        console.log('last result1111', this.editPipelines)
+        utils.addNode(pipeArray, newNode, subNodes);
+        console.log("last result1111", this.editPipelines);
       } else {
-        console.log('pipeArray', pipeArray)
-        console.log('nodeForm', this.nodeForm)
-        console.log('itemList', this.itemList)
-        this.itemList.splice(this.itemList.length - 1, 1)
-        utils.updateNode(pipeArray, this.nodeForm, this.itemList)
+        console.log("pipeArray", pipeArray);
+        console.log("nodeForm", this.nodeForm);
+        console.log("itemList", this.itemList);
+        this.itemList.splice(this.itemList.length - 1, 1);
+        utils.updateNode(pipeArray, this.nodeForm, this.itemList);
         // 修改完成
       }
-      this.resetNode()
+      this.resetNode();
     },
     getPrenode(arr, index) {
-      let tmp = {}
+      let tmp = {};
       arr.forEach((e) => {
         if (e.next && e.next.length > 0) {
           e.next.forEach((ele) => {
             if (ele.index == index) {
-              tmp = e
+              tmp = e;
             }
-          })
+          });
         }
-      })
-      return tmp
+      });
+      return tmp;
     },
     resetNode() {
-      this.dialogVisible = false
-      this.selectNodeType = ''
-      this.configForm = {}
-      this.itemList = []
-      this.nodeForm = {}
+      this.dialogVisible = false;
+      this.selectNodeType = "";
+      this.configForm = {};
+      this.itemList = [];
+      this.nodeForm = {};
     },
     preNodeAddline(array, prenodeId, itemIndexs, groupId) {
       array.forEach((e) => {
@@ -545,149 +545,149 @@ export default {
               index: ele,
               weight: 0,
               groupId: groupId,
-            })
-          })
+            });
+          });
         }
-      })
+      });
     },
     remoteMethod() {
       serviceApi.getServices().then((res) => {
-        this.pipelines = []
+        this.pipelines = [];
         res.data.forEach((e) => {
           this.pipelines.push({
             label: e.serviceName,
             value: e.serviceId,
-          })
-        })
-      })
+          });
+        });
+      });
     },
     pausePipeline() {},
     startPipeline() {
       if (!this.currentPipeline.pipelineConfig.length) {
-        this.$message.warning('请先选择流水线')
-        return
+        this.$message.warning("请先选择流水线");
+        return;
       }
     },
     startEdit() {
       if (!this.currentPipeline.pipelineConfig.length) {
-        this.$message.warning('请先选择流水线')
-        return
+        this.$message.warning("请先选择流水线");
+        return;
       }
-      this.piplienOperate = 1
-      this.titleName = '编辑流水线'
-      this.isView = false
-      this.pipelineDialog = true
-      this.pipelineForm = this.currentPipeline
-      this.rootList = []
+      this.piplienOperate = 1;
+      this.titleName = "编辑流水线";
+      this.isView = false;
+      this.pipelineDialog = true;
+      this.pipelineForm = this.currentPipeline;
+      this.rootList = [];
       this.currentPipeline.pipelineConfig.forEach((e) => {
         if (e.id && e.rootId == e.id) {
-          this.rootList.push(e)
+          this.rootList.push(e);
         }
 
-        if (e.name == '开始' || e.name == '构建' || e.name == '结束') {
-          e.disable = true
+        if (e.name == "开始" || e.name == "构建" || e.name == "结束") {
+          e.disable = true;
         }
-      })
-      this.editPipelines = this.currentPipeline.pipelineConfig
+      });
+      this.editPipelines = this.currentPipeline.pipelineConfig;
     },
     startView() {
       if (!this.currentPipeline.pipelineConfig.length) {
-        this.$message.warning('请先选择流水线')
-        return
+        this.$message.warning("请先选择流水线");
+        return;
       }
-      this.piplienOperate = 2
-      this.titleName = '查看流水线'
-      this.pipelineDialog = true
-      this.isView = true
-      this.pipelineForm = this.currentPipeline
-      this.editPipelines = this.currentPipeline.pipelineConfig
+      this.piplienOperate = 2;
+      this.titleName = "查看流水线";
+      this.pipelineDialog = true;
+      this.isView = true;
+      this.pipelineForm = this.currentPipeline;
+      this.editPipelines = this.currentPipeline.pipelineConfig;
     },
     selectPipeline(item) {
       this.publishList.forEach((e) => {
-        e.selected = false
-      })
+        e.selected = false;
+      });
       this.buildList.forEach((e) => {
-        e.selected = false
-      })
+        e.selected = false;
+      });
       this.customList.forEach((e) => {
-        e.selected = false
-      })
-      item.selected = true
+        e.selected = false;
+      });
+      item.selected = true;
       historyApi
         .latestPipelineHistory(this.serviceId, item.pipelineId)
         .then((res) => {
           if (!res.data) {
-            this.history = {}
-            return
+            this.history = {};
+            return;
           }
-          this.history = res.data
-        })
+          this.history = res.data;
+        });
       pipelineApi.queryPipeline(this.serviceId, item.pipelineId).then((res) => {
-        let config = utils.displayData(res.data.stageList)
-        this.currentPipeline.pipelineConfig = config
-        this.currentPipeline.pipelineName = res.data.pipelineName
-        this.currentPipeline.pipelineType = res.data.pipelineType
-        this.currentPipeline.pipelineId = item.pipelineId
-      })
+        let config = utils.displayData(res.data.stageList);
+        this.currentPipeline.pipelineConfig = config;
+        this.currentPipeline.pipelineName = res.data.pipelineName;
+        this.currentPipeline.pipelineType = res.data.pipelineType;
+        this.currentPipeline.pipelineId = item.pipelineId;
+      });
     },
     handleCommand(command) {
-      if (command == 'manage') {
-        this.isManaged = true
+      if (command == "manage") {
+        this.isManaged = true;
       }
-      if (command == 'new') {
-        this.piplienOperate = 3
-        this.titleName = '创建流水线'
-        this.pipelineDialog = true
-        this.isView = false
-        this.rootList = []
+      if (command == "new") {
+        this.piplienOperate = 3;
+        this.titleName = "创建流水线";
+        this.pipelineDialog = true;
+        this.isView = false;
+        this.rootList = [];
         pipelineApi.detaultConfig().then((res) => {
-          let defaultConfigs = JSON.parse(res.data.configDetail)
+          let defaultConfigs = JSON.parse(res.data.configDetail);
           defaultConfigs.forEach((e) => {
             if (e.id && e.rootId == e.id) {
-              this.rootList.push(e)
+              this.rootList.push(e);
             }
-          })
-          this.editPipelines = JSON.parse(JSON.stringify(defaultConfigs))
-        })
+          });
+          this.editPipelines = JSON.parse(JSON.stringify(defaultConfigs));
+        });
       }
     },
     deletePipeline() {
-      this.$confirm('确认删除？')
+      this.$confirm("确认删除？")
         .then(() => {
           if (this.checkList.length < 1) {
             this.$message({
-              message: '请选择要删除的流水线',
-              type: 'warning',
-            })
-            return
+              message: "请选择要删除的流水线",
+              type: "warning",
+            });
+            return;
           }
 
-          let serviceId = this.serviceId
+          let serviceId = this.serviceId;
           this.checkList.forEach((e) => {
             pipelineApi.deletePipeline(serviceId, e).then(() => {
-              this.isManaged = false
-              this.checkList = []
-              this.getPipelineList()
-            })
-          })
+              this.isManaged = false;
+              this.checkList = [];
+              this.getPipelineList();
+            });
+          });
         })
         .catch(() => {
-          this.isManaged = false
-          this.checkList = []
-        })
+          this.isManaged = false;
+          this.checkList = [];
+        });
     },
     cancelManage() {
-      this.isManaged = false
-      this.checkList = []
+      this.isManaged = false;
+      this.checkList = [];
     },
     submitPipeline() {
-      console.log('3333333', this.pipelineForm)
-      let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
-      param.pipelineConfig = JSON.stringify(this.editPipelines)
+      console.log("3333333", this.pipelineForm);
+      let param = utils.exchangeData(this.pipelineForm, this.editPipelines);
+      param.pipelineConfig = JSON.stringify(this.editPipelines);
 
       //修改流水线
       if (this.piplienOperate == 1) {
-        console.log('pipelien id ', this.currentPipeline)
+        console.log("pipelien id ", this.currentPipeline);
         pipelineApi
           .updatePipeline(
             this.serviceId,
@@ -696,102 +696,102 @@ export default {
           )
           .then(() => {
             this.$message({
-              message: '修改流水线成功',
-              type: 'success',
-            })
-            this.cancelCreatePipeline()
+              message: "修改流水线成功",
+              type: "success",
+            });
+            this.cancelCreatePipeline();
             pipelineApi
               .queryPipeline(this.serviceId, this.currentPipeline.pipelineId)
               .then((res) => {
-                let config = utils.displayData(res.data.stageList)
-                this.currentPipeline.pipelineConfig = config
-                this.currentPipeline.pipelineName = res.data.pipelineName
-                this.currentPipeline.pipelineType = res.data.pipelineType
-                this.currentPipeline.pipelineId = item.pipelineId
-                this.uuid++
-              })
-          })
+                let config = utils.displayData(res.data.stageList);
+                this.currentPipeline.pipelineConfig = config;
+                this.currentPipeline.pipelineName = res.data.pipelineName;
+                this.currentPipeline.pipelineType = res.data.pipelineType;
+                this.currentPipeline.pipelineId = item.pipelineId;
+                this.uuid++;
+              });
+          });
       }
 
       //创建流水线
       if (this.piplienOperate == 3) {
-        param.serviceId = this.serviceId
-        param.creator = '古月澜'
-        console.log('请求的参数', param)
+        param.serviceId = this.serviceId;
+        param.creator = "古月澜";
+        console.log("请求的参数", param);
         pipelineApi.savePipeline(param).then(() => {
           this.$message({
-            message: '创建流水线成功',
-            type: 'success',
-          })
-          this.cancelCreatePipeline()
-          this.getPipelineList()
-        })
+            message: "创建流水线成功",
+            type: "success",
+          });
+          this.cancelCreatePipeline();
+          this.getPipelineList();
+        });
       }
     },
     cancelCreatePipeline() {
-      this.rootList = []
-      this.pipelineDialog = false
-      this.isView = false
+      this.rootList = [];
+      this.pipelineDialog = false;
+      this.isView = false;
     },
     datachange(name) {
       this.chosedConfigItem.config.forEach((e) => {
         if (e.name == name) {
-          e.value = this.configForm[name]
+          e.value = this.configForm[name];
         }
-      })
-      this.$forceUpdate()
+      });
+      this.$forceUpdate();
     },
     getPipelineList() {
       pipelineApi.pipelineList(this.serviceId).then((res) => {
-        this.publishList = []
-        this.buildList = []
-        this.customList = []
+        this.publishList = [];
+        this.buildList = [];
+        this.customList = [];
         res.data.forEach((e) => {
-          e.selected = false
-          e.pipelineConfig = JSON.parse(e.pipelineConfig)
+          e.selected = false;
+          e.pipelineConfig = JSON.parse(e.pipelineConfig);
           if (e.pipelineType == 1) {
-            this.publishList.push(e)
+            this.publishList.push(e);
           }
           if (e.pipelineType == 2) {
-            this.buildList.push(e)
+            this.buildList.push(e);
           }
           if (e.pipelineType == 3) {
-            this.customList.push(e)
+            this.customList.push(e);
           }
-        })
-      })
+        });
+      });
     },
     configPipeline(list) {
-      let index = 0
+      let index = 0;
       list.forEach((e) => {
-        e.index = index
-        index++
+        e.index = index;
+        index++;
         if (e.root) {
-          this.rootList.push(e)
+          this.rootList.push(e);
         }
-      })
-      this.currentPipeline.pipelineConfig = list
+      });
+      this.currentPipeline.pipelineConfig = list;
     },
     getDefaultService() {
       serviceApi.getServices().then((res) => {
-        this.pipelines = []
+        this.pipelines = [];
         res.data.forEach((e) => {
           this.pipelines.push({
             label: e.serviceName,
             value: e.serviceId,
-          })
-        })
+          });
+        });
 
-        this.serviceId = this.pipelines[0].value
-        this.getPipelineList()
-      })
+        this.serviceId = this.pipelines[0].value;
+        this.getPipelineList();
+      });
     },
   },
   created() {
-    this.stepOptions = json.pipeline_stepOptions
-    this.getDefaultService()
+    this.stepOptions = json.pipeline_stepOptions;
+    this.getDefaultService();
   },
-}
+};
 </script>
 
 <style scoped>
