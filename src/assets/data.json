@@ -1,0 +1,114 @@
+{
+  "pipeline_config": {
+    "build": [
+      {
+        "name": "代码构建",
+        "config": [],
+        "script": ""
+      },
+      {
+        "name": "checkstyle",
+        "config": [{ "tip": "代码阈值", "name": "maxSize", "type": "input" }],
+        "script": ""
+      },
+      {
+        "name": "Findbugs",
+        "config": [{ "tip": "bug率", "name": "bug_rate", "type": "input" }],
+        "script": ""
+      },
+      {
+        "name": "PMD",
+        "config": [{ "tip": "指标", "name": "number", "type": "input" }],
+        "script": ""
+      }
+    ],
+    "check": [
+      { "name": "安全检查", "config": {}, "script": "" },
+      { "name": "漏洞检查", "config": {}, "script": "" }
+    ],
+    "deploy": [
+      {
+        "name": "环境部署",
+        "config": [
+          {
+            "tip": "环境选择",
+            "name": "env",
+            "type": "select",
+            "list": [
+              { "label": "测试环境", "value": "env-1" },
+              { "label": "开发环境", "value": "env-2" }
+            ]
+          },
+          {
+            "tip": "部署脚本",
+            "name": "script",
+            "type": "input"
+          }
+        ],
+        "script": ""
+      }
+    ],
+    "test": [{ "name": "功能测试", "config": {}, "script": "" }],
+    "merge": [{ "name": "代码合并", "config": {}, "script": "" }]
+  },
+  "pipeline_init": [
+    {
+      "id": "0",
+      "name": "开始",
+      "status": "success",
+      "root": true,
+      "group": "0",
+      "disable": true,
+      "next": [
+        {
+          "index": 1,
+          "weight": 0
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "构建",
+      "status": "success",
+      "root": true,
+      "disable": true,
+      "group": "1",
+      "next": [
+        {
+          "index": 2,
+          "weight": 0
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "结束",
+      "disable": true,
+      "status": "success",
+      "group": "2",
+      "root": true
+    }
+  ],
+  "pipeline_stepOptions": [
+    {
+      "label": "构建",
+      "value": "build"
+    },
+    {
+      "label": "检测",
+      "value": "check"
+    },
+    {
+      "label": "部署",
+      "value": "deploy"
+    },
+    {
+      "label": "测试",
+      "value": "test"
+    },
+    {
+      "label": "合并",
+      "value": "merge"
+    }
+  ]
+}
