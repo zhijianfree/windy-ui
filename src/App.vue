@@ -26,7 +26,7 @@
         </el-submenu>
         <el-submenu index="/code/change">
           <template slot="title">
-            <i class="el-icon-s-help"></i>
+            <i class="el-icon-share"></i>
             <span slot="title">流水线管理</span>
           </template>
           <el-menu-item index="/code/change">
@@ -36,6 +36,10 @@
           <el-menu-item index="/pipeline">
             <i class="el-icon-s-unfold"></i>
             Pipeline</el-menu-item
+          >
+          <el-menu-item index="/pipe/action">
+            <i class="el-icon-s-promotion"></i>
+            执行点管理</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/">

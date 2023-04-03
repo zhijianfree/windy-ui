@@ -377,7 +377,6 @@ export default {
 
     let stageId = null
     Object.values(rootMap).forEach((nodeList) => {
-      console.log('排序', nodeList)
       let node = {}
       let subNode = []
       nodeList.forEach((e) => {
@@ -385,11 +384,16 @@ export default {
           node.stageName = e.name
           node.type = e.group
           node.stageId = e.stageId
+          node.configId = e.configId
           stageId = e.stageId
         } else {
+          let nodeConfig = {
+            actionId: e.originData.actionId,
+            compareInfo: e.originData.results,
+          }
           subNode.push({
             nodeName: e.name,
-            // configDetail: JSON.stringify(e.originData.config),
+            configDetail: JSON.stringify(nodeConfig),
             type: e.group,
             nodeId: e.nodeId,
             stageId: stageId,
@@ -420,6 +424,8 @@ export default {
         group: groupId,
         root: true,
         stageId: e.stageId,
+        configId: e.configId,
+        list: e.nodes,
         next: [],
       }
       data.push(rootNode)
@@ -436,6 +442,7 @@ export default {
             status: 'success',
             group: groupId,
             nodeId: ele.nodeId,
+            originData: JSON.parse(ele.configDetail),
             next: [],
           })
           preNode.next.push({ index: index, weight: 0 })

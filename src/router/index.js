@@ -7,6 +7,7 @@ import Task from "../views/feature/execute-manage.vue";
 import RecordDetail from "../views/feature/record-detail.vue";
 import Service from "../views/service/service.vue";
 import Pipeline from "../views/pipeline/pipeline.vue";
+import PipeAction from "../views/pipeline/action.vue";
 import CodeChange from "../views/pipeline/codechange.vue";
 
 Vue.use(VueRouter);
@@ -51,6 +52,11 @@ const routes = [
     path: "/code/change",
     name: "CodeChange",
     component: CodeChange,
+  },
+  {
+    path: "/pipe/action",
+    name: "PipeAction",
+    component: PipeAction,
   },
 ];
 
