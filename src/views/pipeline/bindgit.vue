@@ -2,8 +2,7 @@
   <div>
     <div>
       <div class="git">
-        <a href="">{{ gitUrl }}</a>
-        <i class="el-icon-document-copy copy-icon" />
+        <el-link type="primary" :underline="false">{{ gitUrl }}</el-link>
       </div>
     </div>
 
@@ -12,15 +11,12 @@
         <el-select
           v-model="selectedBranch"
           filterable
-          remote
           size="small"
           reserve-keyword
           placeholder="请输入绑定的分支"
-          :remote-method="remoteMethod"
-          :loading="loading"
         >
           <el-option
-            v-for="item in features"
+            v-for="item in branches"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -30,10 +26,10 @@
         <el-button
           type="primary"
           size="small"
-          @click="bindFeature"
+          @click="createBind"
           class="search-btn"
           icon="el-icon-paperclip"
-          >绑定分支</el-button
+          >关联分支</el-button
         >
       </div>
       <div>
@@ -45,15 +41,30 @@
           </el-table-column>
           <el-table-column prop="createTime" label="绑定时间" width="180">
           </el-table-column>
-          <el-table-column prop="bindType" label="绑定类型"> </el-table-column>
-          <el-table-column fixed="right" label="操作" width="100">
+          <el-table-column prop="isChoose" label="是否绑定">
+            <template slot-scope="scope">
+              <i
+                class="el-icon-circle-check choose-item"
+                v-if="scope.row.isChoose"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作">
             <template slot-scope="scope">
               <el-button
-                @click="unbind(scope.row)"
+                @click="bindBranch(scope.row)"
                 icon="el-icon-connection"
                 type="text"
                 size="small"
-                >解绑</el-button
+                >{{ scope.row.isChoose ? '解绑' : '绑定' }}</el-button
+              >
+              <el-button
+                @click="deleteBind(scope.row)"
+                class="delete-icon"
+                icon="el-icon-delete"
+                type="text"
+                size="small"
+                >删除</el-button
               >
             </template>
           </el-table-column>
@@ -63,62 +74,89 @@
   </div>
 </template>
 <script>
-import gitBindApi from "../../http/GitBind";
+import gitBindApi from '../../http/GitBind'
 export default {
   props: {
     pipeline: String,
+    service: String,
   },
   data() {
     return {
-      selectedBranch: "",
-      features: [{ label: "feature_2021202020", value: "feature_2021202020" }],
+      selectedBranch: '',
+      branches: [],
       loading: false,
       tableData: [],
-      pipelineId: "",
-      gitUrl: "https://www.baidu.com",
-    };
+      pipelineId: '',
+      serviceId: '',
+      gitUrl: '',
+    }
   },
   methods: {
-    remoteMethod(query) {
-      console.log("远端请求", query);
+    deleteBind(row) {
+      gitBindApi.deleteCodeChange(this.pipelineId, row.bindId).then((res) => {
+        console.log(res)
+        if (res.data == 1) {
+          this.$message.success('删除成功')
+          this.getBindBranches()
+        } else {
+          this.$message.error('删除失败')
+        }
+      })
     },
-    unbind(item) {
-      this.$confirm("确认删除？").then(() => {
-        gitBindApi.deleteCodeChange(this.pipelineId, item.bindId).then(() => {
-          this.$message({ message: "解绑成功", type: "success" });
-          this.getBindFeatures();
-        });
-      });
+    bindBranch(item) {
+      item.isChoose = !item.isChoose
+      gitBindApi.bindBranch(item).then(() => {
+        let msg = item.isChoose ? '绑定' : '解绑'
+        this.$message({ message: `${msg}成功`, type: 'success' })
+        this.getBindBranches()
+      })
     },
-    bindFeature() {
-      if (!this.selectedBranch || this.selectedBranch == "") {
-        this.$message({ message: "请先选择分支", type: "warning" });
-        return;
+    createBind() {
+      if (!this.selectedBranch || this.selectedBranch == '') {
+        this.$message({ message: '请先选择分支', type: 'warning' })
+        return
       }
 
       let data = {
         gitBranch: this.selectedBranch,
         gitUrl: this.gitUrl,
-        bindType: 0,
+        isChoose: false,
         pipelineId: this.pipelineId,
-      };
+      }
       gitBindApi.createGitbind(data).then(() => {
-        this.$message({ message: "绑定成功", type: "success" });
-        this.getBindFeatures();
-      });
+        this.$message({ message: '绑定成功', type: 'success' })
+        this.getBindBranches()
+      })
     },
-    getBindFeatures() {
+    getBindBranches() {
       gitBindApi.gitbindList(this.pipelineId).then((res) => {
-        console.log("get list", res);
-        this.tableData = res.data;
-      });
+        console.log('get list', res)
+        this.tableData = res.data
+      })
+    },
+    getService() {
+      gitBindApi.getService(this.serviceId).then((res) => {
+        console.log('get service', res)
+        this.gitUrl = res.data.gitUrl
+      })
+    },
+    getServiceBranch() {
+      this.branches = []
+      gitBindApi.getServiceBranch(this.serviceId).then((res) => {
+        res.data.forEach((branch) => {
+          this.branches.push({ label: branch, value: branch })
+        })
+      })
     },
   },
   created() {
-    this.pipelineId = this.pipeline;
-    this.getBindFeatures();
+    this.serviceId = this.service
+    this.pipelineId = this.pipeline
+    this.getBindBranches()
+    this.getService()
+    this.getServiceBranch()
   },
-};
+}
 </script>
 <style scoped>
 .git {
@@ -136,11 +174,6 @@ export default {
   display: inline-block;
   font-size: 13px;
 }
-.copy-icon {
-  position: absolute;
-  top: 5px;
-  right: 20px;
-}
 .git a {
   text-decoration: none;
 }
@@ -150,5 +183,13 @@ export default {
 .bind-title {
   margin: 20px 0;
   font-weight: 900;
+}
+.choose-item {
+  font-size: 20px;
+  font-weight: 900;
+  color: #67c23a;
+}
+.delete-icon {
+  color: #f56c6c;
 }
 </style>

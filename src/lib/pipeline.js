@@ -2,6 +2,7 @@ const width = 120
 const height = 50
 export default {
   updateNode(pipeline, node, subNodes) {
+    console.log('before update', pipeline, node, subNodes)
     if (!subNodes) {
       //删除所有节点
       return
@@ -16,56 +17,78 @@ export default {
       }
     })
 
-    //找到删除的子节点
-    let reduceArray = []
-    currentline.forEach((e) => {
-      let flag = false
-      subNodes.forEach((ele) => {
-        if (ele.id == e.id) {
-          flag = true
-        }
-      })
-
-      if (!flag) {
-        reduceArray.push(e)
-      }
-    })
-
-    //删除原有的子节点
-    let reduceIndex = []
-    reduceArray.forEach((e) => {
-      let index = pipelineArray.indexOf(e)
-      reduceIndex.push(index)
-    })
-    reduceIndex.forEach((index) => {
-      pipelineArray.splice(index, 1)
-    })
-
-    let reduceCount = currentline.length - subNodes.length
-    let nodeIndex = pipelineArray.indexOf(node)
-    pipelineArray.forEach((e) => {
-      if (!e.next) {
-        return
-      }
-      //所有前置节点都要删除移除的子节点指向
-      let nextArray = e.next
-      nextArray.forEach((ele) => {
-        let result = reduceIndex.indexOf(ele.index)
-        if (result > 0) {
-          nextArray.splice(nextArray.indexOf(ele), 1)
-        }
-      })
-
-      //在修改节点之后的root节点next都要减少reduceCount
-      let currentIndex = pipelineArray.indexOf(e)
-      if (e.root && e.next && e.next.length > 0 && currentIndex >= nodeIndex) {
-        e.next.forEach((ele) => {
-          ele.index -= reduceCount
+    if (currentline.length != subNodes.length + 1) {
+      //找到删除的子节点
+      let reduceArray = []
+      currentline.forEach((e) => {
+        let flag = false
+        subNodes.forEach((ele) => {
+          if (ele.id == e.id) {
+            flag = true
+          }
         })
-      }
 
-      pipeline = pipelineArray
+        if (!flag) {
+          reduceArray.push(e)
+        }
+      })
+
+      //删除原有的子节点
+      let reduceIndex = []
+      reduceArray.forEach((e) => {
+        let index = pipelineArray.indexOf(e)
+        reduceIndex.push(index)
+      })
+      reduceIndex.forEach((index) => {
+        pipelineArray.splice(index, 1)
+      })
+
+      let reduceCount = currentline.length - subNodes.length
+      let nodeIndex = pipelineArray.indexOf(node)
+      pipelineArray.forEach((e) => {
+        if (!e.next) {
+          return
+        }
+        //所有前置节点都要删除移除的子节点指向
+        let nextArray = e.next
+        nextArray.forEach((ele) => {
+          let result = reduceIndex.indexOf(ele.index)
+          if (result > 0) {
+            nextArray.splice(nextArray.indexOf(ele), 1)
+          }
+        })
+
+        //在修改节点之后的root节点next都要减少reduceCount
+        let currentIndex = pipelineArray.indexOf(e)
+        if (
+          e.root &&
+          e.next &&
+          e.next.length > 0 &&
+          currentIndex >= nodeIndex
+        ) {
+          e.next.forEach((ele) => {
+            ele.index -= reduceCount
+          })
+        }
+      })
+    }
+    let changeMap = {}
+    subNodes.forEach((e) => {
+      changeMap[e.actionId] = e.results
     })
+
+    console.log('changeMap', changeMap)
+    pipelineArray.forEach((e) => {
+      if (e.originData) {
+        console.log('e.originData')
+        let config = changeMap[e.originData.actionId]
+        if (config) {
+          console.log('e.originData config', config)
+          e.originData.compareInfo = config
+        }
+      }
+    })
+    return pipelineArray
   },
   addNode(pipeline, node, subNodes) {
     //新加节点与最后节点互换位置
@@ -372,6 +395,7 @@ export default {
     let pipeline = {
       pipelineName: pipelineForm.pipelineName,
       pipelineType: pipelineForm.pipelineType,
+      executeType: pipelineForm.executeType,
       stageList: [],
     }
 
@@ -387,9 +411,14 @@ export default {
           node.configId = e.configId
           stageId = e.stageId
         } else {
+          console.log('sub item', e)
+          let data = e.originData.results
+          if (!data) {
+            data = e.originData.compareInfo
+          }
           let nodeConfig = {
             actionId: e.originData.actionId,
-            compareInfo: e.originData.results,
+            compareInfo: data,
           }
           subNode.push({
             nodeName: e.name,
@@ -454,6 +483,8 @@ export default {
       groupId++
     })
 
+    data[0].status = 'start'
+    data[data.length - 1].status = 'end'
     console.log('filnal', data)
     return data
   },

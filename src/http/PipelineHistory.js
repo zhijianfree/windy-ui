@@ -10,4 +10,14 @@ export default {
             })
         })
     },
+    getPipelienStatus(pipelineId) {
+        return new Promise((resolve, reject) => {
+            let url = `/v1/devops/pipeline/${pipelineId}/status`
+            http.get(url).then(res =>{
+                resolve(res)
+            }).catch(e =>{
+                reject(e)
+            })
+        })
+    },
 }

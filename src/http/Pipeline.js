@@ -78,4 +78,30 @@ export default {
         })
     })
   },
+  startPipeline(pipelineId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/pipeline/${pipelineId}`
+      http
+        .post(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  pausePipeline(historyId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/pipeline/${historyId}/pause`
+      http
+        .put(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }
