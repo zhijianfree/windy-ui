@@ -1,14 +1,16 @@
-import axios from "axios";
+import axios from 'axios'
+import { Message } from 'element-ui'
 axios.interceptors.response.use(
   (res) => {
-    return res;
+    return res
   },
   (error) => {
-    return Promise.reject(error);
+    Message.error(error.response.data.message)
+    return Promise.reject(error)
   }
-);
+)
 
-const base = "/api";
+const base = '/api'
 export default {
   get(url) {
     return new Promise((resolve, reject) => {
@@ -16,15 +18,15 @@ export default {
         .get(base + url)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   delete(url) {
     return new Promise((resolve, reject) => {
@@ -32,15 +34,15 @@ export default {
         .delete(base + url)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   post(url, data) {
     return new Promise((resolve, reject) => {
@@ -48,15 +50,15 @@ export default {
         .post(base + url, data)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   put(url, data) {
     return new Promise((resolve, reject) => {
@@ -64,14 +66,14 @@ export default {
         .put(base + url, data)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
-};
+}
