@@ -15,7 +15,7 @@ export default {
   },
   updateNode(data) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/pipeline/nodes`
+      let url = `/v1/devops/pipeline/node`
       http
         .put(url, data)
         .then((res) => {

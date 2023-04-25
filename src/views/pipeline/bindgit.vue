@@ -33,9 +33,7 @@
         >
       </div>
       <div>
-        <div class="bind-title">
-          已绑定分支：
-        </div>
+        <div class="bind-title">已绑定分支：</div>
         <el-table :data="tableData" stripe style="width: 100%">
           <el-table-column prop="gitBranch" label="分支名" width="180">
           </el-table-column>
@@ -124,7 +122,7 @@ export default {
         pipelineId: this.pipelineId,
       }
       gitBindApi.createGitbind(data).then(() => {
-        this.$message({ message: '绑定成功', type: 'success' })
+        this.$message({ message: '关联成功', type: 'success' })
         this.getBindBranches()
       })
     },

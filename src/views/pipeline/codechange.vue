@@ -21,9 +21,7 @@
     </div>
     <div class="change-content">
       <div class="change-title">
-        <div class="change-desc">
-          服务变更列表
-        </div>
+        <div class="change-desc">服务变更列表</div>
         <div class="add-btn">
           <el-button
             type="primary"
@@ -130,9 +128,6 @@ import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
-      service: {
-        serviceId: '1234567',
-      },
       service: '',
       serviceList: [],
       changeList: [],
@@ -184,15 +179,13 @@ export default {
     },
     removeChange(item) {
       this.$confirm('确认删除？').then(() => {
-        requestApi
-          .deleteCodeChange(this.service, item.changeId)
-          .then(() => {
-            this.$message({
-              message: '删除变更成功',
-              type: 'success',
-            })
-            this.getCodeChangeList()
+        requestApi.deleteCodeChange(this.service, item.changeId).then(() => {
+          this.$message({
+            message: '删除变更成功',
+            type: 'success',
           })
+          this.getCodeChangeList()
+        })
       })
     },
     closeDialog() {
