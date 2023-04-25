@@ -28,6 +28,7 @@
       <el-tab-pane label="任务管理" name="first">
         <!-- 任务列表开始 -->
         <el-table :data="taskData" size="mini" style="width: 100%">
+          <el-table-column prop="taskId" label="任务Id"> </el-table-column>
           <el-table-column prop="taskName" label="任务名称"> </el-table-column>
           <el-table-column prop="description" label="任务描述">
           </el-table-column>

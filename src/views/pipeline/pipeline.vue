@@ -637,7 +637,7 @@ export default {
         res.data.forEach((e) => {
           let compareInfo = config[e.actionId]
           if (compareInfo != undefined && compareInfo != null) {
-            e.results = compareInfo
+            e.compareResults = compareInfo
             console.log()
           }
           this.itemList.push(e)
@@ -646,10 +646,10 @@ export default {
     },
     chooseStep(item) {
       console.log('选择的node', item)
-      item.results.forEach((e) => {
+      item.compareResults.forEach((e) => {
         this.configForm[e.compareKey] = e.value
       })
-      this.StepConfigs = item.results
+      this.StepConfigs = item.compareResults
       this.chosedConfigItem = item
       this.$forceUpdate()
     },
@@ -964,7 +964,7 @@ export default {
     },
     datachange(name) {
       console.log('数据变化', name)
-      this.chosedConfigItem.results.forEach((e) => {
+      this.chosedConfigItem.compareResults.forEach((e) => {
         if (e.compareKey == name) {
           e.value = this.configForm[name]
           console.log('数据变化111', this.configForm[name])

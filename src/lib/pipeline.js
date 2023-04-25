@@ -3,78 +3,120 @@ const height = 50
 export default {
   updateNode(pipeline, node, subNodes) {
     console.log('before update', pipeline, node, subNodes)
-    if (!subNodes) {
-      //删除所有节点
-      return
-    }
     let pipelineArray = JSON.parse(JSON.stringify(pipeline))
 
     //找到当前修改跟节点以及所有子节点
     let currentline = []
+    let nodeIndex = 0
     pipelineArray.forEach((e) => {
       if (e.group == node.group) {
+        if (e.root) {
+          nodeIndex = pipelineArray.indexOf(e)
+          return
+        }
         currentline.push(e)
       }
     })
 
-    if (currentline.length != subNodes.length + 1) {
-      //找到删除的子节点
-      let reduceArray = []
-      currentline.forEach((e) => {
-        let flag = false
-        subNodes.forEach((ele) => {
-          if (ele.id == e.id) {
-            flag = true
-          }
-        })
+    //删除所有子节点
+    let reduceIndex = []
+    currentline.forEach((e) => {
+      let index = pipelineArray.indexOf(e)
+      reduceIndex.push(index)
+    })
+    reduceIndex.forEach((index) => {
+      pipelineArray.splice(index, 1)
+    })
 
-        if (!flag) {
-          reduceArray.push(e)
-        }
-      })
+    console.log('index======', nodeIndex)
+    console.log('pipe======', JSON.parse(JSON.stringify(pipelineArray)))
+    let num = 1
+    subNodes.forEach((e) => {
+      let index = nodeIndex + num
+      let item = {
+        group: node.group,
+        hint: e.actionName,
+        id: index,
+        name: e.actionName,
+        next: [],
+        root: false,
+        nodeId: e.nodeId,
+        status: 'success',
+        originData: {
+          actionId: e.actionId,
+          compareInfo: e.compareResults,
+        },
+      }
+      pipelineArray.splice(index, 0, item)
+      num++
+    })
+    let reduceCount = currentline.length - subNodes.length
+    console.log('reduceCount  ==== ', reduceCount)
+    let arr = []
+    node.next.forEach((e) => {
+      e.index = e.index - reduceCount
+      arr.push(e)
+    })
+    console.log('pipe done======', JSON.parse(JSON.stringify(pipelineArray)))
 
-      //删除原有的子节点
-      let reduceIndex = []
-      reduceArray.forEach((e) => {
-        let index = pipelineArray.indexOf(e)
-        reduceIndex.push(index)
-      })
-      reduceIndex.forEach((index) => {
-        pipelineArray.splice(index, 1)
-      })
+    // if (currentline.length != subNodes.length + 1) {
+    //   //找到删除的子节点
+    //   let reduceArray = []
+    //   currentline.forEach((e) => {
+    //     let flag = false
+    //     subNodes.forEach((ele) => {
+    //       if (ele.id == e.id) {
+    //         flag = true
+    //       }
+    //     })
 
-      let reduceCount = currentline.length - subNodes.length
-      let nodeIndex = pipelineArray.indexOf(node)
-      pipelineArray.forEach((e) => {
-        if (!e.next) {
-          return
-        }
-        //所有前置节点都要删除移除的子节点指向
-        let nextArray = e.next
-        nextArray.forEach((ele) => {
-          let result = reduceIndex.indexOf(ele.index)
-          if (result > 0) {
-            nextArray.splice(nextArray.indexOf(ele), 1)
-          }
-        })
+    //     if (!flag) {
+    //       reduceArray.push(e)
+    //     }
+    //   })
 
-        //在修改节点之后的root节点next都要减少reduceCount
-        let currentIndex = pipelineArray.indexOf(e)
-        if (
-          e.root &&
-          e.next &&
-          e.next.length > 0 &&
-          currentIndex >= nodeIndex
-        ) {
-          e.next.forEach((ele) => {
-            ele.index -= reduceCount
-          })
-        }
-      })
-    }
+    //   //删除原有的子节点
+    //   let reduceIndex = []
+    //   reduceArray.forEach((e) => {
+    //     let index = pipelineArray.indexOf(e)
+    //     reduceIndex.push(index)
+    //   })
+    //   reduceIndex.forEach((index) => {
+    //     pipelineArray.splice(index, 1)
+    //   })
+
+    //   let reduceCount = currentline.length - subNodes.length
+    //   let nodeIndex = pipelineArray.indexOf(node)
+    //   pipelineArray.forEach((e) => {
+    //     if (!e.next) {
+    //       return
+    //     }
+    //     //所有前置节点都要删除移除的子节点指向
+    //     let nextArray = e.next
+    //     nextArray.forEach((ele) => {
+    //       let result = reduceIndex.indexOf(ele.index)
+    //       if (result > 0) {
+    //         nextArray.splice(nextArray.indexOf(ele), 1)
+    //       }
+    //     })
+
+    //     //在修改节点之后的root节点next都要减少reduceCount
+    //     let currentIndex = pipelineArray.indexOf(e)
+    //     if (
+    //       e.root &&
+    //       e.next &&
+    //       e.next.length > 0 &&
+    //       currentIndex >= nodeIndex
+    //     ) {
+    //       e.next.forEach((ele) => {
+    //         ele.index -= reduceCount
+    //       })
+    //     }
+    //   })
+    // }
     let changeMap = {}
     subNodes.forEach((e) => {
-      changeMap[e.actionId] = e.results
+      changeMap[e.actionId] = e.compareResults
     })
 
     console.log('changeMap', changeMap)
@@ -412,7 +454,7 @@ export default {
           stageId = e.stageId
         } else {
           console.log('sub item', e)
-          let data = e.originData.results
+          let data = e.originData.compareResults
           if (!data) {
             data = e.originData.compareInfo
           }

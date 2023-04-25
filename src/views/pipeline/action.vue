@@ -301,12 +301,12 @@
   </div>
 </template>
 <script>
-import ActionApi from "../../http/PipelineAction";
-import NodeApi from "../../http/NodeBind";
+import ActionApi from '../../http/PipelineAction'
+import NodeApi from '../../http/NodeBind'
 export default {
   data() {
     return {
-      queryName: "",
+      queryName: '',
       actionList: [],
       showCreateExecuter: false,
       actionForm: {},
@@ -314,208 +314,209 @@ export default {
       compareList: [{}],
       currentPage: 1,
       totalSize: 0,
-      title: "创建执行点",
+      title: '创建执行点',
       isEditAction: false,
 
       //----节点参数配置-----
-      activeTab: "node",
+      activeTab: 'node',
       nodeList: [],
       showCreateNode: false,
-      nodeTitle: "创建节点",
+      nodeTitle: '创建节点',
       executeList: [],
       nodeForm: {},
       selectActions: [],
       currentNodePage: 1,
       nodeTotalSize: 0,
-      queryNodeName: "",
+      queryNodeName: '',
       isEditNode: false,
       operators: [
-        { label: "equals", value: "equals" },
-        { label: "大于", value: ">" },
-        { label: "大于等于", value: ">=" },
-        { label: "小于", value: "<" },
-        { label: "小于等于", value: "<=" },
+        { label: 'equals', value: 'equals' },
+        { label: '大于', value: '>' },
+        { label: '大于等于', value: '>=' },
+        { label: '小于', value: '<' },
+        { label: '小于等于', value: '<=' },
       ],
       typeList: [
-        { label: "数字类型", value: "Integer" },
-        { label: "字符串类型", value: "String" },
+        { label: '数字类型', value: 'Integer' },
+        { label: '字符串类型', value: 'String' },
       ],
-    };
+    }
   },
   methods: {
     addNewCondition() {
-      this.compareList.push({});
+      this.compareList.push({})
     },
     startQueryNode() {
-      this.getNodes();
+      this.getNodes()
     },
     editNode(row) {
-      this.isEditNode = true;
-      this.nodeTitle = "编辑节点";
-      this.showCreateNode = true;
-      this.nodeForm = row;
-      this.selectActions = [];
+      this.isEditNode = true
+      this.nodeTitle = '编辑节点'
+      this.showCreateNode = true
+      this.nodeForm = row
+      this.selectActions = []
+      this.getAllActions()
       NodeApi.getNodeActions(row.nodeId).then((res) => {
         res.data.forEach((e) => {
-          this.selectActions.push(e.actionId);
-        });
-      });
+          this.selectActions.push(e.actionId)
+        })
+      })
     },
     closeNodeDialog() {
-      this.isEditNode = false;
-      this.showCreateNode = false;
-      this.nodeForm = { executors: [] };
-      this.selectActions = [];
+      this.isEditNode = false
+      this.showCreateNode = false
+      this.nodeForm = { executors: [] }
+      this.selectActions = []
     },
     removeNode(row) {
       this.$confirm(`确认删除节点【${row.nodeName}】？`).then(() => {
         NodeApi.deleteNode(row.nodeId).then((res) => {
           if (res.data) {
-            this.$message.success("删除节点成功");
-            this.getNodes();
+            this.$message.success('删除节点成功')
+            this.getNodes()
           } else {
-            this.$message.error("删除节点失败");
+            this.$message.error('删除节点失败')
           }
-        });
-      });
+        })
+      })
     },
     changeNodePage() {
-      this.getNodes();
+      this.getNodes()
     },
     createNode() {
-      this.nodeTitle = "创建节点";
-      this.showCreateNode = true;
-      this.getAllActions();
+      this.nodeTitle = '创建节点'
+      this.showCreateNode = true
+      this.getAllActions()
     },
     addNode() {
-      this.nodeForm.executors = this.selectActions;
-      console.log("node 节点", this.nodeForm);
+      this.nodeForm.executors = this.selectActions
+      console.log('node 节点', this.nodeForm)
       if (this.isEditNode) {
         NodeApi.updateNode(this.nodeForm).then((res) => {
           if (res.data) {
-            this.$message.success("修改节点成功");
-            this.getNodes();
-            this.closeNodeDialog();
+            this.$message.success('修改节点成功')
+            this.getNodes()
+            this.closeNodeDialog()
           } else {
-            this.$message.error("修改节点失败");
+            this.$message.error('修改节点失败')
           }
-        });
-        return;
+        })
+        return
       }
       NodeApi.createNode(this.nodeForm).then((res) => {
         if (res.data) {
-          this.$message.success("添加节点成功");
-          this.getNodes();
-          this.closeNodeDialog();
+          this.$message.success('添加节点成功')
+          this.getNodes()
+          this.closeNodeDialog()
         } else {
-          this.$message.error("添加节点失败");
+          this.$message.error('添加节点失败')
         }
-      });
+      })
     },
     getNodes() {
       NodeApi.getNodePage(this.currentNodePage, 10, this.queryNodeName).then(
         (res) => {
-          console.log("get node list", res);
-          this.nodeTotalSize = res.total;
-          this.nodeList = res.data;
+          console.log('get node list', res)
+          this.nodeTotalSize = res.total
+          this.nodeList = res.data
         }
-      );
+      )
     },
     //-----节点方法结束------
     startQuery() {
-      this.currentPage = 1;
-      this.getActions();
+      this.currentPage = 1
+      this.getActions()
     },
     changePage() {
-      this.getActions();
+      this.getActions()
     },
     createTemplet() {
-      this.showCreateExecuter = true;
-      this.title = "创建执行点";
+      this.showCreateExecuter = true
+      this.title = '创建执行点'
     },
     editAction(row) {
-      console.log("row", row);
-      this.isEditAction = true;
-      this.title = "编辑执行点";
-      this.showCreateExecuter = true;
-      this.actionForm = row;
-      this.configList = row.paramDetail;
-      this.compareList = row.results;
+      console.log('row', row)
+      this.isEditAction = true
+      this.title = '编辑执行点'
+      this.showCreateExecuter = true
+      this.actionForm = row
+      this.configList = row.paramList
+      this.compareList = row.compareResults
     },
     removeAction(row) {
       this.$confirm(`确认删除执行点【${row.actionName}】？`).then(() => {
         ActionApi.deleteAction(row.actionId).then((res) => {
           if (res.data) {
-            this.$message.success("删除执行点成功");
-            this.getActions();
+            this.$message.success('删除执行点成功')
+            this.getActions()
           } else {
-            this.$message.error("删除执行点失败");
+            this.$message.error('删除执行点失败')
           }
-        });
-      });
+        })
+      })
     },
     closeDialog() {
-      this.showCreateExecuter = false;
-      this.configList = [];
-      this.compareList = [];
-      this.actionForm = {};
-      this.isEditAction = false;
+      this.showCreateExecuter = false
+      this.configList = []
+      this.compareList = []
+      this.actionForm = {}
+      this.isEditAction = false
     },
     addAction() {
-      let data = this.actionForm;
-      data.paramDetail = this.configList;
-      data.results = this.compareList;
-      console.log(data);
+      let data = this.actionForm
+      data.paramList = this.configList
+      data.compareResults = this.compareList
+      console.log(data)
       if (this.isEditAction) {
         ActionApi.updateAction(data).then((res) => {
           if (res.data) {
-            this.$message.success("修改执行点成功");
-            this.closeDialog();
-            this.getActions();
+            this.$message.success('修改执行点成功')
+            this.closeDialog()
+            this.getActions()
           } else {
-            this.$message.error("修改执行点失败");
+            this.$message.error('修改执行点失败')
           }
-        });
-        return;
+        })
+        return
       }
 
       ActionApi.createAction(data).then((res) => {
         if (res.data) {
-          this.$message.success("创建执行点成功");
-          this.closeDialog();
-          this.getActions();
+          this.$message.success('创建执行点成功')
+          this.closeDialog()
+          this.getActions()
         } else {
-          this.$message.error("创建执行点失败");
+          this.$message.error('创建执行点失败')
         }
-      });
+      })
     },
     addNewItem() {
-      this.configList.push({});
+      this.configList.push({})
     },
     getActions() {
       ActionApi.getActionPage(this.currentPage, 10, this.queryName).then(
         (res) => {
-          this.totalSize = res.total;
-          this.actionList = res.data;
-          console.log(res);
+          this.totalSize = res.total
+          this.actionList = res.data
+          console.log(res)
         }
-      );
+      )
     },
     getAllActions() {
-      ActionApi.getActionPage(1, 100, "").then((res) => {
-        console.log(res);
-        this.executeList = [];
+      ActionApi.getActionPage(1, 100, '').then((res) => {
+        console.log(res)
+        this.executeList = []
         res.data.forEach((e) => {
-          this.executeList.push({ label: e.actionName, value: e.actionId });
-        });
-      });
+          this.executeList.push({ label: e.actionName, value: e.actionId })
+        })
+      })
     },
   },
   created() {
-    this.getActions();
-    this.getNodes();
+    this.getActions()
+    this.getNodes()
   },
-};
+}
 </script>
 <style scoped>
 .query-div {
