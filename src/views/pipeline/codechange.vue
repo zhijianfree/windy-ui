@@ -2,7 +2,7 @@
   <div>
     <div class="title-line">
       <el-form :inline="true" size="mini" class="demo-form-inline">
-        <el-form-item label="服务列表">
+        <el-form-item :label="$t('pipeline.codeChange.service_list')">
           <el-select
             v-model="service"
             size="small"
@@ -21,37 +21,64 @@
     </div>
     <div class="change-content">
       <div class="change-title">
-        <div class="change-desc">服务变更列表</div>
+        <div class="change-desc">
+          {{ $t('pipeline.codeChange.code_change_list') }}
+        </div>
         <div class="add-btn">
           <el-button
             type="primary"
             size="small"
             icon="el-icon-circle-plus-outline"
             @click="addChangeCode"
-            >添加变更</el-button
+            >{{ $t('pipeline.codeChange.create_code_change') }}</el-button
           >
         </div>
       </div>
       <div class="change-list">
         <div>
           <el-table :data="changeList" stripe style="width: 100%">
-            <el-table-column prop="changeName" label="变更"> </el-table-column>
-            <el-table-column prop="changeBranch" label="分支">
+            <el-table-column
+              prop="changeName"
+              :label="$t('pipeline.codeChange.name')"
+            >
             </el-table-column>
-            <el-table-column prop="changeDesc" label="描述"> </el-table-column>
-            <el-table-column prop="creator" label="创建者"> </el-table-column>
-            <el-table-column prop="relationId" label="关联Id">
+            <el-table-column
+              prop="changeBranch"
+              :label="$t('pipeline.codeChange.branch')"
+            >
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间">
+            <el-table-column
+              prop="changeDesc"
+              :label="$t('pipeline.codeChange.description')"
+            >
             </el-table-column>
-            <el-table-column fixed="right" label="操作" width="100">
+            <el-table-column
+              prop="creator"
+              :label="$t('pipeline.codeChange.user')"
+            >
+            </el-table-column>
+            <el-table-column
+              prop="relationId"
+              :label="$t('pipeline.codeChange.union_id')"
+            >
+            </el-table-column>
+            <el-table-column
+              prop="createTime"
+              :label="$t('pipeline.codeChange.create_time')"
+            >
+            </el-table-column>
+            <el-table-column
+              fixed="right"
+              :label="$t('pipeline.codeChange.operate')"
+              width="100"
+            >
               <template slot-scope="scope">
                 <el-button
                   @click="removeChange(scope.row)"
                   slot="reference"
                   type="text"
                   size="small"
-                  >删除</el-button
+                  >{{ $t('pipeline.codeChange.delete') }}</el-button
                 >
               </template>
             </el-table-column>

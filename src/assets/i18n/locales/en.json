@@ -1,0 +1,17 @@
+{
+  "pipeline": {
+    "codeChange": {
+      "service_list": "Service List",
+      "code_change_list": "Code Change List",
+      "name": "Name",
+      "branch": "Branch Name",
+      "description": "Description",
+      "user": "User",
+      "union_id": "UnionId",
+      "create_time": "CreateTime",
+      "create_code_change": "Create Code Change",
+      "delete": "Delete",
+      "operate": "Operate"
+    }
+  }
+}

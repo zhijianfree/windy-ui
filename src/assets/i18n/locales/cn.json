@@ -1,0 +1,29 @@
+{
+  "common": {
+    "service_list": "服务列表",
+    "manage": "服务列表"
+  },
+  "pipeline": {
+    "codeChange": {
+      "service_list": "服务列表",
+      "code_change_list": "服务变更列表",
+      "name": "变更名称",
+      "branch": "分支",
+      "description": "描述",
+      "user": "创建者",
+      "union_id": "关联Id",
+      "create_time": "创建时间",
+      "create_code_change": "添加变更",
+      "delete": "删除",
+      "operate": "操作"
+    },
+    "pipe": {
+      "manag": "管理",
+      "create": "新增",
+      "publish_line": "Publish Line",
+      "daily_line": "Daily Line",
+      "custom_line": "Custom Line",
+      "create_new_line": "创建流水线"
+    }
+  }
+}

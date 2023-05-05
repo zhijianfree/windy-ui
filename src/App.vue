@@ -63,6 +63,22 @@
       </el-menu>
     </el-aside>
     <el-main>
+      <div class="i18n-select">
+        <el-select
+          size="small"
+          v-model="selectLang"
+          placeholder="请选择多语言"
+          @change="chooseLang"
+        >
+          <el-option
+            v-for="item in langOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+          </el-option>
+        </el-select>
+      </div>
       <router-view></router-view>
     </el-main>
   </el-container>
@@ -72,24 +88,34 @@ export default {
   data() {
     return {
       isStartCollapse: false,
-      selectIndex: "/",
-    };
+      selectIndex: '/',
+      langOptions: [
+        { label: '简体中文', value: 'cn' },
+        { label: 'English', value: 'en' },
+      ],
+      selectLang: 'cn',
+    }
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse;
+      this.isStartCollapse = !this.isStartCollapse
+    },
+    chooseLang(lang) {
+      console.log('切换语言', lang)
+      this.$i18n.locale = lang
+      localStorage.setItem('lang', lang)
     },
   },
   computed: {
     toggleButton() {
       if (this.isStartCollapse) {
-        return "minMargin";
+        return 'minMargin'
       } else {
-        return "maxMargin";
+        return 'maxMargin'
       }
     },
   },
-};
+}
 </script>
 <style>
 body {
@@ -137,5 +163,10 @@ body,
   vertical-align: middle;
   font-size: 18px;
   cursor: pointer;
+}
+.i18n-select {
+  position: absolute;
+  right: 20px;
+  top: 20px;
 }
 </style>
