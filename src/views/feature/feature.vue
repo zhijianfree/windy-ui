@@ -875,7 +875,9 @@ export default {
       this.isDrag = true
     },
     addItem(e) {
+      this.featureList = JSON.parse(JSON.stringify(this.featureList))
       let item = this.featureList[e.newIndex]
+      console.log(item)
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
       item.sortOrder = e.newIndex
@@ -1059,8 +1061,12 @@ export default {
         let releaseData = JSON.parse(JSON.stringify(this.release))
         this.refreshArray(releaseData)
       }
+      this.$forceUpdate()
     },
     refreshArray(data) {
+      console.log('DARAAAAddDDDdd', data)
+      console.log('featureList', this.featureList)
+      this.featureList = []
       let index = 0
       data.forEach((e) => {
         this.$set(this.featureList, index, e)

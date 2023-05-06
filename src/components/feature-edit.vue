@@ -70,9 +70,13 @@ export default {
   },
   watch: {
     feature(val) {
+      console.log('1111111')
       this.data = JSON.parse(JSON.stringify(val))
       if (this.data.type == 1) {
         this.paramList = this.matchMap(this.data.value)
+      }
+      if (!val.value) {
+        this.data.value = val.defaultValue.defaultValue
       }
     },
   },
