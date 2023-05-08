@@ -571,6 +571,7 @@ export default {
     leftMove() {
       utils.moveLeft(this.editPipelines, this.nodeForm)
       this.uuid++
+      console.log(this.editPipelines)
     },
     rightMove() {
       utils.moveRight(this.editPipelines, this.nodeForm)
@@ -910,6 +911,7 @@ export default {
     },
     submitPipeline() {
       let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
+      console.log('更新参数', param)
       param.pipelineConfig = JSON.stringify(this.editPipelines)
 
       //修改流水线

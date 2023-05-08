@@ -206,13 +206,21 @@
             v-model="actionForm.description"
           />
         </el-form-item>
+        <el-form-item label="执行类型">
+          <el-radio-group v-model="executeType" @change="chooseExecuteType">
+            <el-radio label="HTTP">默认</el-radio>
+            <el-radio label="WAIT">等待</el-radio>
+            <el-radio label="APPROVAL">人工卡点</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-divider content-position="left">动作触发配置</el-divider>
-        <el-form-item label="动作触发地址">
+        <el-form-item label="动作触发地址" v-if="executeType == 'HTTP'">
           <el-input
             placeholder="请输入执行点名称"
             v-model="actionForm.actionUrl"
           />
         </el-form-item>
+
         <el-form-item label="参数列表">
           <el-row
             v-for="(item, index) in configList"
@@ -228,24 +236,22 @@
             </el-col>
             <el-col :span="1" class="separate-line">-</el-col>
             <el-col :span="5">
-              <el-input placeholder="输入参数类型" v-model="item.type" />
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="5">
               <el-input placeholder="输入默认值" v-model="item.value" />
             </el-col>
           </el-row>
           <div class="add-btn" @click="addNewItem">新增参数</div>
         </el-form-item>
 
-        <el-divider content-position="left">状态查询配置</el-divider>
-        <el-form-item label="状态查询地址">
+        <el-divider content-position="left" v-if="executeType == 'HTTP'"
+          >状态查询配置</el-divider
+        >
+        <el-form-item label="状态查询地址" v-if="executeType == 'HTTP'">
           <el-input
             placeholder="请输入状态查询地址"
             v-model="actionForm.queryUrl"
           />
         </el-form-item>
-        <el-form-item label="结果条件列表">
+        <el-form-item label="结果条件列表" v-if="executeType == 'HTTP'">
           <el-row
             v-for="(item, index) in compareList"
             :key="index"
@@ -340,9 +346,20 @@ export default {
         { label: '数字类型', value: 'Integer' },
         { label: '字符串类型', value: 'String' },
       ],
+      executeType: 'HTTP',
     }
   },
   methods: {
+    chooseExecuteType(type) {
+      let item = {}
+      if (type == 'WAIT') {
+        item = { name: 'waitTime', description: '等待时长(秒)' }
+      }
+      if (type == 'APPROVAL') {
+        item = { name: 'maxWait', description: '审批最大等待时长(秒)' }
+      }
+      this.configList = [item]
+    },
     addNewCondition() {
       this.compareList.push({})
     },
@@ -433,6 +450,7 @@ export default {
     createTemplet() {
       this.showCreateExecuter = true
       this.title = '创建执行点'
+      this.actionForm.executeType = 'HTTP'
     },
     editAction(row) {
       console.log('row', row)
@@ -440,6 +458,7 @@ export default {
       this.title = '编辑执行点'
       this.showCreateExecuter = true
       this.actionForm = row
+      this.executeType = row.executeType
       this.configList = row.paramList
       this.compareList = row.compareResults
     },
@@ -461,12 +480,13 @@ export default {
       this.compareList = []
       this.actionForm = {}
       this.isEditAction = false
+      this.executeType = 'HTTP'
     },
     addAction() {
       let data = this.actionForm
       data.paramList = this.configList
       data.compareResults = this.compareList
-      console.log(data)
+      data.executeType = this.executeType
       if (this.isEditAction) {
         ActionApi.updateAction(data).then((res) => {
           if (res.data) {

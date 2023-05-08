@@ -1,6 +1,9 @@
 const width = 120
 const height = 50
 export default {
+  /**
+   * 修改节点
+   */
   updateNode(pipeline, node, subNodes) {
     console.log('before update', pipeline, node, subNodes)
     let pipelineArray = JSON.parse(JSON.stringify(pipeline))
@@ -59,61 +62,6 @@ export default {
     })
     console.log('pipe done======', JSON.parse(JSON.stringify(pipelineArray)))
 
-    // if (currentline.length != subNodes.length + 1) {
-    //   //找到删除的子节点
-    //   let reduceArray = []
-    //   currentline.forEach((e) => {
-    //     let flag = false
-    //     subNodes.forEach((ele) => {
-    //       if (ele.id == e.id) {
-    //         flag = true
-    //       }
-    //     })
-
-    //     if (!flag) {
-    //       reduceArray.push(e)
-    //     }
-    //   })
-
-    //   //删除原有的子节点
-    //   let reduceIndex = []
-    //   reduceArray.forEach((e) => {
-    //     let index = pipelineArray.indexOf(e)
-    //     reduceIndex.push(index)
-    //   })
-    //   reduceIndex.forEach((index) => {
-    //     pipelineArray.splice(index, 1)
-    //   })
-
-    //   let reduceCount = currentline.length - subNodes.length
-    //   let nodeIndex = pipelineArray.indexOf(node)
-    //   pipelineArray.forEach((e) => {
-    //     if (!e.next) {
-    //       return
-    //     }
-    //     //所有前置节点都要删除移除的子节点指向
-    //     let nextArray = e.next
-    //     nextArray.forEach((ele) => {
-    //       let result = reduceIndex.indexOf(ele.index)
-    //       if (result > 0) {
-    //         nextArray.splice(nextArray.indexOf(ele), 1)
-    //       }
-    //     })
-
-    //     //在修改节点之后的root节点next都要减少reduceCount
-    //     let currentIndex = pipelineArray.indexOf(e)
-    //     if (
-    //       e.root &&
-    //       e.next &&
-    //       e.next.length > 0 &&
-    //       currentIndex >= nodeIndex
-    //     ) {
-    //       e.next.forEach((ele) => {
-    //         ele.index -= reduceCount
-    //       })
-    //     }
-    //   })
-    // }
     let changeMap = {}
     subNodes.forEach((e) => {
       changeMap[e.actionId] = e.compareResults
@@ -132,6 +80,10 @@ export default {
     })
     return pipelineArray
   },
+  /**
+   * 添加节点
+   *
+   */
   addNode(pipeline, node, subNodes) {
     //新加节点与最后节点互换位置
     console.log(JSON.parse(JSON.stringify(pipeline)), '节点', node)
@@ -209,6 +161,9 @@ export default {
     pipeline.push(lastNode)
     console.log('sub result', pipeline)
   },
+  /**
+   * 删除节点
+   */
   removeNode(pipeline, node) {
     if (node.id != node.group) {
       return this.removeSingleNode(pipeline, node)
@@ -274,6 +229,10 @@ export default {
     console.log('delete result', newArray)
     return newArray
   },
+  /**
+   * 删除耽搁节点
+   *
+   */
   removeSingleNode(pipeline, node) {
     console.log('pipe item', pipeline)
     console.log('start handle single item', node)
@@ -311,6 +270,10 @@ export default {
     console.log('remove single result', pipeline)
     return pipeline
   },
+  /**
+   * 将流水线子节点向左移动
+   *
+   */
   moveLeft(pipeline, node) {
     node = this.getRootOfNode(pipeline, node)
     if (node.id <= 2) {
@@ -318,8 +281,9 @@ export default {
       return
     }
 
+    this.changeGroup(pipeline, node, true)
     let array = this.transformTreeNode(pipeline)
-    console.log('流水线', array)
+    console.log('流水线', JSON.parse(JSON.stringify(array)))
     let index = array.findIndex((item) => item.id == node.id)
     let preRootNode = array[index - 1]
     let beforTwoNode = array[index - 2]
@@ -370,10 +334,22 @@ export default {
 
     pipeline[beforTwo.id].next = beforTwoArray
     console.log('beforTwo.id', beforTwo.id)
-    pipeline[pipeline.length - 1].group = pipeline[pipeline.length - 1].id
+
+    let idx = 0
+    pipeline.forEach((e) => {
+      e.id = idx
+      idx++
+    })
+    console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
   },
+  /**
+   * 将流水线子节点向右移动
+   *
+   */
   moveRight(pipeline, node) {
     node = this.getRootOfNode(pipeline, node)
+    this.changeGroup(pipeline, node, false)
+
     let array = this.transformTreeNode(pipeline)
     let pos = array.findIndex((item) => item.id == node.id)
     if (pos >= array.length - 2) {
@@ -420,7 +396,17 @@ export default {
       pipeline[middleNode.id + i + 1] = middleNode.nodes[i]
     }
     pipeline[pipeline.length - 1].group = pipeline[pipeline.length - 1].id
+
+    let idx = 0
+    pipeline.forEach((e) => {
+      e.id = idx
+      idx++
+    })
   },
+  /**
+   * 请求添加或者修改流水线的接口前需要通过此方法将数据转换一下
+   *
+   */
   exchangeData(pipelineForm, nodes) {
     //先获取root节点
     let rootMap = {}
@@ -478,8 +464,11 @@ export default {
     console.log('转换结果', pipeline)
     return pipeline
   },
+  /**
+   * 从后端接口获取到的数据需要通过此方法转换给ui
+   *
+   */
   displayData(list) {
-    // console.log('list', list)
     let data = []
     let preNode = {
       next: [],
@@ -530,6 +519,10 @@ export default {
     console.log('filnal', data)
     return data
   },
+  /**
+   * 如果在页面点击的不是根节点，则将子节点转换为根结点
+   *
+   */
   getRootOfNode(pipeline, node) {
     if (node.root) {
       return node
@@ -542,6 +535,40 @@ export default {
       }
     })
     return result
+  },
+  /**
+   * 移动节点的时候切换两列节点的group属性，(group属性在请求接口转化数据的时候使用)
+   *
+   */
+  changeGroup(pipeline, node, isMoveLeft) {
+    let temGroup = node.group
+    pipeline.forEach((e) => {
+      if (temGroup == e.group) {
+        e.group = 'temp'
+      }
+    })
+
+    if (isMoveLeft) {
+      let preGroup = temGroup - 1
+      pipeline.forEach((e) => {
+        if (preGroup == e.group) {
+          e.group = preGroup + 1
+        }
+        if ('temp' == e.group) {
+          e.group = temGroup - 1
+        }
+      })
+    } else {
+      let preGroup = temGroup + 1
+      pipeline.forEach((e) => {
+        if (preGroup == e.group) {
+          e.group = preGroup - 1
+        }
+        if ('temp' == e.group) {
+          e.group = temGroup + 1
+        }
+      })
+    }
   },
   transformTreeNode(pipeline) {
     let array = []
