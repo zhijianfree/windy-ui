@@ -484,8 +484,18 @@ export default {
     },
     addAction() {
       let data = this.actionForm
-      data.paramList = this.configList
-      data.compareResults = this.compareList
+      data.paramList = []
+      this.configList.forEach((e) => {
+        if (e.value && e.name) {
+          data.paramList.push(e)
+        }
+      })
+      data.compareResults = []
+      this.compareList.forEach((e) => {
+        if (e.value && e.compareKey) {
+          data.compareResults.push(e)
+        }
+      })
       data.executeType = this.executeType
       if (this.isEditAction) {
         ActionApi.updateAction(data).then((res) => {

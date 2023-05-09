@@ -272,7 +272,12 @@
     <!-- 节点日志结束 -->
 
     <!-- 新增/编辑节点开始 -->
-    <el-dialog title="配置节点" :visible.sync="dialogVisible" width="70%">
+    <el-dialog
+      title="配置节点"
+      :visible.sync="dialogVisible"
+      width="70%"
+      @close="closeConfigNode"
+    >
       <el-form size="mini" :disabled="isView">
         <el-form-item label="节点名称" :label-width="formLabelWidth">
           <el-input v-model="nodeForm.name" autocomplete="off"></el-input>
@@ -465,6 +470,7 @@ import bind from './bindgit.vue'
 import pipelineApi from '../../http/Pipeline'
 import serviceApi from '../../http/Service'
 import historyApi from '../../http/PipelineHistory'
+import actionApi from '../../http/PipelineAction'
 import nodeApi from '../../http/NodeBind'
 import utils from '../../lib/pipeline'
 export default {
@@ -513,6 +519,11 @@ export default {
     }
   },
   methods: {
+    closeConfigNode() {
+      this.nodeForm = {}
+      this.selectNodeType = ''
+      this.configForm = {}
+    },
     exchangeStatusMessage(status) {
       let msg = '无'
       if (status == undefined || status == null) {
@@ -586,6 +597,25 @@ export default {
       this.getPipelineList()
     },
     showNodeLog(node) {
+      if (this.isRunning && node.originData && node.originData.actionId) {
+        actionApi.getAction(node.originData.actionId).then((res) => {
+          if (res.data.executeType == 'APPROVAL') {
+            if (!this.history.historyId) {
+              return
+            }
+
+            this.$confirm('是否审批通过?').then((_) => {
+              historyApi
+                .approval(this.history.historyId, node.nodeId)
+                .then((res) => {
+                  this.$message.success('审批通过')
+                })
+            })
+          }
+        })
+        return
+      }
+
       if (!this.history || !this.history.historyId) {
         this.logForm.status = 1
         this.logForm.messageList = ['未执行']
@@ -747,9 +777,9 @@ export default {
       }
 
       pipelineApi.pausePipeline(this.history.historyId).then((res) => {
+        this.isRunning = false
         if (res.data) {
           this.$message.success('停止流水线成功')
-          this.isRunning = false
         } else {
           this.$message.error('停止流水线失败')
         }
