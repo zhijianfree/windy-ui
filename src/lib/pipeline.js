@@ -414,7 +414,6 @@ export default {
       if (!rootMap[e.group]) {
         rootMap[e.group] = []
       }
-
       rootMap[e.group].push(e)
     })
     console.log('list...', nodes)
@@ -444,9 +443,18 @@ export default {
           if (!data) {
             data = e.originData.compareInfo
           }
+          // 将触发的参数组装起来
+          let requestContext = {}
+          if (e.originData && e.originData.paramList) {
+            e.originData.paramList.forEach((el) => {
+              requestContext[el.name] = el.value
+            })
+          }
+
           let nodeConfig = {
             actionId: e.originData.actionId,
             compareInfo: data,
+            requestContext: requestContext,
           }
           subNode.push({
             nodeName: e.name,

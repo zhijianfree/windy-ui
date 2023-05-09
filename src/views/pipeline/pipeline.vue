@@ -275,6 +275,7 @@
     <el-dialog
       title="配置节点"
       :visible.sync="dialogVisible"
+      :destroy-on-close="true"
       width="70%"
       @close="closeConfigNode"
     >
@@ -327,12 +328,13 @@
               <el-form-item
                 v-for="(item, index) in StepConfigs"
                 :key="index"
-                :label-width="formLabelWidth"
+                :label-width="labelWidth"
               >
                 <span slot="label">{{ item.description }}</span>
                 <el-select
                   v-if="item.type == 'select'"
                   v-model="configForm[item.compareKey]"
+                  @change="selectChange"
                   placeholder="请选择"
                 >
                   <el-option
@@ -471,6 +473,7 @@ import pipelineApi from '../../http/Pipeline'
 import serviceApi from '../../http/Service'
 import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
+import taskApi from '../../http/Task'
 import nodeApi from '../../http/NodeBind'
 import utils from '../../lib/pipeline'
 export default {
@@ -481,6 +484,7 @@ export default {
       startIndex: 1,
       nodeForm: {},
       formLabelWidth: '80px',
+      labelWidth: '120px',
       dialogVisible: false,
       stepOptions: [],
       selectNodeType: '',
@@ -523,6 +527,7 @@ export default {
       this.nodeForm = {}
       this.selectNodeType = ''
       this.configForm = {}
+      this.itemList = []
     },
     exchangeStatusMessage(status) {
       let msg = '无'
@@ -654,22 +659,35 @@ export default {
       this.itemList = selectItem.list
       this.selectStep(selectItem.configId)
     },
-    selectStep(nodeId) {
+    selectStep(configId) {
       this.itemList = []
-      nodeApi.getNodeActions(nodeId).then((res) => {
+      nodeApi.getNodeActions(configId).then((res) => {
         let config = {}
         if (this.nodeForm.list) {
           this.nodeForm.list.forEach((e) => {
             let detail = JSON.parse(e.configDetail)
-            config[detail.actionId] = detail.compareInfo
+            config[detail.actionId] = detail
           })
         }
 
         res.data.forEach((e) => {
-          let compareInfo = config[e.actionId]
-          if (compareInfo != undefined && compareInfo != null) {
-            e.compareResults = compareInfo
-            console.log()
+          let detail = config[e.actionId]
+          if (detail != undefined && detail != null) {
+            e.compareResults = detail.compareInfo
+
+            e.paramList.forEach((e) => {
+              let data = detail.requestContext[e.name]
+              if (data) {
+                e.value = data
+              }
+            })
+
+            this.nodeForm.list.forEach((el) => {
+              let configDetail = JSON.parse(el.configDetail)
+              if (e.actionId == configDetail.actionId) {
+                e.nodeId = el.nodeId
+              }
+            })
           }
           this.itemList.push(e)
         })
@@ -677,10 +695,37 @@ export default {
     },
     chooseStep(item) {
       console.log('选择的node', item)
-      item.compareResults.forEach((e) => {
+      this.StepConfigs = JSON.parse(JSON.stringify(item.compareResults))
+      this.StepConfigs.forEach((e) => {
         this.configForm[e.compareKey] = e.value
       })
-      this.StepConfigs = item.compareResults
+      console.log('dddddddddd', this.configForm)
+      //用例测试为了选择节点所有特殊处理
+      if (item.executeType == 'TEST') {
+        this.stepSelectConfigs = []
+        taskApi.getAllTaskList(this.serviceId).then((res) => {
+          let list = []
+          res.data.forEach((e) => {
+            list.push({
+              label: e.taskName,
+              value: e.taskId,
+            })
+          })
+
+          item.paramList.forEach((e) => {
+            if (e.name == 'taskId') {
+              this.configForm.taskId = e.value
+              this.StepConfigs.push({
+                compareKey: 'taskId',
+                description: e.description,
+                value: e.value,
+                type: 'select',
+                list: list,
+              })
+            }
+          })
+        })
+      }
       this.chosedConfigItem = item
       this.$forceUpdate()
     },
@@ -994,12 +1039,21 @@ export default {
       this.editPipelines = []
       this.configForm = {}
     },
-    datachange(name) {
-      console.log('数据变化', name)
+    selectChange(value) {
+      console.log('数据变化', value, this.chosedConfigItem)
+      this.chosedConfigItem.paramList.forEach((e) => {
+        if (e.name == 'taskId') {
+          e.value = value
+        }
+      })
+      this.$forceUpdate()
+    },
+    datachange(value) {
+      console.log('数据变化', value, this.chosedConfigItem)
       this.chosedConfigItem.compareResults.forEach((e) => {
-        if (e.compareKey == name) {
-          e.value = this.configForm[name]
-          console.log('数据变化111', this.configForm[name])
+        if (e.compareKey == value) {
+          e.value = this.configForm[value]
+          console.log('数据变化111', this.configForm[value])
         }
       })
       this.$forceUpdate()

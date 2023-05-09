@@ -211,6 +211,7 @@
             <el-radio label="HTTP">默认</el-radio>
             <el-radio label="WAIT">等待</el-radio>
             <el-radio label="APPROVAL">人工卡点</el-radio>
+            <el-radio label="TEST">用例测试</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-divider content-position="left">动作触发配置</el-divider>
@@ -251,7 +252,10 @@
             v-model="actionForm.queryUrl"
           />
         </el-form-item>
-        <el-form-item label="结果条件列表" v-if="executeType == 'HTTP'">
+        <el-form-item
+          label="结果条件列表"
+          v-if="executeType == 'HTTP' || executeType == 'TEST'"
+        >
           <el-row
             v-for="(item, index) in compareList"
             :key="index"
