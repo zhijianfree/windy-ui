@@ -325,9 +325,12 @@
           <div>
             <div class="step-title">配置步骤</div>
             <el-form v-model="configForm" size="mini" :disabled="isView">
+              <el-divider content-position="left" v-if="paramConfigs.length > 0"
+                >触发参数配置</el-divider
+              >
               <el-form-item
-                v-for="(item, index) in StepConfigs"
-                :key="index"
+                v-for="(item, index) in paramConfigs"
+                :key="100 + index"
                 :label-width="labelWidth"
               >
                 <span slot="label">{{ item.description }}</span>
@@ -338,8 +341,8 @@
                   placeholder="请选择"
                 >
                   <el-option
-                    v-for="item in item.list"
-                    :key="item.value"
+                    v-for="(item, index) in item.list"
+                    :key="index"
                     :label="item.label"
                     :value="item.value"
                   >
@@ -348,6 +351,20 @@
                 <el-input
                   @input="datachange(item.compareKey)"
                   v-else
+                  v-model="configForm[item.compareKey]"
+                />
+              </el-form-item>
+              <el-divider content-position="left" v-if="stepConfigs.length > 0"
+                >节点配置</el-divider
+              >
+              <el-form-item
+                v-for="(item, index) in stepConfigs"
+                :key="index"
+                :label-width="labelWidth"
+              >
+                <span slot="label">{{ item.description }}</span>
+                <el-input
+                  @input="datachange(item.compareKey)"
                   v-model="configForm[item.compareKey]"
                 />
               </el-form-item>
@@ -484,12 +501,13 @@ export default {
       startIndex: 1,
       nodeForm: {},
       formLabelWidth: '80px',
-      labelWidth: '120px',
+      labelWidth: '150px',
       dialogVisible: false,
       stepOptions: [],
       selectNodeType: '',
       itemList: [],
-      StepConfigs: [],
+      stepConfigs: [],
+      paramConfigs: [],
       configForm: {},
       loading: false,
       activePipelines: ['1', '2', '3'],
@@ -695,14 +713,24 @@ export default {
     },
     chooseStep(item) {
       console.log('选择的node', item)
-      this.StepConfigs = JSON.parse(JSON.stringify(item.compareResults))
-      this.StepConfigs.forEach((e) => {
+      this.stepConfigs = JSON.parse(JSON.stringify(item.compareResults))
+      this.stepConfigs.forEach((e) => {
         this.configForm[e.compareKey] = e.value
       })
-      console.log('dddddddddd', this.configForm)
+
+      let taskId = ''
+      this.paramConfigs = []
+      item.paramList.forEach((e) => {
+        this.configForm[e.name] = e.value
+        this.paramConfigs.push({
+          compareKey: e.name,
+          description: e.description,
+          value: e.value,
+          type: e.type,
+        })
+      })
       //用例测试为了选择节点所有特殊处理
       if (item.executeType == 'TEST') {
-        this.stepSelectConfigs = []
         taskApi.getAllTaskList(this.serviceId).then((res) => {
           let list = []
           res.data.forEach((e) => {
@@ -711,19 +739,12 @@ export default {
               value: e.taskId,
             })
           })
-
-          item.paramList.forEach((e) => {
-            if (e.name == 'taskId') {
-              this.configForm.taskId = e.value
-              this.StepConfigs.push({
-                compareKey: 'taskId',
-                description: e.description,
-                value: e.value,
-                type: 'select',
-                list: list,
-              })
+          this.paramConfigs.forEach((e) => {
+            if (e.compareKey == 'taskId') {
+              e.list = list
             }
           })
+          this.$forceUpdate()
         })
       }
       this.chosedConfigItem = item
@@ -1040,12 +1061,14 @@ export default {
       this.configForm = {}
     },
     selectChange(value) {
-      console.log('数据变化', value, this.chosedConfigItem)
+      console.log('selectChange 数据变化', value)
       this.chosedConfigItem.paramList.forEach((e) => {
         if (e.name == 'taskId') {
           e.value = value
+          console.log('数据变化111 selectChange', value.data)
         }
       })
+
       this.$forceUpdate()
     },
     datachange(value) {
@@ -1053,7 +1076,7 @@ export default {
       this.chosedConfigItem.compareResults.forEach((e) => {
         if (e.compareKey == value) {
           e.value = this.configForm[value]
-          console.log('数据变化111', this.configForm[value])
+          console.log('数据变化111 datachange', this.configForm[value])
         }
       })
       this.$forceUpdate()

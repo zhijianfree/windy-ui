@@ -490,7 +490,11 @@ export default {
       let data = this.actionForm
       data.paramList = []
       this.configList.forEach((e) => {
-        if (e.value && e.name) {
+        if (this.executeType == 'TEST') {
+          e.type = 'select'
+        }
+
+        if (e.description && e.name) {
           data.paramList.push(e)
         }
       })

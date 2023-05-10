@@ -48,6 +48,7 @@ export default {
         originData: {
           actionId: e.actionId,
           compareInfo: e.compareResults,
+          paramList: e.paramList,
         },
       }
       pipelineArray.splice(index, 0, item)
