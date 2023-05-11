@@ -13,6 +13,19 @@ export default {
         })
     })
   },
+  getAllTaskList(serviceId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/${serviceId}/tasks`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   createTask(task) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/task`

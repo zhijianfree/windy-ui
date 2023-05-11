@@ -170,7 +170,7 @@
               name="config"
               v-if="infoForm.featureType == 1"
             >
-              <div class="feature-content">
+              <div class="feature-content gridBackground">
                 <div>
                   <el-row :gutter="20">
                     <el-col :span="18">
@@ -875,7 +875,9 @@ export default {
       this.isDrag = true
     },
     addItem(e) {
+      this.featureList = JSON.parse(JSON.stringify(this.featureList))
       let item = this.featureList[e.newIndex]
+      console.log(item)
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
       item.sortOrder = e.newIndex
@@ -1059,8 +1061,12 @@ export default {
         let releaseData = JSON.parse(JSON.stringify(this.release))
         this.refreshArray(releaseData)
       }
+      this.$forceUpdate()
     },
     refreshArray(data) {
+      console.log('DARAAAAddDDDdd', data)
+      console.log('featureList', this.featureList)
+      this.featureList = []
       let index = 0
       data.forEach((e) => {
         this.$set(this.featureList, index, e)
@@ -1309,5 +1315,13 @@ export default {
 .folder-Text i {
   color: #70c745;
   font-size: 16px;
+}
+.gridBackground {
+  background: #dcdfe6;
+  background-image: linear-gradient(white 0px, transparent 0),
+    linear-gradient(90deg, white 0px, transparent 0),
+    linear-gradient(hsla(0, 0%, 100%, 0.3) 1px, transparent 0),
+    linear-gradient(90deg, hsla(0, 0%, 100%, 0.3) 1px, transparent 0);
+  background-size: 75px 75px, 75px 75px, 15px 15px, 15px 15px;
 }
 </style>

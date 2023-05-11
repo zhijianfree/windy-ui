@@ -177,6 +177,9 @@ export default {
       this.executeList = []
       this.cleanList = []
       this.activeName = 'preset'
+      this.presetError = 0
+      this.executeError = 0
+      this.cleanError = 0
     },
     showRecord(row) {
       this.getExecuteRecords(row.historyId)

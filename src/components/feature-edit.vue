@@ -70,9 +70,13 @@ export default {
   },
   watch: {
     feature(val) {
+      console.log('1111111')
       this.data = JSON.parse(JSON.stringify(val))
       if (this.data.type == 1) {
         this.paramList = this.matchMap(this.data.value)
+      }
+      if (!val.value) {
+        this.data.value = val.defaultValue.defaultValue
       }
     },
   },
@@ -81,6 +85,7 @@ export default {
       pointId: '',
       data: {},
       paramList: [],
+      uniqId: '',
     }
   },
   methods: {
@@ -99,6 +104,7 @@ export default {
         item: data,
         pointId: this.pointId,
       })
+      this.$forceUpdate()
     },
     matchMap(map) {
       let array = []
@@ -142,7 +148,7 @@ export default {
     if (!this.data.value) {
       this.data.value = this.data.defaultValue.defaultValue
     }
-    
+
     if (this.data.type == 1) {
       this.paramList = this.matchMap(this.data.value)
     }
