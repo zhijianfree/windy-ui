@@ -627,10 +627,10 @@ export default {
               return
             }
 
-            this.$confirm('是否审批通过?').then((_) => {
+            this.$confirm('是否审批通过?').then(() => {
               historyApi
                 .approval(this.history.historyId, node.nodeId)
-                .then((res) => {
+                .then(() => {
                   this.$message.success('审批通过')
                 })
             })
@@ -718,7 +718,6 @@ export default {
         this.configForm[e.compareKey] = e.value
       })
 
-      let taskId = ''
       this.paramConfigs = []
       item.paramList.forEach((e) => {
         this.configForm[e.name] = e.value
@@ -955,6 +954,7 @@ export default {
             let item = {}
             res.data.nodeStatusList.forEach((e) => {
               item[e.nodeId] = this.exchangeStatus(e.status)
+              console.log(item[e.nodeId])
             })
 
             this.currentPipeline.pipelineConfig.forEach((e) => {

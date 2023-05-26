@@ -170,199 +170,7 @@
               name="config"
               v-if="infoForm.featureType == 1"
             >
-              <div class="feature-content gridBackground">
-                <div>
-                  <el-row :gutter="20">
-                    <el-col :span="18">
-                      <div class="edit-content">
-                        <div class="menu-type">
-                          <el-radio-group
-                            v-model="menuType"
-                            size="small"
-                            @change="selectTestStep"
-                          >
-                            <el-radio-button label="1">预置</el-radio-button>
-                            <el-radio-button label="2">执行</el-radio-button>
-                            <el-radio-button label="3">清理</el-radio-button>
-                          </el-radio-group>
-                        </div>
-                        <!--- 开始-->
-                        <div>
-                          <el-empty
-                            v-if="isShowEmpty"
-                            description="请在右侧拖拽组件到此处"
-                          ></el-empty>
-                          <el-collapse
-                            v-model="activeCollapse"
-                            accordion
-                            :key="uuid"
-                            v-else
-                          >
-                            <draggable
-                              v-model="featureList"
-                              @add="addItem"
-                              group="api"
-                              animation="100"
-                            >
-                              <el-collapse-item
-                                v-for="(executePoint, index) in featureList"
-                                :key="index"
-                                :name="executePoint.randomId"
-                              >
-                                <template slot="title">
-                                  <div style="width: 800px">
-                                    <el-row :gutter="10">
-                                      <el-col :span="4">
-                                        {{ executePoint.name }}
-                                      </el-col>
-                                      <el-col :span="3">
-                                        <i
-                                          v-if="isEdit"
-                                          @click.stop="
-                                            deleteExecutePoint(
-                                              index,
-                                              executePoint.pointId
-                                            )
-                                          "
-                                          class="el-icon-delete delete-point"
-                                        />
-                                        <i
-                                          v-if="
-                                            isEdit && !executePoint.editDesc
-                                          "
-                                          @click.stop
-                                          @click="
-                                            exchangeEditStatus(executePoint)
-                                          "
-                                          class="el-icon-edit-outline delete-point"
-                                        />
-                                      </el-col>
-                                      <el-col
-                                        :span="8"
-                                        v-if="
-                                          executePoint.description &&
-                                          !executePoint.editDesc
-                                        "
-                                      >
-                                        <el-tag type="success">
-                                          {{ executePoint.description }}
-                                        </el-tag>
-                                      </el-col>
-
-                                      <el-col
-                                        :span="8"
-                                        v-if="executePoint.editDesc"
-                                      >
-                                        <div @keyup.space.enter.stop>
-                                          <el-input
-                                            @click.native.stop
-                                            placeholder="输入功能描述"
-                                            v-model="executePoint.description"
-                                            size="mini"
-                                          />
-                                        </div>
-                                      </el-col>
-                                      <el-col
-                                        v-if="executePoint.editDesc"
-                                        :span="5"
-                                      >
-                                        <el-button
-                                          size="mini"
-                                          @click="
-                                            exchangeEditStatus(executePoint)
-                                          "
-                                          >保存</el-button
-                                        >
-                                        <el-button size="mini">取消</el-button>
-                                      </el-col>
-                                    </el-row>
-                                  </div>
-                                </template>
-                                <FeatureTemplate
-                                  v-if="executePoint.executeType == 1"
-                                  :data="executePoint"
-                                  :isEdit="isEdit"
-                                  :type="executePoint.writeType"
-                                  @refreshData="refreshValue"
-                                />
-                                <FeatureTool
-                                  v-else
-                                  :data="executePoint"
-                                  :isEdit="isEdit"
-                                  @refreshData="refreshValue"
-                                />
-                              </el-collapse-item>
-                            </draggable>
-                          </el-collapse>
-                        </div>
-                      </div>
-                    </el-col>
-                    <el-col :span="6">
-                      <div class="feature-config-list">
-                        <el-collapse v-model="toolType" accordion>
-                          <el-collapse-item title="基础工具" name="1">
-                            <draggable
-                              @start="startDrag"
-                              v-model="featureItemList"
-                              v-bind="{
-                                group: { name: 'api', pull: 'clone' },
-                                sort: true,
-                              }"
-                              animation="100"
-                            >
-                              <div
-                                v-for="(element, index) in featureItemList"
-                                :key="index"
-                              >
-                                <div
-                                  class="feature-item"
-                                  v-if="element.templateType != 1"
-                                >
-                                  <div class="template-name">
-                                    {{ element.name }}
-                                  </div>
-                                  <div class="template-desc">
-                                    {{ element.description }}
-                                  </div>
-                                </div>
-                              </div>
-                            </draggable>
-                          </el-collapse-item>
-                          <el-collapse-item title="业务模版" name="2">
-                            <draggable
-                              @start="startDrag"
-                              style="height: 500px"
-                              v-model="featureItemList"
-                              v-bind="{
-                                group: { name: 'api', pull: 'clone' },
-                                sort: true,
-                              }"
-                              animation="100"
-                            >
-                              <div
-                                v-for="(element, index) in featureItemList"
-                                :key="index"
-                              >
-                                <div
-                                  class="feature-item"
-                                  v-if="element.templateType == 1"
-                                >
-                                  <div class="template-name">
-                                    {{ element.name }}
-                                  </div>
-                                  <div class="template-desc">
-                                    {{ element.description }}
-                                  </div>
-                                </div>
-                              </div>
-                            </draggable>
-                          </el-collapse-item>
-                        </el-collapse>
-                      </div>
-                    </el-col>
-                  </el-row>
-                </div>
-              </div>
+              <FeatureConfig :feature="selectFeatureId" />
             </el-tab-pane>
             <!-- 用例编写结束 -->
             <el-tab-pane
@@ -373,43 +181,6 @@
               <history ref="historyComp" :feature="infoForm.featureId" />
             </el-tab-pane>
           </el-tabs>
-          <div
-            class="operate"
-            v-if="this.infoForm != null && activeName == 'config'"
-          >
-            <el-button
-              v-if="!isEdit"
-              icon="el-icon-edit"
-              type="text"
-              @click="clickEdit"
-              size="mini"
-              >编辑</el-button
-            >
-            <el-button
-              v-if="isEdit"
-              icon="el-icon-upload"
-              type="success"
-              @click="saveConfig"
-              size="mini"
-              >保存</el-button
-            >
-            <el-button
-              v-if="isEdit"
-              icon="el-icon-circle-close"
-              type="info"
-              @click="cancelEdit"
-              size="mini"
-              >取消</el-button
-            >
-            <el-button
-              icon="item el-icon-video-play"
-              v-if="!isEdit"
-              type="text"
-              @click="startDebug"
-              size="mini"
-              >启动调试</el-button
-            >
-          </div>
         </div>
         <!-- 用例内容结束 -->
       </el-col>
@@ -606,6 +377,7 @@ import draggable from 'vuedraggable'
 import FeatureTemplate from '@/components/feature-template'
 import FeatureTool from '@/components/feature-tool'
 import history from './history.vue'
+import FeatureConfig from './comp/feature-config.vue'
 import featureApi from '../../http/Feature'
 import testCaseApi from '../../http/TestCase'
 export default {
@@ -614,6 +386,7 @@ export default {
     history,
     FeatureTemplate,
     FeatureTool,
+    FeatureConfig,
   },
   watch: {
     filterText(val) {
@@ -622,22 +395,12 @@ export default {
   },
   data() {
     return {
-      isEdit: false,
       infoForm: null,
       activeName: 'desc',
       filterText: '',
-      menuType: '1',
-      preset: [],
-      test: [],
-      release: [],
-      featureList: [],
       userCase: [],
-      featureItemList: [],
-      featureTemp: [],
       showDebugDialog: false,
       isConnect: false,
-      historyId: '',
-      isDrag: false,
       service: '',
       showFeatureDialog: false,
       featureForm: {},
@@ -657,13 +420,12 @@ export default {
         { label: 'Double', value: 'Double' },
       ],
       uuid: 0,
-      activeCollapse: '',
-      toolType: '2',
       dynamicTags: [],
       inputVisible: false,
       inputValue: '',
       createData: {},
       caseName: '',
+      selectFeatureId: '',
     }
   },
   methods: {
@@ -720,10 +482,6 @@ export default {
       }
       this.inputVisible = false
       this.inputValue = ''
-    },
-    exchangeEditStatus(item) {
-      item.editDesc = !item.editDesc
-      this.uuid = this.$utils.randomString(20)
     },
     getTestCaseConfigs() {
       this.configData = []
@@ -805,30 +563,6 @@ export default {
         this.stepList.push({ hover: false, content: e })
       })
     },
-    deleteExecutePoint(index, pointId) {
-      this.$confirm('确认删除用例执行点?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }).then(() => {
-        if (!pointId) {
-          this.uuid = this.$utils.randomString(20)
-          this.featureList.splice(index, 1)
-          this.updateFeatureList()
-          return
-        }
-        featureApi.deleteExecutePoint(pointId).then((res) => {
-          if (res.data == 1) {
-            this.uuid = this.$utils.randomString(20)
-            this.featureList.splice(index, 1)
-            this.updateFeatureList()
-            this.$message.success('删除执行点成功')
-            return
-          }
-          this.$message.warning('删除执行点失败')
-        })
-      })
-    },
     deleteFeature() {
       this.$confirm('用例删除后所有执行点数据都会删除, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -871,106 +605,6 @@ export default {
         this.requestCaseFeatures(this.caseId)
       })
     },
-    startDrag() {
-      this.isDrag = true
-    },
-    addItem(e) {
-      this.featureList = JSON.parse(JSON.stringify(this.featureList))
-      let item = this.featureList[e.newIndex]
-      console.log(item)
-      item.randomId = this.$utils.randomString(20)
-      item.writeType = '1'
-      item.sortOrder = e.newIndex
-
-      item.pointId = null
-      this.featureList.forEach((e) => {
-        e.testStage = parseInt(this.menuType)
-      })
-      this.isEdit = true
-      this.updateFeatureList()
-      this.uuid = this.$utils.randomString(20)
-    },
-    updateFeatureList() {
-      if (this.menuType == '1') {
-        this.preset = JSON.parse(JSON.stringify(this.featureList))
-      }
-
-      if (this.menuType == '2') {
-        this.test = JSON.parse(JSON.stringify(this.featureList))
-      }
-
-      if (this.menuType == '3') {
-        this.release = JSON.parse(JSON.stringify(this.featureList))
-      }
-    },
-    refreshValue(update) {
-      let features = JSON.parse(JSON.stringify(this.featureList))
-      this.featureList = []
-      features.forEach((e) => {
-        if (e.randomId == update.data.randomId) {
-          this.featureList.push(update.data)
-        } else {
-          this.featureList.push(e)
-        }
-      })
-      this.updateFeatureList()
-    },
-    cancelEdit() {
-      this.tabChange()
-      this.isEdit = false
-    },
-    getAllFeatures() {
-      if (this.menuType == '1') {
-        return this.featureList.concat(this.test).concat(this.release)
-      }
-
-      if (this.menuType == '2') {
-        return this.preset.concat(this.featureList).concat(this.release)
-      }
-
-      if (this.menuType == '3') {
-        return this.preset.concat(this.test).concat(this.featureList)
-      }
-    },
-    saveConfig() {
-      var data = JSON.parse(JSON.stringify(this.infoForm))
-      data.testFeatures = []
-
-      let allFeature = this.getAllFeatures()
-      let index = 0
-      allFeature.forEach((e) => {
-        let item = {
-          method: e.method,
-          name: e.name,
-          description: e.description,
-          service: e.service,
-        }
-
-        if (e.executeType != 1) {
-          item.executePoints = e.executePoints
-        } else {
-          item.params = e.params
-        }
-
-        data.testFeatures.push({
-          pointId: e.pointId,
-          featureId: data.featureId,
-          testStage: e.testStage,
-          sortOrder: index,
-          executorUnit: item,
-          compareDefine: e.compareDefine,
-          variableDefine: e.variableDefine,
-          executeType: e.executeType,
-          description: e.description,
-        })
-        index++
-      })
-
-      featureApi.updateFeature(data).then(() => {
-        this.$message.success('保存成功')
-        this.isEdit = false
-      })
-    },
     startDebug() {
       let res = this.$refs.tree.getCheckedNodes()
       if (res.length == 0) {
@@ -981,66 +615,19 @@ export default {
       this.tableData = []
       featureApi.startFeature(this.infoForm.featureId).then((res) => {
         this.$message.success('开始执行，请查看运行日志')
-        this.historyId = res.data
       })
     },
     tabChange() {
       if (this.activeName == 'history') {
         this.$refs.historyComp.getFeatureHistory(this.infoForm.featureId)
       }
-      if (this.activeName == 'config') {
-        featureApi.getExecutePoints(this.infoForm.featureId).then((res) => {
-          this.preset = []
-          this.test = []
-          this.release = []
-          this.featureList = []
-          res.data.data.forEach((e) => {
-            let executePoint = e.executorUnit
-            let data = executePoint.params
-            let item = {
-              id: e.id,
-              pointId: e.pointId,
-              name: executePoint.name,
-              method: executePoint.method,
-              service: executePoint.service,
-              description: e.description,
-              params: data,
-              executePoints: executePoint.executePoints,
-              compareDefine: e.compareDefine,
-              variableDefine: e.variableDefine,
-              writeType: '1',
-              executeType: e.executeType,
-              randomId: this.$utils.randomString(20),
-            }
-            if (e.testStage == 1) {
-              this.preset.push(item)
-            }
-
-            if (e.testStage == 2) {
-              this.test.push(item)
-            }
-            if (e.testStage == 3) {
-              this.release.push(item)
-            }
-          })
-          this.featureList = this.preset
-        })
-        featureApi.getFeatureTemplates().then((res) => {
-          let array = res.data
-          array.forEach((e) => {
-            e.executeType = e.templateType
-          })
-          this.featureItemList = array
-        })
-        this.menuType = '1'
-      }
     },
     treeNodeClick(data) {
       this.activeName = 'desc'
       this.infoForm = data
-      this.isEdit = false
       this.dynamicTags = []
       this.formStepList = data.testStep.split('|')
+      this.selectFeatureId = data.featureId
       featureApi.getFeatureDetail(data.featureId).then((res) => {
         this.dynamicTags = res.data.tags
       })
@@ -1048,37 +635,6 @@ export default {
     filterNode(value, data) {
       if (!value) return true
       return data.featureName.indexOf(value) !== -1
-    },
-    selectTestStep(type) {
-      this.featureList = []
-      if (type == '1') {
-        let data = JSON.parse(JSON.stringify(this.preset))
-        this.refreshArray(data)
-      } else if (type == '2') {
-        let testData = JSON.parse(JSON.stringify(this.test))
-        this.refreshArray(testData)
-      } else {
-        let releaseData = JSON.parse(JSON.stringify(this.release))
-        this.refreshArray(releaseData)
-      }
-      this.$forceUpdate()
-    },
-    refreshArray(data) {
-      console.log('DARAAAAddDDDdd', data)
-      console.log('featureList', this.featureList)
-      this.featureList = []
-      let index = 0
-      data.forEach((e) => {
-        this.$set(this.featureList, index, e)
-        index++
-      })
-    },
-    clickEdit() {
-      this.isEdit = !this.isEdit
-      this.editIcon = ''
-      if (!this.isEdit) {
-        this.editIcon = 'el-icon-edit'
-      }
     },
     showGlobalEnv() {
       this.showDebugDialog = !this.showDebugDialog
@@ -1097,21 +653,6 @@ export default {
       testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
         this.caseName = res.data.testCaseName
       })
-    },
-  },
-  computed: {
-    isShowEmpty() {
-      let flag = false
-      if (
-        this.featureList.length == 0 ||
-        this.featureList.length == undefined
-      ) {
-        flag = true
-      }
-      if (this.isDrag) {
-        flag = false
-      }
-      return flag
     },
   },
   created() {
@@ -1179,30 +720,7 @@ export default {
   transform: translateX(-50%);
   margin-bottom: 10px;
 }
-.feature-content {
-  height: 75vh;
-  min-height: 300px;
-  padding: 0 10px;
-  background-color: #fff;
-}
-.feature {
-  height: 40px;
-  line-height: 40px;
-  width: 200px;
-  background: #ffffff;
-  border: 1px solid #dcdfe6;
-}
 
-.feature span {
-  margin-left: 10px;
-}
-
-.param_desc {
-  height: 30px;
-  line-height: 30px;
-  color: #c0c4cc;
-  margin-left: 10px;
-}
 .op {
   margin-top: 10px;
   font-size: 14px;
@@ -1231,35 +749,7 @@ export default {
   height: 80vh;
   padding: 10px 5px;
 }
-.feature-item {
-  height: 40px;
-  padding: 2px 4px;
-  border-radius: 5px;
-  text-align: left;
-  border: 2px solid #f2f6fc;
-  cursor: pointer;
-  background-color: #f2f6fc;
-  box-shadow: 1px 1px 2px #f2f6fc;
-  margin: 10px;
-  font-size: 14px;
-  color: #606266;
-  border: 1px dashed #d4d6d8;
-}
-.template-desc {
-  font-size: 12px;
-  color: #909399;
-}
-.template-name {
-  height: 20px;
-}
-.edit-content {
-  position: relative;
-}
-.operate {
-  position: absolute;
-  right: 20px;
-  top: 8px;
-}
+
 .service-panel {
   margin: 5px 10px;
 }
@@ -1315,13 +805,5 @@ export default {
 .folder-Text i {
   color: #70c745;
   font-size: 16px;
-}
-.gridBackground {
-  background: #dcdfe6;
-  background-image: linear-gradient(white 0px, transparent 0),
-    linear-gradient(90deg, white 0px, transparent 0),
-    linear-gradient(hsla(0, 0%, 100%, 0.3) 1px, transparent 0),
-    linear-gradient(90deg, hsla(0, 0%, 100%, 0.3) 1px, transparent 0);
-  background-size: 75px 75px, 75px 75px, 15px 15px, 15px 15px;
 }
 </style>

@@ -19,16 +19,16 @@
         </el-table-column>
         <el-table-column prop="executeStatus" label="结果">
           <template slot-scope="scope">
-            <el-tag v-if="scope.row.executeStatus == 3" type="success"
+            <el-tag v-if="scope.row.executeStatus == 1" type="success"
               >成功</el-tag
             >
-            <el-tag v-if="scope.row.executeStatus == 2" type="danger"
+            <el-tag v-if="scope.row.executeStatus == 3" type="danger"
               >超时</el-tag
             >
-            <el-tag v-if="scope.row.executeStatus == 1" type="primary"
+            <el-tag v-if="scope.row.executeStatus == 4" type="primary"
               >执行中</el-tag
             >
-            <el-tag v-if="scope.row.executeStatus == 4" type="danger"
+            <el-tag v-if="scope.row.executeStatus == 2" type="danger"
               >失败</el-tag
             >
           </template>
@@ -138,19 +138,19 @@ export default {
       this.resultList.forEach((e) => {
         if (1 == e.testStage) {
           this.presetList.push(e)
-          if (e.status != 3) {
+          if (e.status != 1) {
             this.presetError++
           }
         }
         if (2 == e.testStage) {
           this.executeList.push(e)
-          if (e.status != 3) {
+          if (e.status != 1) {
             this.executeError++
           }
         }
         if (3 == e.testStage) {
           this.cleanList.push(e)
-          if (e.status != 3) {
+          if (e.status != 1) {
             this.cleanError++
           }
         }

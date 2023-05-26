@@ -79,9 +79,9 @@
           <el-table-column prop="status" label="状态">
             <template slot-scope="scope">
               <el-tag
-                :type="scope.row.status == 1 ? '执行中' : '执行完成'"
+                :type="scope.row.status == 4 ? '执行中' : '执行完成'"
                 size="medium"
-                >{{ scope.row.status == 1 ? '执行中' : '执行完成' }}</el-tag
+                >{{ scope.row.status == 4 ? '执行中' : '执行完成' }}</el-tag
               >
             </template>
           </el-table-column>
