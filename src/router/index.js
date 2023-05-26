@@ -6,9 +6,10 @@ import Template from '../views/feature/template.vue'
 import Task from '../views/feature/execute-manage.vue'
 import RecordDetail from '../views/feature/record-detail.vue'
 import Service from '../views/service/service.vue'
-import Pipeline from '../views/pipeline/pipeline.vue'
+import Pipeline from '../views/pipeline/pipeline-copy.vue'
 import PipeAction from '../views/pipeline/action.vue'
 import CodeChange from '../views/pipeline/codechange.vue'
+import Test from '../views/pipeline/comp/pipeline-config.vue'
 
 Vue.use(VueRouter)
 
@@ -57,6 +58,11 @@ const routes = [
     path: '/pipe/action',
     name: 'PipeAction',
     component: PipeAction,
+  },
+  {
+    path: '/test',
+    name: 'Test',
+    component: Test,
   },
 ]
 
