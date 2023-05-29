@@ -219,15 +219,47 @@ export default {
   props: {
     isEditPipeline: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     pipeline: {
       type: String,
-      default: '0867d78a8ba040aa9745aee5c7f5171b',
+      default: '',
     },
     service: {
       type: String,
-      default: '891c495297db4a6f98103c087f9b0224',
+    },
+  },
+  watch: {
+    pipeline: {
+      handler(val) {
+        console.log('监听到新值', val)
+        this.pipelineId = val
+      },
+      deep: true,
+      immediate: true,
+    },
+    service: {
+      handler(val) {
+        console.log('监听到新值', val)
+        this.serviceId = val
+      },
+      deep: true,
+      immediate: true,
+    },
+    isEditPipeline: {
+      handler(val) {
+        console.log('监听到新值', val)
+        console.log('22222', this.serviceId, this.pipelineId)
+        if (!this.isEditPipeline) {
+          this.pipelineId = ''
+          this.serviceId = ''
+          this.getDefaultPipe()
+        } else {
+          this.getPipeline()
+        }
+      },
+      deep: true,
+      immediate: true,
     },
   },
   data() {
@@ -255,12 +287,22 @@ export default {
   },
   methods: {
     leftMove() {
+      if (!this.nodeForm.name) {
+        this.$message.warning('请先点击选择一个移动的节点')
+        return
+      }
       utils.moveLeft(this.editPipelines, this.nodeForm)
       this.uuid++
+      this.nodeForm = {}
       console.log(this.editPipelines)
     },
     rightMove() {
+      if (!this.nodeForm.name) {
+        this.$message.warning('请先点击选择一个移动的节点')
+        return
+      }
       utils.moveRight(this.editPipelines, this.nodeForm)
+      this.nodeForm = {}
       this.uuid++
     },
     removeNode() {
@@ -349,6 +391,7 @@ export default {
           configId: this.selectNodeType,
           list: [],
           id: rootId,
+          group: rootId,
           root: true,
         }
 
@@ -499,11 +542,6 @@ export default {
     this.getConfigNodes()
     this.serviceId = this.service
     this.pipelineId = this.pipeline
-    if (!this.isEditPipeline) {
-      this.getDefaultPipe()
-    } else {
-      this.getPipeline()
-    }
   },
 }
 </script>

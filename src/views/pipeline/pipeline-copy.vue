@@ -393,8 +393,8 @@
       :before-close="cancelCreatePipeline"
     >
       <PipelineConfig
-        :isEditPipeline="this.piplienOperate == 1"
-        :pipeline="this.currentPipeline.pipelineId"
+        :isEditPipeline="piplienOperate == 1"
+        :pipeline="currentPipeline.pipelineId"
         :service="serviceId"
         @complete="completeNotify"
       />

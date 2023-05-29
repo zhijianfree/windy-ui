@@ -94,7 +94,7 @@ export default {
     node.x = lastNode.x
     node.y = lastNode.y
     node.group = lastNode.group
-    lastNode.group = node.id
+    lastNode.group = lastNode.group + 1
 
     //原数组删除最后一个节点
     pipeline.splice(pipeline.length - 1, 1)
@@ -133,10 +133,10 @@ export default {
     })
 
     let rootId = node.group
-    let index = 0
+    let index = 1
     subNodes.forEach((e) => {
       let item = {
-        id: rootId + '_' + index,
+        id: rootId + index,
         name: e.name,
         hint: e.name,
         status: 'success',
@@ -160,6 +160,8 @@ export default {
     //最后节点横坐标加一个单位，并且重新加入数组
     lastNode.x += width
     pipeline.push(lastNode)
+
+    this.resetId(pipeline)
     console.log('sub result', pipeline)
   },
   /**
@@ -272,7 +274,7 @@ export default {
     return pipeline
   },
   /**
-   * 将流水线子节点向左移动
+   * 将流水线节点向左移动
    *
    */
   moveLeft(pipeline, node) {
@@ -282,6 +284,7 @@ export default {
       return
     }
 
+    console.log('before', JSON.parse(JSON.stringify(pipeline)))
     this.changeGroup(pipeline, node, true)
     let array = this.transformTreeNode(pipeline)
     console.log('流水线', JSON.parse(JSON.stringify(array)))
@@ -336,13 +339,15 @@ export default {
     pipeline[beforTwo.id].next = beforTwoArray
     console.log('beforTwo.id', beforTwo.id)
 
-    let idx = 0
-    pipeline.forEach((e) => {
-      e.id = idx
-      idx++
-    })
+    // let idx = 0
+    // pipeline.forEach((e) => {
+    //   e.id = idx
+    //   idx++
+    // })
+    this.resetId(pipeline)
     console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
   },
+
   /**
    * 将流水线子节点向右移动
    *
@@ -421,6 +426,7 @@ export default {
     console.log('map', rootMap)
 
     let pipeline = {
+      pipelineId: pipelineForm.pipelineId,
       pipelineName: pipelineForm.pipelineName,
       pipelineType: pipelineForm.pipelineType,
       executeType: pipelineForm.executeType,
@@ -596,5 +602,12 @@ export default {
 
     array[array.length - 1].nodes = []
     return array
+  },
+  resetId(pipeline) {
+    let idx = 0
+    pipeline.forEach((e) => {
+      e.id = idx
+      idx++
+    })
   },
 }
