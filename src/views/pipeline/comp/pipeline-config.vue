@@ -152,7 +152,7 @@
               <el-form-item
                 v-for="(item, index) in paramConfigs"
                 :key="100 + index"
-                :label-width="labelWidth"
+                :label-width="formLabelWidth"
               >
                 <span slot="label">{{ item.description }}</span>
                 <el-select
@@ -181,7 +181,7 @@
               <el-form-item
                 v-for="(item, index) in stepConfigs"
                 :key="index"
-                :label-width="labelWidth"
+                :label-width="formLabelWidth"
               >
                 <span slot="label">{{ item.description }}</span>
                 <el-input
@@ -278,7 +278,7 @@ export default {
       configForm: {},
       paramConfigs: [],
       stepConfigs: [],
-      labelWidth: '120px',
+      labelWidth: '150px',
       rootList: [],
       uuid: '',
       serviceId: '',
@@ -317,6 +317,16 @@ export default {
         }
       })
 
+      this.$forceUpdate()
+    },
+    datachange(value) {
+      console.log('数据变化', value, this.chosedConfigItem)
+      this.chosedConfigItem.compareResults.forEach((e) => {
+        if (e.compareKey == value) {
+          e.value = this.configForm[value]
+          console.log('数据变化111 datachange', this.configForm[value])
+        }
+      })
       this.$forceUpdate()
     },
     selectStep(configId) {

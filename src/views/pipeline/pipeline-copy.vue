@@ -271,119 +271,6 @@
     </el-dialog>
     <!-- 节点日志结束 -->
 
-    <!-- 新增/编辑节点开始 -->
-    <el-dialog
-      title="配置节点"
-      :visible.sync="dialogVisible"
-      :destroy-on-close="true"
-      width="70%"
-      @close="closeConfigNode"
-    >
-      <el-form size="mini" :disabled="isView">
-        <el-form-item label="节点名称" :label-width="formLabelWidth">
-          <el-input v-model="nodeForm.name" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="节点提示" :label-width="formLabelWidth">
-          <el-input v-model="nodeForm.hint" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="节点类型" :label-width="formLabelWidth">
-          <el-select
-            v-model="selectNodeType"
-            placeholder="请选择"
-            @change="selectStep"
-          >
-            <el-option
-              v-for="item in stepOptions"
-              :key="item.nodeId"
-              :label="item.nodeName"
-              :value="item.nodeId"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <el-row>
-        <el-col :span="8">
-          <div class="step-title">执行步骤</div>
-          <div class="item-list">
-            <ul>
-              <draggable>
-                <li
-                  v-for="(item, index) in itemList"
-                  :key="index"
-                  @click="chooseStep(item)"
-                >
-                  <div class="item">
-                    {{ item.actionName }}
-                  </div>
-                </li>
-              </draggable>
-            </ul>
-          </div>
-        </el-col>
-        <el-col :span="16">
-          <div>
-            <div class="step-title">配置步骤</div>
-            <el-form v-model="configForm" size="mini" :disabled="isView">
-              <el-divider content-position="left" v-if="paramConfigs.length > 0"
-                >触发参数配置</el-divider
-              >
-              <el-form-item
-                v-for="(item, index) in paramConfigs"
-                :key="100 + index"
-                :label-width="labelWidth"
-              >
-                <span slot="label">{{ item.description }}</span>
-                <el-select
-                  v-if="item.type == 'select'"
-                  v-model="configForm[item.compareKey]"
-                  @change="selectChange"
-                  placeholder="请选择"
-                >
-                  <el-option
-                    v-for="(item, index) in item.list"
-                    :key="index"
-                    :label="item.label"
-                    :value="item.value"
-                  >
-                  </el-option>
-                </el-select>
-                <el-input
-                  @input="datachange(item.compareKey)"
-                  v-else
-                  v-model="configForm[item.compareKey]"
-                />
-              </el-form-item>
-              <el-divider content-position="left" v-if="stepConfigs.length > 0"
-                >节点配置</el-divider
-              >
-              <el-form-item
-                v-for="(item, index) in stepConfigs"
-                :key="index"
-                :label-width="labelWidth"
-              >
-                <span slot="label">{{ item.description }}</span>
-                <el-input
-                  @input="datachange(item.compareKey)"
-                  v-model="configForm[item.compareKey]"
-                />
-              </el-form-item>
-            </el-form>
-          </div>
-        </el-col>
-      </el-row>
-      <div slot="footer">
-        <el-button
-          v-if="!isView"
-          type="primary"
-          @click="submitConfig"
-          size="mini"
-          >确认</el-button
-        >
-      </div>
-    </el-dialog>
-    <!-- 创建编辑节点结束 -->
-
     <!-- 创建/编辑流水线开始 -->
     <el-dialog
       :title="titleName"
@@ -403,37 +290,23 @@
   </div>
 </template>
 <script>
-import draggable from 'vuedraggable'
 import bind from './bindgit.vue'
 import PipelineConfig from './comp/pipeline-config.vue'
 import pipelineApi from '../../http/Pipeline'
 import serviceApi from '../../http/Service'
 import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
-import taskApi from '../../http/Task'
-import nodeApi from '../../http/NodeBind'
 import utils from '../../lib/pipeline'
 export default {
-  components: { draggable, bind, PipelineConfig },
+  components: { bind, PipelineConfig },
   data() {
     return {
       nodes: [],
       startIndex: 1,
-      nodeForm: {},
       formLabelWidth: '80px',
-      labelWidth: '150px',
-      dialogVisible: false,
-      stepOptions: [],
-      selectNodeType: '',
-      itemList: [],
-      stepConfigs: [],
-      paramConfigs: [],
-      configForm: {},
       loading: false,
       activePipelines: ['1', '2', '3'],
       pipelines: [],
-      operateType: 1,
-      rootList: [],
       currentPipeline: {
         pipelineConfig: [],
       },
@@ -453,8 +326,6 @@ export default {
       serviceId: '',
       titleName: '新增流水线',
       showGitConfig: false,
-      startMove: false,
-      editPipelines: [],
       uuid: 1,
       isShowNodeLog: false,
       logForm: {},
@@ -476,12 +347,6 @@ export default {
             this.uuid++
           })
       }
-    },
-    closeConfigNode() {
-      this.nodeForm = {}
-      this.selectNodeType = ''
-      this.configForm = {}
-      this.itemList = []
     },
     exchangeStatusMessage(status) {
       let msg = '无'
@@ -538,20 +403,6 @@ export default {
         this.deletePipeline(item)
       }
     },
-    leftMove() {
-      utils.moveLeft(this.editPipelines, this.nodeForm)
-      this.uuid++
-      console.log(this.editPipelines)
-    },
-    rightMove() {
-      utils.moveRight(this.editPipelines, this.nodeForm)
-      this.uuid++
-    },
-    removeNode() {
-      let array = utils.removeNode(this.editPipelines, this.nodeForm)
-      this.editPipelines = array
-      this.uuid++
-    },
     selectService() {
       this.getPipelineList()
     },
@@ -592,142 +443,6 @@ export default {
         })
       })
     },
-    choosePipeItem(node) {
-      let selectItem = node
-      this.nodeForm = selectItem
-      if (node.disable || this.startMove) {
-        return
-      }
-      //选择根节点
-      this.editPipelines.forEach((e) => {
-        if (e.group == node.group && e.root) {
-          this.nodeForm = e
-          selectItem = e
-        }
-      })
-      console.log('=====-----', selectItem)
-
-      this.dialogVisible = true
-      this.operateType = 2
-      this.selectNodeType = selectItem.configId
-      this.itemList = selectItem.list
-      this.selectStep(selectItem.configId)
-    },
-    selectStep(configId) {
-      this.itemList = []
-      nodeApi.getNodeActions(configId).then((res) => {
-        let config = {}
-        if (this.nodeForm.list) {
-          this.nodeForm.list.forEach((e) => {
-            let detail = JSON.parse(e.configDetail)
-            config[detail.actionId] = detail
-          })
-        }
-
-        res.data.forEach((e) => {
-          let detail = config[e.actionId]
-          if (detail != undefined && detail != null) {
-            e.compareResults = detail.compareInfo
-
-            e.paramList.forEach((e) => {
-              let data = detail.requestContext[e.name]
-              if (data) {
-                e.value = data
-              }
-            })
-
-            this.nodeForm.list.forEach((el) => {
-              let configDetail = JSON.parse(el.configDetail)
-              if (e.actionId == configDetail.actionId) {
-                e.nodeId = el.nodeId
-              }
-            })
-          }
-          this.itemList.push(e)
-        })
-      })
-    },
-    chooseStep(item) {
-      console.log('选择的node', item)
-      this.stepConfigs = JSON.parse(JSON.stringify(item.compareResults))
-      this.stepConfigs.forEach((e) => {
-        this.configForm[e.compareKey] = e.value
-      })
-
-      this.paramConfigs = []
-      item.paramList.forEach((e) => {
-        this.configForm[e.name] = e.value
-        this.paramConfigs.push({
-          compareKey: e.name,
-          description: e.description,
-          value: e.value,
-          type: e.type,
-        })
-      })
-      //用例测试为了选择节点所有特殊处理
-      if (item.executeType == 'TEST') {
-        taskApi.getAllTaskList(this.serviceId).then((res) => {
-          let list = []
-          res.data.forEach((e) => {
-            list.push({
-              label: e.taskName,
-              value: e.taskId,
-            })
-          })
-          this.paramConfigs.forEach((e) => {
-            if (e.compareKey == 'taskId') {
-              e.list = list
-            }
-          })
-          this.$forceUpdate()
-        })
-      }
-      this.chosedConfigItem = item
-      this.$forceUpdate()
-    },
-    submitConfig() {
-      let pipeArray = this.editPipelines
-      if (this.operateType == 1) {
-        let subNodes = []
-        console.log('新增的节点', this.nodeForm, '列表', this.itemList)
-        this.itemList.forEach((e) => {
-          subNodes.push({
-            name: e.actionName,
-            hint: e.actionName,
-            status: 'success',
-            originData: JSON.parse(JSON.stringify(e)),
-            next: [],
-          })
-        })
-
-        let temp = JSON.parse(JSON.stringify(pipeArray))
-        let rootId = temp.length
-        let newNode = {
-          name: this.nodeForm.name,
-          hint: this.nodeForm.hint,
-          status: 'success',
-          configId: this.selectNodeType,
-          list: [],
-          id: rootId,
-          root: true,
-        }
-
-        utils.addNode(pipeArray, newNode, subNodes)
-        console.log('last result1111', this.editPipelines)
-      } else {
-        console.log('pipeArray', pipeArray)
-        console.log('nodeForm', this.nodeForm)
-        console.log('itemList', this.itemList)
-        this.editPipelines = utils.updateNode(
-          pipeArray,
-          this.nodeForm,
-          this.itemList
-        )
-        // 修改完成
-        console.log('修改结果', this.editPipelines)
-      }
-      this.resetNode()
-    },
     getPrenode(arr, index) {
       let tmp = {}
       arr.forEach((e) => {
@@ -740,13 +455,6 @@ export default {
         }
       })
       return tmp
-    },
-    resetNode() {
-      this.dialogVisible = false
-      this.selectNodeType = ''
-      this.configForm = {}
-      this.itemList = []
-      this.nodeForm = {}
     },
     preNodeAddline(array, prenodeId, itemIndexs, groupId) {
       array.forEach((e) => {
@@ -824,26 +532,9 @@ export default {
         return
       }
       this.piplienOperate = 1
-      this.titleName = '编辑流水线'
       this.isView = false
       this.pipelineDialog = true
       this.pipelineForm = JSON.parse(JSON.stringify(this.currentPipeline))
-      console.log('pipelien', this.pipelineForm)
-      this.rootList = []
-      this.currentPipeline.pipelineConfig.forEach((e) => {
-        if (e.id && e.rootId == e.id) {
-          this.rootList.push(e)
-        }
-
-        if (e.name == '开始' || e.name == '构建' || e.name == '结束') {
-          e.disable = true
-        }
-        e.status = 'success'
-      })
-
-      this.editPipelines = JSON.parse(
-        JSON.stringify(this.currentPipeline.pipelineConfig)
-      )
     },
     startView() {
       if (!this.currentPipeline.pipelineConfig.length) {
@@ -855,7 +546,6 @@ export default {
       this.pipelineDialog = true
       this.isView = true
       this.pipelineForm = this.currentPipeline
-      this.editPipelines = this.currentPipeline.pipelineConfig
     },
     selectPipeline(item) {
       this.publishList.forEach((e) => {
@@ -920,16 +610,6 @@ export default {
         this.titleName = '创建流水线'
         this.pipelineDialog = true
         this.isView = false
-        this.rootList = []
-        pipelineApi.detaultConfig().then((res) => {
-          let defaultConfigs = JSON.parse(res.data.configDetail)
-          defaultConfigs.forEach((e) => {
-            if (e.id && e.rootId == e.id) {
-              this.rootList.push(e)
-            }
-          })
-          this.editPipelines = JSON.parse(JSON.stringify(defaultConfigs))
-        })
       }
     },
     deletePipeline(pipeline) {
@@ -940,82 +620,6 @@ export default {
             this.getPipelineList()
           })
       })
-    },
-    submitPipeline() {
-      let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
-      console.log('更新参数', param)
-      param.pipelineConfig = JSON.stringify(this.editPipelines)
-
-      //修改流水线
-      if (this.piplienOperate == 1) {
-        pipelineApi
-          .updatePipeline(
-            this.serviceId,
-            this.currentPipeline.pipelineId,
-            param
-          )
-          .then(() => {
-            this.$message({
-              message: '修改流水线成功',
-              type: 'success',
-            })
-            this.cancelCreatePipeline()
-            pipelineApi
-              .queryPipeline(this.serviceId, this.currentPipeline.pipelineId)
-              .then((res) => {
-                let config = utils.displayData(res.data.stageList)
-                this.currentPipeline.pipelineConfig = config
-                this.currentPipeline.pipelineName = res.data.pipelineName
-                this.currentPipeline.pipelineType = res.data.pipelineType
-                this.currentPipeline.pipelineId = res.data.pipelineId
-                this.uuid++
-              })
-          })
-      }
-
-      //创建流水线
-      if (this.piplienOperate == 3) {
-        param.serviceId = this.serviceId
-        param.creator = '古月澜'
-        console.log('请求的参数', param)
-        pipelineApi.savePipeline(param).then(() => {
-          this.$message({
-            message: '创建流水线成功',
-            type: 'success',
-          })
-          this.cancelCreatePipeline()
-          this.getPipelineList()
-        })
-      }
-    },
-    cancelCreatePipeline() {
-      this.rootList = []
-      this.pipelineDialog = false
-      this.isView = false
-      this.pipelineForm = {}
-      this.editPipelines = []
-      this.configForm = {}
-    },
-    selectChange(value) {
-      console.log('selectChange 数据变化', value)
-      this.chosedConfigItem.paramList.forEach((e) => {
-        if (e.name == 'taskId') {
-          e.value = value
-          console.log('数据变化111 selectChange', value.data)
-        }
-      })
-
-      this.$forceUpdate()
-    },
-    datachange(value) {
-      console.log('数据变化', value, this.chosedConfigItem)
-      this.chosedConfigItem.compareResults.forEach((e) => {
-        if (e.compareKey == value) {
-          e.value = this.configForm[value]
-          console.log('数据变化111 datachange', this.configForm[value])
-        }
-      })
-      this.$forceUpdate()
     },
     getPipelineList() {
       pipelineApi.pipelineList(this.serviceId).then((res) => {
@@ -1037,17 +641,6 @@ export default {
         })
       })
     },
-    configPipeline(list) {
-      let index = 0
-      list.forEach((e) => {
-        e.index = index
-        index++
-        if (e.root) {
-          this.rootList.push(e)
-        }
-      })
-      this.currentPipeline.pipelineConfig = list
-    },
     getDefaultService() {
       serviceApi.getServices().then((res) => {
         this.pipelines = []
@@ -1060,11 +653,6 @@ export default {
 
         this.serviceId = this.pipelines[0].value
         this.getPipelineList()
-      })
-    },
-    getConfigNodes() {
-      nodeApi.getAllNodes().then((res) => {
-        this.stepOptions = res.data
       })
     },
     loopQueryStatus() {
