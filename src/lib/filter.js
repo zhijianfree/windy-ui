@@ -17,3 +17,24 @@ Vue.filter('dateFormat', function (timestamp) {
   let ss = String(today.getSeconds()).padStart(2, '0') //获取当前秒数(0-59)
   return yyyy + '-' + MM + '-' + DD + ' ' + hh + ':' + mm + ':' + ss
 })
+
+Vue.filter('statusFormat', function (status) {
+  if (!status) {
+    return ''
+  }
+  switch (status) {
+    case 1:
+      return 'success'
+    case 2:
+      return 'danger'
+    case 3:
+      return 'info'
+    case 4:
+      return 'primary'
+    case 5:
+      return 'wrning'
+    case 6:
+      return 'info'
+  }
+  return 'info'
+})

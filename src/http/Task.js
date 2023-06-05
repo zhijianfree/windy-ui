@@ -78,6 +78,19 @@ export default {
         })
     })
   },
+  stopTask(recordId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/task/stop/${recordId}`
+      http
+        .put(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   deleteTask(taskId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/task/${taskId}`

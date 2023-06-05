@@ -60,14 +60,16 @@
                       <template slot="content">
                         <div
                           class="request-list"
-                          v-for="(line, index) in result.executeDetail
-                            .requestDetail.request"
+                          v-for="(line, index) in result.executeDetailVo
+                            .requestDetailVo.request"
                           :key="index"
                         >
                           {{ line }}
                         </div>
                         <div>
-                          {{ result.executeDetail.requestDetail.requestBody }}
+                          {{
+                            result.executeDetailVo.requestDetailVo.requestBody
+                          }}
                         </div>
                       </template>
                     </Panel>
@@ -83,10 +85,12 @@
                             responseBody:
                             <json-viewer
                               v-if="
-                                result.executeDetail.responseDetail.responseBody
+                                result.executeDetailVo.responseDetailVo
+                                  .responseBody
                               "
                               :value="
-                                result.executeDetail.responseDetail.responseBody
+                                result.executeDetailVo.responseDetailVo
+                                  .responseBody
                               "
                               :expand-depth="5"
                               copyable
@@ -96,13 +100,17 @@
                       </template>
                     </Panel>
                     <div
-                      v-if="result.executeDetail.responseDetail.errorMessage"
+                      v-if="
+                        result.executeDetailVo.responseDetailVo.errorMessage
+                      "
                     >
                       <div class="desc-div error-icon">
                         <i class="el-icon-warning" /> Error
                       </div>
                       <div class="request-list">
-                        {{ result.executeDetail.responseDetail.errorMessage }}
+                        {{
+                          result.executeDetailVo.responseDetailVo.errorMessage
+                        }}
                       </div>
                     </div>
                   </div>
@@ -123,16 +131,18 @@
                 <template slot="content">
                   <div
                     class="request-list"
-                    v-for="(line, index) in result.executeDetail.requestDetail
-                      .request"
+                    v-for="(line, index) in result.executeDetailVo
+                      .requestDetailVo.request"
                     :key="index"
                   >
                     {{ line }}
                   </div>
                   <div>
                     <json-viewer
-                      v-if="result.executeDetail.requestDetail.requestBody"
-                      :value="result.executeDetail.requestDetail.requestBody"
+                      v-if="result.executeDetailVo.requestDetailVo.requestBody"
+                      :value="
+                        result.executeDetailVo.requestDetailVo.requestBody
+                      "
                       :expand-depth="5"
                       copyable
                     ></json-viewer>
@@ -163,9 +173,11 @@
                     <div class="request-list">
                       响应结果:
                       <json-viewer
-                        v-if="result.executeDetail.responseDetail.responseBody"
+                        v-if="
+                          result.executeDetailVo.responseDetailVo.responseBody
+                        "
                         :value="
-                          result.executeDetail.responseDetail.responseBody
+                          result.executeDetailVo.responseDetailVo.responseBody
                         "
                         :expand-depth="5"
                         copyable
@@ -174,12 +186,12 @@
                   </div>
                 </template>
               </Panel>
-              <div v-if="result.executeDetail.responseDetail.errorMessage">
+              <div v-if="result.executeDetailVo.responseDetailVo.errorMessage">
                 <div class="desc-div error-icon">
                   <i class="el-icon-warning" /> Error
                 </div>
                 <div class="request-list">
-                  {{ result.executeDetail.responseDetail.errorMessage }}
+                  {{ result.executeDetailVo.responseDetailVo.errorMessage }}
                 </div>
               </div>
             </div>
@@ -218,7 +230,7 @@ export default {
         e.executeResult.forEach((ele) => {
           ele.status = ele.success
         })
-        let executeSuccess = e.status == 3
+        let executeSuccess = e.status == 1
         if (e.compareResult) {
           executeSuccess = e.compareResult.compareStatus
         }

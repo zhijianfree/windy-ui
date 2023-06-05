@@ -48,6 +48,7 @@ export default {
         originData: {
           actionId: e.actionId,
           compareInfo: e.compareResults,
+          paramList: e.paramList,
         },
       }
       pipelineArray.splice(index, 0, item)
@@ -93,7 +94,7 @@ export default {
     node.x = lastNode.x
     node.y = lastNode.y
     node.group = lastNode.group
-    lastNode.group = node.id
+    lastNode.group = lastNode.group + 1
 
     //原数组删除最后一个节点
     pipeline.splice(pipeline.length - 1, 1)
@@ -132,10 +133,10 @@ export default {
     })
 
     let rootId = node.group
-    let index = 0
+    let index = 1
     subNodes.forEach((e) => {
       let item = {
-        id: rootId + '_' + index,
+        id: rootId + index,
         name: e.name,
         hint: e.name,
         status: 'success',
@@ -151,14 +152,18 @@ export default {
 
       //前置节点指向新节点的子节点
       preNodeArray.forEach((element) => {
+        console.log('前置节点', JSON.parse(JSON.stringify(element)))
+        console.log('前置节点index', pipeline.length - 1)
         element.next.push({ index: pipeline.length - 1, weight: 0 })
       })
-      node.next.push({ index: pipeline.length - 1, weight: 0 })
+      console.log('node节点index', index)
     })
 
     //最后节点横坐标加一个单位，并且重新加入数组
     lastNode.x += width
     pipeline.push(lastNode)
+
+    this.resetId(pipeline)
     console.log('sub result', pipeline)
   },
   /**
@@ -170,24 +175,9 @@ export default {
     }
 
     let array = this.transformTreeNode(pipeline)
+    console.log('array', JSON.parse(JSON.stringify(array)))
     let pos = array.findIndex((item) => item.id == node.id)
     let current = array[pos]
-
-    //删除节点的前一个节点需要调整指向坐标
-    let leftNode = array[pos - 1]
-    leftNode.next = []
-    let rightNode = array[pos + 1]
-    console.log('rightNode', rightNode)
-    leftNode.next.push({
-      index: rightNode.id - current.nodes.length - 1,
-      width: 0,
-    })
-    rightNode.nodes.forEach((e) => {
-      leftNode.next.push({
-        index: e.id - current.nodes.length - 1,
-        width: 0,
-      })
-    })
 
     //删除节点的后面节点指向坐标只需要减去删除节点长度
     for (let i = pos + 1; i < array.length; i++) {
@@ -200,10 +190,13 @@ export default {
     //新数组添加没有改变的节点
     let newArray = []
     for (let i = 0; i < array[pos - 1].id; i++) {
+      console.log('addadada')
       newArray.push(pipeline[i])
     }
+    console.log('new Array', JSON.parse(JSON.stringify(newArray)))
 
     //新数组添加改变的节点
+    console.log('array array', JSON.parse(JSON.stringify(array)))
     let group = null
     for (let i = pos - 1; i < array.length; i++) {
       if (i == pos) {
@@ -211,6 +204,23 @@ export default {
       }
 
       let item = array[i]
+      if (i == pos - 1) {
+        //删除节点的前一个节点需要调整指向坐标
+        let rightNode = array[pos + 1]
+        item.next = []
+        item.next.push({
+          index: rightNode.id - current.nodes.length - 1,
+          width: 0,
+        })
+
+        rightNode.nodes.forEach((e) => {
+          item.next.push({
+            index: e.id - current.nodes.length - 1,
+            width: 0,
+          })
+        })
+      }
+
       if (item.root) {
         group = newArray.length
         item.group = group
@@ -259,7 +269,7 @@ export default {
 
     //给删除节点的当前根节点和后续根节点的指向下标-1
     pipeline.forEach((e) => {
-      if ((e.id > node.id || e.group == node.group) && e.root) {
+      if ((e.id > node.id || e.group == node.group) && e.root && e.next) {
         e.next.forEach((e) => {
           e.index = e.index - 1
         })
@@ -268,10 +278,11 @@ export default {
     let index = pipeline.findIndex((item) => item.id == node.id)
     pipeline.splice(index, 1)
     console.log('remove single result', pipeline)
+    this.resetId(pipeline)
     return pipeline
   },
   /**
-   * 将流水线子节点向左移动
+   * 将流水线节点向左移动
    *
    */
   moveLeft(pipeline, node) {
@@ -281,6 +292,7 @@ export default {
       return
     }
 
+    console.log('before', JSON.parse(JSON.stringify(pipeline)))
     this.changeGroup(pipeline, node, true)
     let array = this.transformTreeNode(pipeline)
     console.log('流水线', JSON.parse(JSON.stringify(array)))
@@ -335,13 +347,15 @@ export default {
     pipeline[beforTwo.id].next = beforTwoArray
     console.log('beforTwo.id', beforTwo.id)
 
-    let idx = 0
-    pipeline.forEach((e) => {
-      e.id = idx
-      idx++
-    })
+    // let idx = 0
+    // pipeline.forEach((e) => {
+    //   e.id = idx
+    //   idx++
+    // })
+    this.resetId(pipeline)
     console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
   },
+
   /**
    * 将流水线子节点向右移动
    *
@@ -420,6 +434,7 @@ export default {
     console.log('map', rootMap)
 
     let pipeline = {
+      pipelineId: pipelineForm.pipelineId,
       pipelineName: pipelineForm.pipelineName,
       pipelineType: pipelineForm.pipelineType,
       executeType: pipelineForm.executeType,
@@ -595,5 +610,12 @@ export default {
 
     array[array.length - 1].nodes = []
     return array
+  },
+  resetId(pipeline) {
+    let idx = 0
+    pipeline.forEach((e) => {
+      e.id = idx
+      idx++
+    })
   },
 }

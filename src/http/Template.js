@@ -78,4 +78,17 @@ export default {
         })
     })
   },
+  refresh(templateId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/${templateId}/refresh`
+      http
+        .put(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }

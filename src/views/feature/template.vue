@@ -30,7 +30,7 @@
       <el-table-column prop="templateId" label="模版ID"> </el-table-column>
       <el-table-column prop="name" label="模版名称"> </el-table-column>
       <el-table-column prop="description" label="模版描述"> </el-table-column>
-      <el-table-column prop="author" label="提交人"> </el-table-column>
+      <!-- <el-table-column prop="author" label="提交人"> </el-table-column> -->
       <el-table-column prop="updateTime" label="最近修改时间">
         <template slot-scope="scope">
           {{ scope.row.updateTime | dateFormat }}
@@ -38,6 +38,12 @@
       </el-table-column>
       <el-table-column align="right">
         <template slot-scope="scope" v-if="scope.row.templateType == 1">
+          <el-button
+            type="primary"
+            size="mini"
+            @click="refreshTemplate(scope.row)"
+            >刷新</el-button
+          >
           <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row)"
             >删除</el-button
@@ -57,30 +63,83 @@
     </div>
 
     <!-- 创建模版开始 -->
-    <el-dialog
-      :title="dialogTitle"
-      :visible.sync="showDialog"
-      @close="closeDialog"
-      width="85%"
-    >
-      <el-form :model="infoForm" size="small" label-width="80px">
+    <el-dialog :visible.sync="showDialog" @close="closeDialog" width="85%">
+      <template slot="title">
+        {{ dialogTitle }}
+        <el-tooltip effect="dark" placement="right-start">
+          <div slot="content">
+            用例执行点是由模版拖拽而来，模版定义了执行点运行的基本参数。<br />执行点配置好参数值之后执行测试任务
+          </div>
+          <span
+            ><i
+              style="margin-left: 5px; cursor: pointer; font-size: 15px"
+              class="el-icon-question"
+          /></span>
+        </el-tooltip>
+      </template>
+      <el-form :model="infoForm" size="small" label-width="120px">
         <el-form-item label="模版名称">
           <el-input
             v-model="infoForm.name"
             placeholder="请输入模版名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="Service">
-          <el-input
-            v-model="infoForm.service"
-            placeholder="请输入Service"
-          ></el-input>
+        <el-form-item label="模版类型">
+          <el-radio-group v-model="infoForm.invokeType">
+            <el-radio :label="1">默认模版</el-radio>
+            <el-radio :label="2">Http</el-radio>
+          </el-radio-group>
         </el-form-item>
-        <el-form-item label="Method">
+        <el-form-item :label="infoForm.invokeType == 1 ? '类名' : 'Url'">
+          <el-input v-model="infoForm.service" placeholder="请输入"></el-input>
+        </el-form-item>
+        <el-form-item label="请求header" v-if="infoForm.invokeType == 2">
+          <el-row v-for="(item, index) in infoForm.headers" :key="index">
+            <el-col :span="10">
+              <el-input
+                size="mini"
+                v-model="item.key"
+                placeholder="请输入"
+              ></el-input>
+            </el-col>
+            <el-col :span="2">
+              <div class="header-line">-</div>
+            </el-col>
+            <el-col :span="10">
+              <el-input
+                size="mini"
+                v-model="item.value"
+                placeholder="请输入默认值"
+              ></el-input>
+            </el-col>
+            <el-col :span="2">
+              <i
+                class="el-icon-remove-outline op-icon"
+                @click="removeHeader(index)"
+              />
+              <i
+                class="el-icon-circle-plus-outline op-icon"
+                v-if="index == infoForm.headers.length - 1"
+                @click="addHeader"
+              />
+            </el-col>
+          </el-row>
+        </el-form-item>
+        <el-form-item label="方法">
           <el-input
+            v-if="infoForm.templateType == 1"
             v-model="infoForm.method"
-            placeholder="请输入Method"
+            placeholder="请输入"
           ></el-input>
+          <el-select v-else v-model="infoForm.method" placeholder="请选择">
+            <el-option
+              v-for="item in httpMethods"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="参数列表">
           <el-row v-for="(item, num) in infoForm.params" :key="num">
@@ -197,12 +256,24 @@ export default {
         { label: 'Float', value: 4 },
         { label: 'Double', value: 5 },
       ],
+      httpMethods: [
+        { label: 'Post', value: 'Post' },
+        { label: 'Get', value: 'Get' },
+        { label: 'Put', value: 'Put' },
+        { label: 'Delete', value: 'Delete' },
+      ],
       isEdit: false,
       currentPage: 1,
       totalSize: 0,
     }
   },
   methods: {
+    removeHeader(index) {
+      this.infoForm.headers.splice(index, 1)
+    },
+    addHeader() {
+      this.infoForm.headers.push({})
+    },
     inputChange() {
       this.getTemplatePage(1)
     },
@@ -227,7 +298,16 @@ export default {
       this.isEdit = false
       this.showDialog = !this.showDialog
       this.dialogTitle = '创建模版'
-      this.infoForm = { params: [{}] }
+      this.infoForm = { params: [{}], headers: [{}] }
+    },
+    refreshTemplate(row) {
+      templateApi.refresh(row.templateId).then((res) => {
+        if (res.data) {
+          this.$message.success('刷新成功')
+        } else {
+          this.$message.error('刷新失败')
+        }
+      })
     },
     handleEdit(row) {
       this.isEdit = true
@@ -235,6 +315,17 @@ export default {
       this.dialogTitle = '编辑模版'
 
       let rowData = JSON.parse(JSON.stringify(row))
+      if (rowData.headers) {
+        let array = []
+        Object.keys(rowData.headers).forEach((key) => {
+          array.push({ key: key, value: rowData.headers[key] })
+        })
+        rowData.headers = array
+      } else {
+        rowData.headers = [{}]
+      }
+
+      rowData.headers
       if (!rowData.params) {
         this.infoForm = rowData
         return
@@ -279,6 +370,12 @@ export default {
         }
       })
 
+      let headers = {}
+      requestParam.headers.forEach((e) => {
+        headers[e.key] = e.value
+      })
+      requestParam.headers = headers
+
       if (this.isEdit) {
         templateApi.updateTemplate(requestParam).then(() => {
           this.$message.success(`${this.dialogTitle}成功`)
@@ -313,5 +410,7 @@ export default {
 }
 .op-icon {
   margin-left: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>

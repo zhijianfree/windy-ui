@@ -15,7 +15,7 @@ export default {
   },
   queryPipeline(serviceId, pipelineId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/pipeline/${serviceId}/${pipelineId}`
+      let url = `/v1/devops/pipeline/detail/${pipelineId}`
       http
         .get(url)
         .then((res) => {

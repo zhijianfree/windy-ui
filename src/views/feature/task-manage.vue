@@ -30,7 +30,14 @@
         <el-table :data="taskData" size="mini" style="width: 100%">
           <el-table-column prop="taskId" label="任务Id"> </el-table-column>
           <el-table-column prop="taskName" label="任务名称"> </el-table-column>
-          <el-table-column prop="description" label="任务描述">
+          <el-table-column prop="description" label="任务状态">
+            <template slot-scope="scope">
+              <i
+                v-if="scope.row.isRunning"
+                class="el-icon-loading loading-status"
+              />
+              <span v-else>--</span>
+            </template>
           </el-table-column>
           <el-table-column prop="createTime" label="创建时间">
             <template slot-scope="scope">
@@ -41,7 +48,7 @@
             <template slot-scope="scope">
               <el-button
                 size="mini"
-                v-if="!scope.row.isRunning"
+                type="primary"
                 icon="el-icon-video-play"
                 @click="startRun(scope.row)"
                 plain
@@ -76,13 +83,11 @@
         <!-- 执行记录表格开始 -->
         <el-table :data="recordData" size="mini" style="width: 100%">
           <el-table-column prop="taskName" label="任务名称"> </el-table-column>
-          <el-table-column prop="status" label="状态">
+          <el-table-column prop="statusName" label="状态">
             <template slot-scope="scope">
-              <el-tag
-                :type="scope.row.status == 1 ? '执行中' : '执行完成'"
-                size="medium"
-                >{{ scope.row.status == 1 ? '执行中' : '执行完成' }}</el-tag
-              >
+              <el-tag :type="scope.row.status | statusFormat">{{
+                scope.row.statusName
+              }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="userId" label="执行人"> </el-table-column>
@@ -91,8 +96,17 @@
               <span> {{ dateFormat(scope.row.updateTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column align="right">
+          <el-table-column label="操作">
             <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="primary"
+                v-if="scope.row.status == 4"
+                icon="el-icon-video-pause"
+                @click="stopRun(scope.row)"
+                plain
+                >停止</el-button
+              >
               <el-button size="mini" @click="showRecord(scope.row)" plain
                 >查看</el-button
               >
@@ -221,10 +235,7 @@ export default {
       dialogTitle: '添加任务',
       isEdit: false,
       activeName: 'first',
-      machineList: [
-        { key: '11.11.203.13', label: '执行者1', disabled: false },
-        { key: '21.25.33.180', label: '执行者2', disabled: false },
-      ],
+      machineList: [],
       executeList: [],
       testCases: [],
       services: [],
@@ -275,10 +286,21 @@ export default {
       return value
     },
     startRun(row) {
-      taskApi.runTask(row.taskId).then(() => {
+      taskApi.runTask(row.taskId).then((res) => {
+        if (res.data) {
+          this.$message.success('执行成功,请查看执行记录')
+        } else {
+          this.$message.error('任务执行失败')
+        }
+      })
+      this.getTasks(this.taskCurrentPage, this.queryForm.name)
+    },
+    stopRun(row) {
+      taskApi.stopTask(row.recordId).then(() => {
         this.$message.success('执行成功,请查看执行记录')
       })
       this.getTasks(this.taskCurrentPage, this.queryForm.name)
+      this.getTaskRecords(this.recordCurrentPage)
     },
     startQuery() {
       this.getTasks(1, this.queryForm.name)
@@ -300,7 +322,7 @@ export default {
       }
     },
     deleteTask(row) {
-      taskApi.deleteTask(row.taskId).then(() => {
+      taskApi.deleteTask(row.recordId).then(() => {
         this.$message.success('删除成功')
         this.getTasks(this.taskCurrentPage, this.queryForm.name)
       })
@@ -422,5 +444,8 @@ export default {
 }
 .op-icon {
   margin-left: 10px;
+}
+.loading-status {
+  font-size: 20px;
 }
 </style>
