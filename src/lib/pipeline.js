@@ -152,9 +152,11 @@ export default {
 
       //前置节点指向新节点的子节点
       preNodeArray.forEach((element) => {
+        console.log('前置节点', JSON.parse(JSON.stringify(element)))
+        console.log('前置节点index', pipeline.length - 1)
         element.next.push({ index: pipeline.length - 1, weight: 0 })
       })
-      node.next.push({ index: pipeline.length - 1, weight: 0 })
+      console.log('node节点index', index)
     })
 
     //最后节点横坐标加一个单位，并且重新加入数组
@@ -173,24 +175,9 @@ export default {
     }
 
     let array = this.transformTreeNode(pipeline)
+    console.log('array', JSON.parse(JSON.stringify(array)))
     let pos = array.findIndex((item) => item.id == node.id)
     let current = array[pos]
-
-    //删除节点的前一个节点需要调整指向坐标
-    let leftNode = array[pos - 1]
-    leftNode.next = []
-    let rightNode = array[pos + 1]
-    console.log('rightNode', rightNode)
-    leftNode.next.push({
-      index: rightNode.id - current.nodes.length - 1,
-      width: 0,
-    })
-    rightNode.nodes.forEach((e) => {
-      leftNode.next.push({
-        index: e.id - current.nodes.length - 1,
-        width: 0,
-      })
-    })
 
     //删除节点的后面节点指向坐标只需要减去删除节点长度
     for (let i = pos + 1; i < array.length; i++) {
@@ -203,10 +190,13 @@ export default {
     //新数组添加没有改变的节点
     let newArray = []
     for (let i = 0; i < array[pos - 1].id; i++) {
+      console.log('addadada')
       newArray.push(pipeline[i])
     }
+    console.log('new Array', JSON.parse(JSON.stringify(newArray)))
 
     //新数组添加改变的节点
+    console.log('array array', JSON.parse(JSON.stringify(array)))
     let group = null
     for (let i = pos - 1; i < array.length; i++) {
       if (i == pos) {
@@ -214,6 +204,23 @@ export default {
       }
 
       let item = array[i]
+      if (i == pos - 1) {
+        //删除节点的前一个节点需要调整指向坐标
+        let rightNode = array[pos + 1]
+        item.next = []
+        item.next.push({
+          index: rightNode.id - current.nodes.length - 1,
+          width: 0,
+        })
+
+        rightNode.nodes.forEach((e) => {
+          item.next.push({
+            index: e.id - current.nodes.length - 1,
+            width: 0,
+          })
+        })
+      }
+
       if (item.root) {
         group = newArray.length
         item.group = group
@@ -262,7 +269,7 @@ export default {
 
     //给删除节点的当前根节点和后续根节点的指向下标-1
     pipeline.forEach((e) => {
-      if ((e.id > node.id || e.group == node.group) && e.root) {
+      if ((e.id > node.id || e.group == node.group) && e.root && e.next) {
         e.next.forEach((e) => {
           e.index = e.index - 1
         })
@@ -271,6 +278,7 @@ export default {
     let index = pipeline.findIndex((item) => item.id == node.id)
     pipeline.splice(index, 1)
     console.log('remove single result', pipeline)
+    this.resetId(pipeline)
     return pipeline
   },
   /**

@@ -26,8 +26,9 @@
       <el-button
         type="primary"
         size="mini"
+        :disabled="startMove"
         v-if="!this.isView"
-        icon="el-icon-edit"
+        icon="el-icon-circle-plus-outline"
         @click="
           dialogVisible = !dialogVisible
           operateType = 1
@@ -40,7 +41,15 @@
         v-if="!this.isView && !startMove"
         icon="el-icon-edit"
         @click="startMove = !startMove"
-        >移动节点</el-button
+        >操作节点</el-button
+      >
+      <el-button
+        type="primary"
+        size="mini"
+        v-if="!this.isView && startMove"
+        icon="el-icon-circle-close"
+        @click="startMove = !startMove"
+        >取消操作</el-button
       >
       <el-button
         type="primary"
