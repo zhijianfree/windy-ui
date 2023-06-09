@@ -204,8 +204,8 @@
                 {{ history.createTime | dateFormat }}
               </el-descriptions-item>
               <el-descriptions-item label="执行结果">
-                <el-tag :type="exchangeExecuteStatus(history.pipelineStatus)">{{
-                  exchangeStatusMessage(history.pipelineStatus)
+                <el-tag :type="history.pipelineStatus | statusFormat">{{
+                  history.pipelineStatus | statusName
                 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>

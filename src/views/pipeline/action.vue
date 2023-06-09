@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-tabs v-model="activeTab" class="content">
-      <el-tab-pane label="节点管理" name="node">
+      <el-tab-pane label="节点列表" name="node">
         <!-- 表单查询开始 -->
         <div class="query-div">
           <el-form :inline="true" size="mini">
@@ -70,7 +70,7 @@
         </div>
         <!-- 节点表格显示结束 -->
       </el-tab-pane>
-      <el-tab-pane label="执行点管理" name="execute">
+      <el-tab-pane label="执行点" name="execute">
         <!-- 表单查询开始 -->
         <div class="query-div">
           <el-form :inline="true" size="mini">

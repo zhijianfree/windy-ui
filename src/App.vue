@@ -39,7 +39,7 @@
           >
           <el-menu-item index="/pipe/action">
             <i class="el-icon-s-promotion"></i>
-            执行点管理</el-menu-item
+            节点管理</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/">
