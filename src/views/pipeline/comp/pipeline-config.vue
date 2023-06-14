@@ -292,6 +292,7 @@ export default {
       uuid: '',
       serviceId: '',
       pipelineId: '',
+      chosedConfigItem: [],
     }
   },
   methods: {
@@ -332,6 +333,13 @@ export default {
       console.log('数据变化', value, this.chosedConfigItem)
       this.chosedConfigItem.compareResults.forEach((e) => {
         if (e.compareKey == value) {
+          e.value = this.configForm[value]
+          console.log('数据变化111 datachange', this.configForm[value])
+        }
+      })
+
+      this.chosedConfigItem.paramList.forEach((e) => {
+        if (e.name == value) {
           e.value = this.configForm[value]
           console.log('数据变化111 datachange', this.configForm[value])
         }
@@ -379,6 +387,7 @@ export default {
       this.pipelineForm = {}
       this.editPipelines = []
       this.configForm = {}
+      this.$emit('complete')
     },
     closeConfigNode() {
       this.nodeForm = {}
@@ -445,7 +454,6 @@ export default {
               type: 'success',
             })
             this.cancelCreatePipeline()
-            this.$emit('complete')
           })
       }
 
@@ -460,7 +468,6 @@ export default {
             type: 'success',
           })
           this.cancelCreatePipeline()
-          this.$emit('complete')
         })
       }
     },
