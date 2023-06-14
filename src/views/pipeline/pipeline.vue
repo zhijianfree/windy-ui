@@ -323,7 +323,6 @@ export default {
       isView: false,
       piplienOperate: 0,
       prenodeId: [],
-      chosedConfigItem: [],
       serviceId: '',
       titleName: '新增流水线',
       showGitConfig: false,
@@ -688,12 +687,9 @@ export default {
       }, 3000)
     },
     cancelCreatePipeline() {
-      this.rootList = []
       this.pipelineDialog = false
       this.isView = false
       this.pipelineForm = {}
-      this.editPipelines = []
-      this.configForm = {}
     },
   },
   created() {

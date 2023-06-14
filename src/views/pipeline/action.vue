@@ -340,7 +340,8 @@ export default {
       queryNodeName: '',
       isEditNode: false,
       operators: [
-        { label: 'equals', value: 'equals' },
+        { label: 'equals', value: 'equal' },
+        { label: '等于', value: '=' },
         { label: '大于', value: '>' },
         { label: '大于等于', value: '>=' },
         { label: '小于', value: '<' },
