@@ -373,7 +373,6 @@
   </div>
 </template>
 <script>
-import draggable from 'vuedraggable'
 import FeatureTemplate from '@/components/feature-template'
 import FeatureTool from '@/components/feature-tool'
 import history from './history.vue'
@@ -382,7 +381,6 @@ import featureApi from '../../http/Feature'
 import testCaseApi from '../../http/TestCase'
 export default {
   components: {
-    draggable,
     history,
     FeatureTemplate,
     FeatureTool,

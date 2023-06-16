@@ -209,96 +209,43 @@
         <el-form-item label="执行类型">
           <el-radio-group v-model="executeType" @change="chooseExecuteType">
             <el-radio label="HTTP">默认</el-radio>
+            <el-radio label="BUILD">构建</el-radio>
             <el-radio label="WAIT">等待</el-radio>
-            <el-radio label="APPROVAL">人工卡点</el-radio>
+            <el-radio label="DEPLOY">部署</el-radio>
             <el-radio label="TEST">用例测试</el-radio>
+            <el-radio label="APPROVAL">人工卡点</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-divider content-position="left">动作触发配置</el-divider>
-        <el-form-item label="动作触发地址" v-if="executeType == 'HTTP'">
-          <el-input
-            placeholder="请输入执行点名称"
-            v-model="actionForm.actionUrl"
-          />
-        </el-form-item>
-
-        <el-form-item label="参数列表">
-          <el-row
-            v-for="(item, index) in configList"
-            :key="index"
-            class="config-line"
-          >
-            <el-col :span="5">
-              <el-input placeholder="输入参数名" v-model="item.name" />
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="6">
-              <el-input placeholder="输入参数描述" v-model="item.description" />
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="5">
-              <el-input placeholder="输入默认值" v-model="item.value" />
-            </el-col>
-          </el-row>
-          <div class="add-btn" @click="addNewItem">新增参数</div>
-        </el-form-item>
-
-        <el-divider content-position="left" v-if="executeType == 'HTTP'"
-          >状态查询配置</el-divider
-        >
-        <el-form-item label="状态查询地址" v-if="executeType == 'HTTP'">
-          <el-input
-            placeholder="请输入状态查询地址"
-            v-model="actionForm.queryUrl"
-          />
-        </el-form-item>
-        <el-form-item
-          label="结果条件列表"
-          v-if="executeType == 'HTTP' || executeType == 'TEST'"
-        >
-          <el-row
-            v-for="(item, index) in compareList"
-            :key="index"
-            class="config-line"
-          >
-            <el-col :span="4">
-              <el-input placeholder="比较Key" v-model="item.compareKey" />
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="4">
-              <el-input placeholder="描述" v-model="item.description" />
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="4">
-              <el-select v-model="item.valueType" placeholder="选择数据类型">
-                <el-option
-                  v-for="item in typeList"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                >
-                </el-option>
-              </el-select>
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="4">
-              <el-select v-model="item.operator" placeholder="选择运算服符">
-                <el-option
-                  v-for="item in operators"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                >
-                </el-option>
-              </el-select>
-            </el-col>
-            <el-col :span="1" class="separate-line">-</el-col>
-            <el-col :span="4">
-              <el-input placeholder="设置期望值" v-model="item.value" />
-            </el-col>
-          </el-row>
-          <div class="add-btn" @click="addNewCondition">新增条件</div>
-        </el-form-item>
+        <HttpAct
+          v-if="executeType == 'HTTP'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
+        <ApprovalAct
+          v-if="executeType == 'APPROVAL'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
+        <BuildAct
+          v-if="executeType == 'BUILD'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
+        <DeployAct
+          v-if="executeType == 'DEPLOY'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
+        <FeatureAct
+          v-if="executeType == 'TEST'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
+        <WaitAct
+          v-if="executeType == 'WAIT'"
+          :form="actionForm"
+          @notifyParam="notifyParam"
+        />
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="closeDialog" size="mini">取 消</el-button>
@@ -313,15 +260,27 @@
 <script>
 import ActionApi from '../../http/PipelineAction'
 import NodeApi from '../../http/NodeBind'
+import HttpAct from './comp/http-action.vue'
+import ApprovalAct from './comp/approval-action.vue'
+import BuildAct from './comp/build-action.vue'
+import DeployAct from './comp/deploy-action.vue'
+import FeatureAct from './comp/feature-action.vue'
+import WaitAct from './comp/wait-action.vue'
 export default {
+  components: {
+    HttpAct,
+    ApprovalAct,
+    BuildAct,
+    DeployAct,
+    FeatureAct,
+    WaitAct,
+  },
   data() {
     return {
       queryName: '',
       actionList: [],
       showCreateExecuter: false,
       actionForm: {},
-      configList: [{}],
-      compareList: [{}],
       currentPage: 1,
       totalSize: 0,
       title: '创建执行点',
@@ -339,31 +298,15 @@ export default {
       nodeTotalSize: 0,
       queryNodeName: '',
       isEditNode: false,
-      operators: [
-        { label: 'equals', value: 'equal' },
-        { label: '等于', value: '=' },
-        { label: '大于', value: '>' },
-        { label: '大于等于', value: '>=' },
-        { label: '小于', value: '<' },
-        { label: '小于等于', value: '<=' },
-      ],
-      typeList: [
-        { label: '数字类型', value: 'Integer' },
-        { label: '字符串类型', value: 'String' },
-      ],
       executeType: 'HTTP',
+      configList: [],
+      compareList: [],
     }
   },
   methods: {
-    chooseExecuteType(type) {
-      let item = {}
-      if (type == 'WAIT') {
-        item = { name: 'waitTime', description: '等待时长(秒)' }
-      }
-      if (type == 'APPROVAL') {
-        item = { name: 'maxWait', description: '审批最大等待时长(秒)' }
-      }
-      this.configList = [item]
+    chooseExecuteType() {
+      this.configList = []
+      this.compareList = []
     },
     addNewCondition() {
       this.compareList.push({})
@@ -383,6 +326,11 @@ export default {
           this.selectActions.push(e.actionId)
         })
       })
+    },
+    notifyParam(notifyData) {
+      console.log('444', notifyData)
+      this.configList = notifyData.paramList
+      this.compareList = notifyData.compareList
     },
     closeNodeDialog() {
       this.isEditNode = false
@@ -464,8 +412,6 @@ export default {
       this.showCreateExecuter = true
       this.actionForm = row
       this.executeType = row.executeType
-      this.configList = row.paramList
-      this.compareList = row.compareResults
     },
     removeAction(row) {
       this.$confirm(`确认删除执行点【${row.actionName}】？`).then(() => {
@@ -560,21 +506,6 @@ export default {
 <style scoped>
 .query-div {
   margin: 10px;
-}
-.add-btn {
-  height: 30px;
-  line-height: 30px;
-  text-align: center;
-  vertical-align: middle;
-  border: 1px dashed #ccc;
-  margin: 10px 20%;
-  cursor: pointer;
-}
-.config-line {
-  margin: 10px 0px;
-}
-.separate-line {
-  text-align: center;
 }
 .content {
   margin: 10px;
