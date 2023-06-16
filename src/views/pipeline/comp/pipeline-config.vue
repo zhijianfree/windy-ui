@@ -356,14 +356,16 @@ export default {
             config[detail.actionId] = detail
           })
         }
-
+        console.log('config=====', config)
+        console.log('return=====', res.data)
         res.data.forEach((e) => {
           let detail = config[e.actionId]
           if (detail != undefined && detail != null) {
             e.compareResults = detail.compareInfo
 
             e.paramList.forEach((e) => {
-              let data = detail.requestContext[e.name]
+              console.log('e=====', e, detail)
+              let data = detail.paramList[e.name]
               if (data) {
                 e.value = data
               }
@@ -378,6 +380,7 @@ export default {
           }
           this.itemList.push(e)
         })
+        console.log('执行完成====', this.itemList)
       })
     },
     cancelCreatePipeline() {
@@ -401,11 +404,21 @@ export default {
         let subNodes = []
         console.log('新增的节点', this.nodeForm, '列表', this.itemList)
         this.itemList.forEach((e) => {
+          let data = {}
+          e.paramList.forEach((ele) => {
+            data[ele.name] = ele.value
+          })
+          
+          let item = {
+            actionId: e.actionId,
+            compareResults: e.compareResults,
+            paramList: data,
+          }
           subNodes.push({
             name: e.actionName,
             hint: e.actionName,
             status: 'success',
-            originData: JSON.parse(JSON.stringify(e)),
+            originData: JSON.parse(JSON.stringify(item)),
             next: [],
           })
         })
@@ -472,6 +485,7 @@ export default {
       }
     },
     choosePipeItem(node) {
+      console.log('pipeline 点击node', node)
       let selectItem = node
       this.nodeForm = selectItem
       if (node.disable || this.startMove) {
