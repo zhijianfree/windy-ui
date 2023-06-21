@@ -28,7 +28,7 @@ export default {
   },
   approval(historyId, nodeId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/pipeline/node/record?historyId=${historyId}&nodeId=${nodeId}`
+      let url = `/v1/devops/pipeline/node/approval?historyId=${historyId}&nodeId=${nodeId}`
       http
         .put(url)
         .then((res) => {

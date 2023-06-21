@@ -116,10 +116,10 @@ export default {
         console.log('监听到新值', val)
         this.actionForm = val
         if (val.paramList && val.paramList.length > 0) {
-          this.paramList = val.paramList
+          this.presetValue(val.paramList, this.paramList, 'name')
         }
         if (val.compareResults && val.compareResults.length > 0) {
-          this.compareList = val.compareResults
+          this.presetValue(val.compareResults, this.compareList, 'compareKey')
         }
       },
       deep: true,
@@ -166,6 +166,19 @@ export default {
       this.$emit('notifyParam', {
         paramList: this.paramList,
         compareList: this.compareList,
+      })
+    },
+    presetValue(source, target, key) {
+      let map = {}
+      source.forEach((e) => {
+        map[e[key]] = e.value
+      })
+
+      target.forEach((e) => {
+        let presetValue = map[e[key]]
+        if (presetValue) {
+          e.value = presetValue
+        }
       })
     },
   },

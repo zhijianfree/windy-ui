@@ -46,7 +46,7 @@ export default {
     form: {
       handler(val) {
         if (val.paramList && val.paramList.length > 0) {
-          this.paramList = val.paramList;
+          this.presetValue(val.paramList, this.paramList, 'name')
         }
       },
       deep: true,
@@ -57,25 +57,38 @@ export default {
     return {
       paramList: [
         {
-          name: "sourceBranch",
-          description: "合并分支",
-          value: "",
+          name: 'sourceBranch',
+          description: '合并分支',
+          value: '',
         },
       ],
-    };
+    }
   },
   methods: {
+    presetValue(source, target, key) {
+      let map = {}
+      source.forEach((e) => {
+        map[e[key]] = e.value
+      })
+
+      target.forEach((e) => {
+        let presetValue = map[e[key]]
+        if (presetValue) {
+          e.value = presetValue
+        }
+      })
+    },
     notifyParam() {
-      this.$emit("notifyParam", {
+      this.$emit('notifyParam', {
         paramList: this.paramList,
         compareList: [],
-      });
+      })
     },
   },
   created() {
-    this.notifyParam();
+    this.notifyParam()
   },
-};
+}
 </script>
 <style scoped>
 .separate-line {

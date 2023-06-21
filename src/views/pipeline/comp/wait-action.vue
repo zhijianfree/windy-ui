@@ -49,10 +49,7 @@ export default {
         console.log('监听到新值', val)
         this.actionForm = val
         if (val.paramList && val.paramList.length > 0) {
-          this.paramList = val.paramList
-        }
-        if (val.compareResults && val.compareResults.length > 0) {
-          this.compareList = val.compareResults
+          this.presetValue(val.paramList, this.paramList, 'name')
         }
       },
       deep: true,
@@ -63,18 +60,6 @@ export default {
     return {
       actionForm: {},
       paramList: [{ name: 'waitTime', description: '节点等待时长', value: 10 }],
-      operators: [
-        { label: 'equals', value: 'equal' },
-        { label: '等于', value: '=' },
-        { label: '大于', value: '>' },
-        { label: '大于等于', value: '>=' },
-        { label: '小于', value: '<' },
-        { label: '小于等于', value: '<=' },
-      ],
-      typeList: [
-        { label: '数字类型', value: 'Integer' },
-        { label: '字符串类型', value: 'String' },
-      ],
     }
   },
   methods: {
@@ -82,6 +67,19 @@ export default {
       this.$emit('notifyParam', {
         paramList: this.paramList,
         compareList: [],
+      })
+    },
+    presetValue(source, target, key) {
+      let map = {}
+      source.forEach((e) => {
+        map[e[key]] = e.value
+      })
+
+      target.forEach((e) => {
+        let presetValue = map[e[key]]
+        if (presetValue) {
+          e.value = presetValue
+        }
       })
     },
   },

@@ -114,13 +114,12 @@ export default {
   watch: {
     form: {
       handler(val) {
-        console.log('监听到新值', val)
         this.actionForm = val
         if (val.paramList && val.paramList.length > 0) {
-          this.paramList = val.paramList
+          this.presetValue(val.paramList, this.paramList, 'name')
         }
         if (val.compareResults && val.compareResults.length > 0) {
-          this.compareList = val.compareResults
+          this.presetValue(val.compareResults, this.compareList, 'compareKey')
         }
       },
       deep: true,
@@ -131,7 +130,6 @@ export default {
     return {
       actionForm: {},
       paramList: [
-        { name: 'gitUrl', description: 'git服务端地址', value: '' },
         {
           name: 'pomPath',
           description: 'maven构建pom为主(默认在根目录下)',
@@ -168,6 +166,19 @@ export default {
         compareList: this.compareList,
         actionUrl: this.dataForm.actionUrl,
         queryUrl: this.dataForm.queryUrl,
+      })
+    },
+    presetValue(source, target, key) {
+      let map = {}
+      source.forEach((e) => {
+        map[e[key]] = e.value
+      })
+
+      target.forEach((e) => {
+        let presetValue = map[e[key]]
+        if (presetValue) {
+          e.value = presetValue
+        }
       })
     },
   },

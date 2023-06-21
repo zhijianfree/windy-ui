@@ -38,17 +38,17 @@ export default {
       let index = nodeIndex + num
       let item = {
         group: node.group,
-        hint: e.actionName,
+        hint: e.hint,
         id: index,
-        name: e.actionName,
+        name: e.name,
         next: [],
         root: false,
         nodeId: e.nodeId,
         status: 'success',
         originData: {
-          actionId: e.actionId,
-          compareInfo: e.compareResults,
-          paramList: e.paramList,
+          actionId: e.originData.actionId,
+          compareInfo: e.originData.compareResults,
+          paramList: e.originData.paramList,
         },
       }
       pipelineArray.splice(index, 0, item)
@@ -347,11 +347,6 @@ export default {
     pipeline[beforTwo.id].next = beforTwoArray
     console.log('beforTwo.id', beforTwo.id)
 
-    // let idx = 0
-    // pipeline.forEach((e) => {
-    //   e.id = idx
-    //   idx++
-    // })
     this.resetId(pipeline)
     console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
   },

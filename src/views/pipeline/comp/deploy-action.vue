@@ -60,6 +60,7 @@
           <el-input
             placeholder="比较Key"
             v-model="item.compareKey"
+            disabled
             @input="notifyParam"
           />
         </el-col>
@@ -68,6 +69,7 @@
           <el-input
             placeholder="描述"
             v-model="item.description"
+            disabled
             @input="notifyParam"
           />
         </el-col>
@@ -76,6 +78,7 @@
           <el-select
             v-model="item.valueType"
             placeholder="选择数据类型"
+            disabled
             @change="notifyParam"
           >
             <el-option
@@ -92,6 +95,7 @@
           <el-select
             v-model="item.operator"
             placeholder="选择运算服符"
+            disabled
             @change="notifyParam"
           >
             <el-option
@@ -108,6 +112,7 @@
           <el-input
             placeholder="设置期望值"
             v-model="item.value"
+            disabled
             @input="notifyParam"
           />
         </el-col>
@@ -123,13 +128,13 @@ export default {
   watch: {
     form: {
       handler(val) {
-        console.log("监听到新值", val);
-        this.dataForm = val;
+        console.log('监听到新值', val)
+        this.dataForm = val
         if (val.paramList && val.paramList.length > 0) {
-          this.paramList = val.paramList;
+          this.presetValue(val.paramList, this.paramList, 'name')
         }
         if (val.compareResults && val.compareResults.length > 0) {
-          this.compareList = val.compareResults;
+          this.presetValue(val.compareResults, this.compareList, 'compareKey')
         }
       },
       deep: true,
@@ -140,45 +145,67 @@ export default {
     return {
       dataForm: {},
       paramList: [
-        { name: "remotePath", description: "服务端路径", value: "" },
-        { name: "sshIp", description: "远程服务器IP", value: "" },
-        { name: "sshPort", description: "远程服务器端口", value: "" },
-        { name: "deployType", description: "部署类型", value: "JAR" },
+        { name: 'remotePath', description: '服务端路径', value: '' },
+        { name: 'sshIp', description: '远程SSH的IP', value: '' },
+        { name: 'sshPort', description: '远程SSH的端口', value: '' },
+        { name: 'serverPort', description: '应用监听端口', value: '' },
+        { name: 'deployType', description: '部署类型', value: 'JAR' },
       ],
-      compareList: [{}],
+      compareList: [
+        {
+          compareKey: 'status',
+          description: '部署状态',
+          value: '',
+          valueType: 'Integer',
+          operator: '=',
+        },
+      ],
       operators: [
-        { label: "equals", value: "equal" },
-        { label: "等于", value: "=" },
-        { label: "大于", value: ">" },
-        { label: "大于等于", value: ">=" },
-        { label: "小于", value: "<" },
-        { label: "小于等于", value: "<=" },
+        { label: 'equals', value: 'equal' },
+        { label: '等于', value: '=' },
+        { label: '大于', value: '>' },
+        { label: '大于等于', value: '>=' },
+        { label: '小于', value: '<' },
+        { label: '小于等于', value: '<=' },
       ],
       typeList: [
-        { label: "数字类型", value: "Integer" },
-        { label: "字符串类型", value: "String" },
+        { label: '数字类型', value: 'Integer' },
+        { label: '字符串类型', value: 'String' },
       ],
       deployModes: [
-        { label: "Jar部署", value: "JAR" },
-        { label: "镜像部署", value: "MIRROR" },
+        { label: 'Jar部署', value: 'JAR' },
+        { label: '镜像部署', value: 'MIRROR' },
       ],
-    };
+    }
   },
   methods: {
+    presetValue(source, target, key) {
+      let map = {}
+      source.forEach((e) => {
+        map[e[key]] = e.value
+      })
+
+      target.forEach((e) => {
+        let presetValue = map[e[key]]
+        if (presetValue) {
+          e.value = presetValue
+        }
+      })
+    },
     notifyParam() {
-      this.$emit("notifyParam", {
+      this.$emit('notifyParam', {
         paramList: this.paramList,
         compareList: this.compareList,
         actionUrl: this.dataForm.actionUrl,
         queryUrl: this.dataForm.queryUrl,
-      });
+      })
     },
   },
   created() {
-    this.dataForm = this.form;
-    this.notifyParam();
+    this.dataForm = this.form
+    this.notifyParam()
   },
-};
+}
 </script>
 <style scoped>
 .separate-line {
