@@ -195,12 +195,14 @@
       :destroy-on-close="true"
     >
       <el-form
-        v-model="featureForm"
+        :model="featureForm"
+        :rules="featureRule"
+        ref="featureForm"
         size="small"
         label-width="80px"
         label-position="top"
       >
-        <el-form-item label="名称">
+        <el-form-item label="名称" prop="featureName">
           <el-input
             v-model="featureForm.featureName"
             placeholder="请输入名称"
@@ -248,7 +250,7 @@
                   @mouseover="item.hover = true"
                   @mouseleave="item.hover = false"
                 >
-                  <span>{{ "步骤" + (index + 1) }}</span>
+                  <span>{{ '步骤' + (index + 1) }}</span>
                   <i
                     v-if="item.hover"
                     class="el-icon-delete step-delete"
@@ -277,7 +279,9 @@
           </el-steps>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitFeatureForm">确认</el-button>
+          <el-button type="primary" @click="submitFeatureForm('featureForm')"
+            >确认</el-button
+          >
           <el-button type="info" @click="closeFeatureDialog">取消</el-button>
         </el-form-item>
       </el-form>
@@ -354,7 +358,7 @@
               </div>
               <div v-else>
                 <el-button size="mini" @click="startEditParam(scope.row)">{{
-                  scope.$index == configData.length - 1 ? "新增" : "编辑"
+                  scope.$index == configData.length - 1 ? '新增' : '编辑'
                 }}</el-button>
                 <el-button
                   size="mini"
@@ -373,10 +377,10 @@
   </div>
 </template>
 <script>
-import history from "./history.vue";
-import FeatureConfig from "./comp/feature-config.vue";
-import featureApi from "../../http/Feature";
-import testCaseApi from "../../http/TestCase";
+import history from './history.vue'
+import FeatureConfig from './comp/feature-config.vue'
+import featureApi from '../../http/Feature'
+import testCaseApi from '../../http/TestCase'
 export default {
   components: {
     history,
@@ -384,277 +388,288 @@ export default {
   },
   watch: {
     filterText(val) {
-      this.$refs.tree.filter(val);
+      this.$refs.tree.filter(val)
     },
   },
   data() {
     return {
       infoForm: null,
-      activeName: "desc",
-      filterText: "",
+      activeName: 'desc',
+      filterText: '',
       userCase: [],
       showDebugDialog: false,
       isConnect: false,
-      service: "",
+      service: '',
       showFeatureDialog: false,
       featureForm: {},
       isEditFeature: false,
-      featureTitle: "",
-      caseId: "",
-      stepContent: "",
+      featureTitle: '',
+      caseId: '',
+      stepContent: '',
       stepList: [],
       formStepList: [],
       configData: [],
       paramTypeList: [
-        { label: "String", value: "String" },
-        { label: "Map", value: "Map" },
-        { label: "List", value: "List" },
-        { label: "Integer", value: "Integer" },
-        { label: "Float", value: "Float" },
-        { label: "Double", value: "Double" },
+        { label: 'String', value: 'String' },
+        { label: 'Map', value: 'Map' },
+        { label: 'List', value: 'List' },
+        { label: 'Integer', value: 'Integer' },
+        { label: 'Float', value: 'Float' },
+        { label: 'Double', value: 'Double' },
       ],
       uuid: 0,
       dynamicTags: [],
       inputVisible: false,
-      inputValue: "",
+      inputValue: '',
       createData: {},
-      caseName: "",
-      selectFeatureId: "",
-    };
+      caseName: '',
+      selectFeatureId: '',
+      featureRule: {
+        featureName: [
+          { required: true, message: '请输入名称', trigger: 'blur' },
+        ],
+      },
+    }
   },
   methods: {
     clickCommand(command, data) {
-      if (command == "newItem") {
-        this.startAddFeature();
-        this.createData.type = 1;
+      if (command == 'newItem') {
+        this.startAddFeature()
+        this.createData.type = 1
         if (data) {
-          this.createData.parentId = data.featureId;
+          this.createData.parentId = data.featureId
         }
       }
 
-      if (command == "newFolder") {
-        this.startAddFeature();
-        this.createData.type = 2;
-        this.featureTitle = "添加目录";
+      if (command == 'newFolder') {
+        this.startAddFeature()
+        this.createData.type = 2
+        this.featureTitle = '添加目录'
         if (data) {
-          this.createData.parentId = data.featureId;
+          this.createData.parentId = data.featureId
         }
       }
 
-      if (command == "deleteItems") {
-        let featureIds = this.$refs.tree.getCheckedKeys();
+      if (command == 'deleteItems') {
+        let featureIds = this.$refs.tree.getCheckedKeys()
         featureApi.batchDeleteFeature({ features: featureIds }).then(() => {
-          this.requestCaseFeatures(this.caseId);
-          this.uuid = this.$utils.randomString(20);
-        });
+          this.requestCaseFeatures(this.caseId)
+          this.uuid = this.$utils.randomString(20)
+        })
       }
-      if (command == "delete") {
+      if (command == 'delete') {
         featureApi
           .deleteFeature(data.featureId)
           .then(() => {
-            this.requestCaseFeatures(this.caseId);
-            this.uuid = this.$utils.randomString(20);
+            this.requestCaseFeatures(this.caseId)
+            this.uuid = this.$utils.randomString(20)
           })
           .catch((e) => {
-            this.$message.error(e.response.data.message);
-          });
+            this.$message.error(e.response.data.message)
+          })
       }
     },
     handleClose(tag) {
-      this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+      this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
     },
     showInput() {
-      this.inputVisible = true;
+      this.inputVisible = true
       this.$nextTick(() => {
-        this.$refs.saveTagInput.$refs.input.focus();
-      });
+        this.$refs.saveTagInput.$refs.input.focus()
+      })
     },
     handleInputConfirm() {
-      let inputValue = this.inputValue;
+      let inputValue = this.inputValue
       if (inputValue) {
-        this.dynamicTags.push(inputValue);
+        this.dynamicTags.push(inputValue)
       }
-      this.inputVisible = false;
-      this.inputValue = "";
+      this.inputVisible = false
+      this.inputValue = ''
     },
     getTestCaseConfigs() {
-      this.configData = [];
+      this.configData = []
       testCaseApi.getTestCaseConfigs(this.caseId).then((res) => {
-        let array = res.data;
-        array.push({ paramType: "String" });
-        this.configData = array;
-      });
+        let array = res.data
+        array.push({ paramType: 'String' })
+        this.configData = array
+      })
     },
     startEditParam(row) {
-      row.isEdit = true;
-      this.uuid = this.$utils.randomString(20);
+      row.isEdit = true
+      this.uuid = this.$utils.randomString(20)
     },
     cancelEditParam(row) {
-      this.uuid = this.$utils.randomString(20);
-      row.isEdit = false;
+      this.uuid = this.$utils.randomString(20)
+      row.isEdit = false
     },
     handleSave(row) {
       if (row.configId) {
         testCaseApi.updateConfig(row).then(() => {
-          this.$message.success("修改配置成功");
-          this.getTestCaseConfigs();
-        });
-        return;
+          this.$message.success('修改配置成功')
+          this.getTestCaseConfigs()
+        })
+        return
       }
 
-      row.unionId = this.caseId;
+      row.unionId = this.caseId
       testCaseApi.addConfigs([row]).then(() => {
-        this.$message.success("添加配置成功");
-        this.getTestCaseConfigs();
-      });
+        this.$message.success('添加配置成功')
+        this.getTestCaseConfigs()
+      })
     },
     handleDelete(row) {
       testCaseApi.deleteConfig(row.configId).then(() => {
-        this.$message.success("删除配置成功");
-        this.getTestCaseConfigs();
-      });
+        this.$message.success('删除配置成功')
+        this.getTestCaseConfigs()
+      })
     },
     addStep() {
       this.stepList.push({
         content: this.stepContent,
         hover: false,
-      });
-      this.stepContent = "";
+      })
+      this.stepContent = ''
     },
     removeStep(index) {
-      this.stepList.splice(index, 1);
+      this.stepList.splice(index, 1)
     },
     closeFeatureDialog() {
-      this.showFeatureDialog = false;
-      this.featureForm = {};
-      this.dynamicTags = [];
-      this.createData = {};
+      this.showFeatureDialog = false
+      this.featureForm = {}
+      this.dynamicTags = []
+      this.createData = {}
       if (!this.infoForm) {
-        return;
+        return
       }
       featureApi.getFeatureDetail(this.infoForm.featureId).then((res) => {
-        this.infoForm = res.data;
-        this.formStepList = [];
-        this.infoForm.testStep.split("|").forEach((e) => {
-          this.formStepList.push(e);
-        });
-      });
+        this.infoForm = res.data
+        this.formStepList = []
+        this.infoForm.testStep.split('|').forEach((e) => {
+          this.formStepList.push(e)
+        })
+      })
     },
     startAddFeature() {
-      this.showFeatureDialog = !this.showFeatureDialog;
-      this.isEditFeature = false;
-      this.featureForm = {};
-      this.featureTitle = "添加用例";
-      this.stepList = [];
+      this.showFeatureDialog = !this.showFeatureDialog
+      this.isEditFeature = false
+      this.featureForm = {}
+      this.featureTitle = '添加用例'
+      this.stepList = []
     },
     startEditFeature() {
-      this.showFeatureDialog = !this.showFeatureDialog;
-      this.isEditFeature = true;
-      this.featureTitle = "修改用例";
-      this.featureForm = this.infoForm;
-      this.stepList = [];
-      this.infoForm.testStep.split("|").forEach((e) => {
-        this.stepList.push({ hover: false, content: e });
-      });
+      this.showFeatureDialog = !this.showFeatureDialog
+      this.isEditFeature = true
+      this.featureTitle = '修改用例'
+      this.featureForm = this.infoForm
+      this.stepList = []
+      this.infoForm.testStep.split('|').forEach((e) => {
+        this.stepList.push({ hover: false, content: e })
+      })
     },
     deleteFeature() {
-      this.$confirm("用例删除后所有执行点数据都会删除, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('用例删除后所有执行点数据都会删除, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       }).then(() => {
         featureApi.deleteFeature(this.infoForm.featureId).then(() => {
-          this.$message("删除用例成功");
-          this.requestCaseFeatures(this.caseId);
-        });
-      });
+          this.$message('删除用例成功')
+          this.requestCaseFeatures(this.caseId)
+        })
+      })
     },
-    submitFeatureForm() {
-      let request = JSON.parse(JSON.stringify(this.featureForm));
-      request.author = "古月澜";
-      request.modify = "古月澜";
-      request.featureType = 1;
-      request.testCaseId = this.caseId;
-      request.testFeatures = [];
-      let str = "";
-      this.stepList.forEach((e) => {
-        str += e.content + "|";
-      });
-      request.testStep = str.substring(0, str.length - 1);
-      request.tags = JSON.parse(JSON.stringify(this.dynamicTags));
-      request.featureType = this.createData.type;
-      request.parentId = this.createData.parentId;
-      if (this.isEditFeature) {
-        featureApi.updateFeature(request).then(() => {
-          this.$message.success(`修改成功`);
-          this.showFeatureDialog = !this.showFeatureDialog;
-          this.requestCaseFeatures(this.caseId);
-        });
-        return;
-      }
+    submitFeatureForm(featureForm) {
+      this.$refs[featureForm].validate((valid) => {
+        if (!valid) {
+          return false
+        }
 
-      featureApi.createFeature(request).then(() => {
-        this.$message.success(`添加成功`);
-        this.showFeatureDialog = !this.showFeatureDialog;
-        this.requestCaseFeatures(this.caseId);
-      });
+        let request = JSON.parse(JSON.stringify(this.featureForm))
+        request.author = '古月澜'
+        request.modify = '古月澜'
+        request.featureType = 1
+        request.testCaseId = this.caseId
+        request.testFeatures = []
+        let str = ''
+        this.stepList.forEach((e) => {
+          str += e.content + '|'
+        })
+        request.testStep = str.substring(0, str.length - 1)
+        request.tags = JSON.parse(JSON.stringify(this.dynamicTags))
+        request.featureType = this.createData.type
+        request.parentId = this.createData.parentId
+        if (this.isEditFeature) {
+          featureApi.updateFeature(request).then(() => {
+            this.$message.success(`修改成功`)
+            this.showFeatureDialog = !this.showFeatureDialog
+            this.requestCaseFeatures(this.caseId)
+          })
+          return
+        }
+
+        featureApi.createFeature(request).then(() => {
+          this.$message.success(`添加成功`)
+          this.showFeatureDialog = !this.showFeatureDialog
+          this.requestCaseFeatures(this.caseId)
+        })
+      })
     },
     startDebug() {
-      let res = this.$refs.tree.getCheckedNodes();
+      let res = this.$refs.tree.getCheckedNodes()
       if (res.length == 0) {
-        this.$message.warning("请选择服务与用例～");
-        return;
+        this.$message.warning('请选择服务与用例～')
+        return
       }
 
-      this.tableData = [];
+      this.tableData = []
       featureApi.startFeature(this.infoForm.featureId).then(() => {
-        this.$message.success("开始执行，请查看运行日志");
-      });
+        this.$message.success('开始执行，请查看运行日志')
+      })
     },
     tabChange() {
-      if (this.activeName == "history") {
-        this.$refs.historyComp.getFeatureHistory(this.infoForm.featureId);
+      if (this.activeName == 'history') {
+        this.$refs.historyComp.getFeatureHistory(this.infoForm.featureId)
       }
     },
     treeNodeClick(data) {
-      this.activeName = "desc";
-      this.infoForm = data;
-      this.dynamicTags = [];
-      this.formStepList = data.testStep.split("|");
-      this.selectFeatureId = data.featureId;
+      this.activeName = 'desc'
+      this.infoForm = data
+      this.dynamicTags = []
+      this.formStepList = data.testStep.split('|')
+      this.selectFeatureId = data.featureId
       featureApi.getFeatureDetail(data.featureId).then((res) => {
-        this.dynamicTags = res.data.tags;
-      });
+        this.dynamicTags = res.data.tags
+      })
     },
     filterNode(value, data) {
-      if (!value) return true;
-      return data.featureName.indexOf(value) !== -1;
+      if (!value) return true
+      return data.featureName.indexOf(value) !== -1
     },
     showGlobalEnv() {
-      this.showDebugDialog = !this.showDebugDialog;
-      this.getTestCaseConfigs();
+      this.showDebugDialog = !this.showDebugDialog
+      this.getTestCaseConfigs()
     },
     goBack() {
-      this.$router.go(-1);
+      this.$router.go(-1)
     },
     requestCaseFeatures(caseId) {
-      this.userCase = [];
+      this.userCase = []
       featureApi.getFeatureTree(caseId).then((res) => {
-        this.userCase = res.data;
-      });
+        this.userCase = res.data
+      })
     },
     getCaseDetail() {
       testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
-        this.caseName = res.data.testCaseName;
-      });
+        this.caseName = res.data.testCaseName
+      })
     },
   },
   created() {
-    this.caseId = this.$route.query.caseId;
-    this.requestCaseFeatures(this.caseId);
-    this.getCaseDetail();
+    this.caseId = this.$route.query.caseId
+    this.requestCaseFeatures(this.caseId)
+    this.getCaseDetail()
   },
-};
+}
 </script>
 
 <style scoped>

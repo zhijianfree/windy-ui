@@ -141,20 +141,26 @@
       @close="closeDialog"
       width="70%"
     >
-      <el-form :model="taskForm" size="small" label-width="120px">
-        <el-form-item label="任务名称">
+      <el-form
+        :model="taskForm"
+        ref="taskForm"
+        :rules="taskRule"
+        size="small"
+        label-width="120px"
+      >
+        <el-form-item label="任务名称" prop="taskName">
           <el-input
             v-model="taskForm.taskName"
             placeholder="请输入任务名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="任务描述">
+        <el-form-item label="任务描述" prop="description">
           <el-input
             v-model="taskForm.description"
             placeholder="请输入任务描述"
           ></el-input>
         </el-form-item>
-        <el-form-item label="选择服务">
+        <el-form-item label="选择服务" prop="serviceId">
           <el-select
             v-model="taskForm.serviceId"
             @change="selectService"
@@ -169,7 +175,7 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="选择任务集">
+        <el-form-item label="选择任务集" prop="testCaseId">
           <el-select
             v-model="taskForm.testCaseId"
             @change="selectTestCase"
@@ -209,7 +215,7 @@
         </el-form-item> -->
 
         <el-form-item>
-          <el-button type="primary" @click="submit">确认</el-button>
+          <el-button type="primary" @click="submit('taskForm')">确认</el-button>
 
           <el-button type="info" @click="closeDialog">取消</el-button>
         </el-form-item>
@@ -244,6 +250,17 @@ export default {
       taskTotal: 0,
       recordCurrentPage: 1,
       recordTotal: 0,
+      taskRule: {
+        taskName: [
+          { required: true, message: '请输入任务名称', trigger: 'blur' },
+        ],
+        serviceId: [
+          { required: true, message: '请选择关联的服务', trigger: 'select' },
+        ],
+        testCaseId: [
+          { required: true, message: '请选择关联的测试集', trigger: 'select' },
+        ],
+      },
     }
   },
   methods: {
@@ -331,32 +348,38 @@ export default {
       this.showDialog = false
       this.taskForm = {}
     },
-    submit() {
-      this.taskForm.machines = JSON.stringify(this.executeList)
-      this.taskForm.taskConfig = this.jsonStr
-      if (this.isEdit) {
-        taskApi.updateTask(this.taskForm).then((res) => {
-          this.closeDialog()
-          this.getTasks(1)
-          if (res.data == 1) {
-            this.$message.success('修改成功')
-            return
-          }
+    submit(taskForm) {
+      this.$refs[taskForm].validate((valid) => {
+        if (!valid) {
+          return false
+        }
 
-          this.$message.warning('修改失败')
-        })
-        return
-      }
+        this.taskForm.machines = JSON.stringify(this.executeList)
+        this.taskForm.taskConfig = this.jsonStr
+        if (this.isEdit) {
+          taskApi.updateTask(this.taskForm).then((res) => {
+            this.closeDialog()
+            this.getTasks(1)
+            if (res.data == 1) {
+              this.$message.success('修改成功')
+              return
+            }
 
-      taskApi.createTask(this.taskForm).then((res) => {
-        this.closeDialog()
-        this.getTasks(1)
-        if (res.data == 1) {
-          this.$message.success('添加成功')
+            this.$message.warning('修改失败')
+          })
           return
         }
 
-        this.$message.warning('添加失败')
+        taskApi.createTask(this.taskForm).then((res) => {
+          this.closeDialog()
+          this.getTasks(1)
+          if (res.data == 1) {
+            this.$message.success('添加成功')
+            return
+          }
+
+          this.$message.warning('添加失败')
+        })
       })
     },
     getServices() {
