@@ -1,22 +1,24 @@
 <template>
   <div>
     <el-form
-      v-model="pipelineForm"
+      :model="pipelineForm"
       label-width="120px"
+      ref="pipelineForm"
+      :rules="rule"
       size="mini"
       :disabled="this.isView"
     >
-      <el-form-item label="流水线名称">
+      <el-form-item label="流水线名称" prop="pipelineName">
         <el-input v-model="pipelineForm.pipelineName" />
       </el-form-item>
-      <el-form-item label="流水线类型">
+      <el-form-item label="流水线类型" prop="pipelineType">
         <el-radio-group v-model="pipelineForm.pipelineType">
           <el-radio :label="1">发布流水线</el-radio>
           <el-radio :label="2">日常流水线</el-radio>
           <el-radio :label="3">个人流水线</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="执行方式">
+      <el-form-item label="执行方式" prop="executeType">
         <el-radio-group v-model="pipelineForm.executeType">
           <el-radio :label="1">手动执行</el-radio>
           <el-radio :label="2">Push</el-radio>
@@ -93,7 +95,10 @@
       <el-form-item>
         <div class="dialog-footer">
           <el-button @click="cancelCreatePipeline" size="mini">取 消</el-button>
-          <el-button type="primary" @click="submitPipeline" size="mini"
+          <el-button
+            type="primary"
+            @click="submitPipeline('pipelineForm')"
+            size="mini"
             >确 定</el-button
           >
         </div>
@@ -246,7 +251,6 @@ export default {
   watch: {
     pipeline: {
       handler(val) {
-        console.log('监听到新值', val)
         this.pipelineId = val
       },
       deep: true,
@@ -254,7 +258,6 @@ export default {
     },
     service: {
       handler(val) {
-        console.log('监听到新值', val)
         this.serviceId = val
       },
       deep: true,
@@ -262,7 +265,6 @@ export default {
     },
     isEditPipeline: {
       handler(val) {
-        console.log('监听到新值', val)
         console.log('22222', this.serviceId, this.pipelineId)
         if (!this.isEditPipeline) {
           this.pipelineId = ''
@@ -298,6 +300,17 @@ export default {
       serviceId: '',
       pipelineId: '',
       chosedConfigItem: [],
+      rule: {
+        pipelineName: [
+          { required: true, message: '请输入流水线名称', trigger: 'blur' },
+        ],
+        pipelineType: [
+          { required: true, message: '请选择流水线类型', trigger: 'change' },
+        ],
+        executeType: [
+          { required: true, message: '请选择执行方式', trigger: 'change' },
+        ],
+      },
     }
   },
   methods: {
@@ -459,37 +472,43 @@ export default {
       }
       this.resetNode()
     },
-    submitPipeline() {
-      let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
-      console.log('更新参数', param)
-      param.pipelineConfig = JSON.stringify(this.editPipelines)
+    submitPipeline(pipelineForm) {
+      this.$refs[pipelineForm].validate((valid) => {
+        if (!valid) {
+          return false
+        }
 
-      //修改流水线
-      if (this.isEditPipeline) {
-        pipelineApi
-          .updatePipeline(this.serviceId, this.pipelineId, param)
-          .then(() => {
+        let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
+        console.log('更新参数', param)
+        param.pipelineConfig = JSON.stringify(this.editPipelines)
+
+        //修改流水线
+        if (this.isEditPipeline) {
+          pipelineApi
+            .updatePipeline(this.serviceId, this.pipelineId, param)
+            .then(() => {
+              this.$message({
+                message: '修改流水线成功',
+                type: 'success',
+              })
+              this.cancelCreatePipeline()
+            })
+        }
+
+        //创建流水线
+        if (!this.isEditPipeline) {
+          param.serviceId = this.serviceId
+          param.creator = '古月澜'
+          console.log('请求的参数', param)
+          pipelineApi.savePipeline(param).then(() => {
             this.$message({
-              message: '修改流水线成功',
+              message: '创建流水线成功',
               type: 'success',
             })
             this.cancelCreatePipeline()
           })
-      }
-
-      //创建流水线
-      if (!this.isEditPipeline) {
-        param.serviceId = this.serviceId
-        param.creator = '古月澜'
-        console.log('请求的参数', param)
-        pipelineApi.savePipeline(param).then(() => {
-          this.$message({
-            message: '创建流水线成功',
-            type: 'success',
-          })
-          this.cancelCreatePipeline()
-        })
-      }
+        }
+      })
     },
     choosePipeItem(node) {
       console.log('pipeline 点击node', node)
@@ -575,12 +594,10 @@ export default {
       })
     },
     getPipeline() {
+      this.pipelineForm = {}
       pipelineApi.queryPipeline(this.serviceId, this.pipelineId).then((res) => {
         this.editPipelines = utils.displayData(res.data.stageList)
-        this.pipelineForm.pipelineName = res.data.pipelineName
-        this.pipelineForm.pipelineType = res.data.pipelineType
-        this.pipelineForm.executeType = res.data.executeType
-        this.pipelineForm.pipelineId = this.pipelineId
+        this.pipelineForm = res.data
         this.uuid++
       })
     },
