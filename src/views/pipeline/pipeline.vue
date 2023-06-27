@@ -166,6 +166,7 @@
               type="primary"
               icon="el-icon-video-play"
               size="mini"
+              :disabled="currentPipeline.executeType != 1"
               @click="startPipeline"
               >运行</el-button
             >
@@ -206,6 +207,11 @@
               <el-descriptions-item label="执行结果">
                 <el-tag :type="history.pipelineStatus | statusFormat">{{
                   history.pipelineStatus | statusName
+                }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="执行方式">
+                <el-tag type="primary">{{
+                  currentPipeline.executeType == 1 ? '手动执行' : '代码提交'
                 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
