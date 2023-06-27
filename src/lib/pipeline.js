@@ -85,9 +85,9 @@ export default {
    * 添加节点
    *
    */
-  addNode(pipeline, node, subNodes) {
+  addNode(pipelineArray, node, subNodes) {
     //新加节点与最后节点互换位置
-    console.log(JSON.parse(JSON.stringify(pipeline)), '节点', node)
+    let pipeline = JSON.parse(JSON.stringify(pipelineArray))
     let lastNode = pipeline[pipeline.length - 1]
     let wIndex = lastNode.x
     let hIndex = lastNode.y
@@ -114,7 +114,7 @@ export default {
       //最后节点横坐标加一个单位，并且重新加入数组
       lastNode.x += width
       pipeline.push(lastNode)
-      return
+      return pipeline
     }
 
     //获取所有指向新节点的前置节点
@@ -165,12 +165,14 @@ export default {
 
     this.resetId(pipeline)
     console.log('sub result', pipeline)
+    return pipeline
   },
   /**
    * 删除节点
    */
   removeNode(pipeline, node) {
-    if (node.id != node.group) {
+    console.log('1qewqewq', node)
+    if (!node.root) {
       return this.removeSingleNode(pipeline, node)
     }
 

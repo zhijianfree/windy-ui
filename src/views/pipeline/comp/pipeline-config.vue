@@ -4,7 +4,7 @@
       :model="pipelineForm"
       label-width="120px"
       ref="pipelineForm"
-      :rules="rule"
+      :rules="pipelineRule"
       size="mini"
       :disabled="this.isView"
     >
@@ -114,16 +114,34 @@
       width="70%"
       @close="closeConfigNode"
     >
-      <el-form size="mini" :disabled="isView">
-        <el-form-item label="节点名称" :label-width="formLabelWidth">
+      <el-form
+        :model="nodeForm"
+        ref="nodeForm"
+        :rules="nodeRule"
+        size="mini"
+        :disabled="isView"
+      >
+        <el-form-item
+          label="节点名称"
+          :label-width="formLabelWidth"
+          prop="name"
+        >
           <el-input v-model="nodeForm.name" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="节点提示" :label-width="formLabelWidth">
+        <el-form-item
+          label="节点提示"
+          :label-width="formLabelWidth"
+          prop="hint"
+        >
           <el-input v-model="nodeForm.hint" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="节点类型" :label-width="formLabelWidth">
+        <el-form-item
+          label="节点类型"
+          :label-width="formLabelWidth"
+          prop="configId"
+        >
           <el-select
-            v-model="selectNodeType"
+            v-model="nodeForm.configId"
             placeholder="请选择"
             @change="selectStep"
           >
@@ -216,7 +234,7 @@
         <el-button
           v-if="!isView"
           type="primary"
-          @click="submitConfig"
+          @click="submitConfig('nodeForm')"
           size="mini"
           >确认</el-button
         >
@@ -265,8 +283,8 @@ export default {
     },
     isEditPipeline: {
       handler(val) {
-        console.log('22222', this.serviceId, this.pipelineId)
-        if (!this.isEditPipeline) {
+        if (!val) {
+          this.pipelineForm = {}
           this.pipelineId = ''
           this.serviceId = ''
           this.getDefaultPipe()
@@ -288,7 +306,7 @@ export default {
       editPipelines: [],
       formLabelWidth: '120px',
       nodeForm: {},
-      selectNodeType: '',
+      // selectNodeType: '',
       stepOptions: [],
       itemList: [],
       configForm: {},
@@ -300,7 +318,7 @@ export default {
       serviceId: '',
       pipelineId: '',
       chosedConfigItem: [],
-      rule: {
+      pipelineRule: {
         pipelineName: [
           { required: true, message: '请输入流水线名称', trigger: 'blur' },
         ],
@@ -309,6 +327,12 @@ export default {
         ],
         executeType: [
           { required: true, message: '请选择执行方式', trigger: 'change' },
+        ],
+      },
+      nodeRule: {
+        name: [{ required: true, message: '请输入节点名称', trigger: 'blur' }],
+        configId: [
+          { required: true, message: '请选择节点类型', trigger: 'select' },
         ],
       },
     }
@@ -370,8 +394,11 @@ export default {
         let config = {}
         if (this.nodeForm.list) {
           this.nodeForm.list.forEach((e) => {
-            let detail = JSON.parse(e.configDetail)
-            config[detail.actionId] = detail
+            console.log('nodeform e =>', e)
+            if (e.configDetail) {
+              let detail = JSON.parse(e.configDetail)
+              config[detail.actionId] = detail
+            }
           })
         }
         console.log('config=====', config)
@@ -400,6 +427,8 @@ export default {
         })
         console.log('执行完成====', this.itemList)
       })
+      this.paramConfigs = []
+      this.stepConfigs = []
     },
     cancelCreatePipeline() {
       this.rootList = []
@@ -412,65 +441,73 @@ export default {
     },
     closeConfigNode() {
       this.nodeForm = {}
-      this.selectNodeType = ''
+      // this.selectNodeType = ''
       this.configForm = {}
       this.itemList = []
     },
-    submitConfig() {
-      let pipeArray = JSON.parse(JSON.stringify(this.editPipelines))
-      let subNodes = []
-      console.log('新增的节点', this.nodeForm, '列表', this.itemList)
-      this.itemList.forEach((e) => {
-        let data = {}
-        e.paramList.forEach((ele) => {
-          data[ele.name] = ele.value
-        })
-
-        let item = {
-          actionId: e.actionId,
-          compareResults: e.compareResults,
-          paramList: data,
+    submitConfig(nodeForm) {
+      this.$refs[nodeForm].validate((valid) => {
+        if (!valid) {
+          return false
         }
-        e.originData = item
 
-        subNodes.push({
-          name: e.actionName,
-          hint: e.actionName,
-          status: 'success',
-          nodeId: e.nodeId,
-          originData: JSON.parse(JSON.stringify(item)),
-          next: [],
+        let pipeArray = JSON.parse(JSON.stringify(this.editPipelines))
+        let subNodes = []
+        console.log('新增的节点', this.nodeForm, '列表', this.itemList)
+        this.itemList.forEach((e) => {
+          let data = {}
+          e.paramList.forEach((ele) => {
+            data[ele.name] = ele.value
+          })
+
+          let item = {
+            actionId: e.actionId,
+            compareResults: e.compareResults,
+            paramList: data,
+          }
+          e.originData = item
+
+          subNodes.push({
+            name: e.actionName,
+            hint: e.actionName,
+            status: 'success',
+            nodeId: e.nodeId,
+            originData: JSON.parse(JSON.stringify(item)),
+            next: [],
+          })
         })
+
+        if (this.operateType == 1) {
+          let temp = JSON.parse(JSON.stringify(pipeArray))
+          let rootId = temp.length
+          let newNode = {
+            name: this.nodeForm.name,
+            hint: this.nodeForm.hint,
+            status: 'success',
+            // configId: this.selectNodeType,
+            configId: this.nodeForm.configId,
+            list: [],
+            id: rootId,
+            group: rootId,
+            root: true,
+          }
+
+          this.editPipelines = utils.addNode(pipeArray, newNode, subNodes)
+          this.uuid++
+          console.log('last result1111', this.editPipelines)
+        } else {
+          console.log('itemlist=', this.itemList)
+          console.log('subnodes=', subNodes)
+          this.editPipelines = utils.updateNode(
+            pipeArray,
+            this.nodeForm,
+            subNodes
+          )
+          // 修改完成
+          console.log('修改结果', this.editPipelines)
+        }
+        this.resetNode()
       })
-
-      if (this.operateType == 1) {
-        let temp = JSON.parse(JSON.stringify(pipeArray))
-        let rootId = temp.length
-        let newNode = {
-          name: this.nodeForm.name,
-          hint: this.nodeForm.hint,
-          status: 'success',
-          configId: this.selectNodeType,
-          list: [],
-          id: rootId,
-          group: rootId,
-          root: true,
-        }
-
-        utils.addNode(pipeArray, newNode, subNodes)
-        console.log('last result1111', this.editPipelines)
-      } else {
-        console.log('itemlist=', this.itemList)
-        console.log('subnodes=', subNodes)
-        this.editPipelines = utils.updateNode(
-          pipeArray,
-          this.nodeForm,
-          subNodes
-        )
-        // 修改完成
-        console.log('修改结果', this.editPipelines)
-      }
-      this.resetNode()
     },
     submitPipeline(pipelineForm) {
       this.$refs[pipelineForm].validate((valid) => {
@@ -528,7 +565,7 @@ export default {
 
       this.dialogVisible = true
       this.operateType = 2
-      this.selectNodeType = selectItem.configId
+      // this.selectNodeType = selectItem.configId
       this.itemList = selectItem.list
       this.selectStep(selectItem.configId)
     },
@@ -572,7 +609,7 @@ export default {
     },
     resetNode() {
       this.dialogVisible = false
-      this.selectNodeType = ''
+      // this.selectNodeType = ''
       this.configForm = {}
       this.itemList = []
       this.nodeForm = {}
