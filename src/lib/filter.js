@@ -39,6 +39,19 @@ Vue.filter('statusFormat', function (status) {
   return 'info'
 })
 
+Vue.filter('publisFormat', function (status) {
+  if (!status) {
+    return '-'
+  }
+  switch (status) {
+    case 1:
+      return '待发布'
+    case 2:
+      return '发布中'
+  }
+  return '-'
+})
+
 Vue.filter('statusName', function (status) {
   if (!status) {
     return ''

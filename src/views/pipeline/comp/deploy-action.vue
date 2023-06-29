@@ -1,122 +1,17 @@
 <template>
   <div>
     <el-divider content-position="left">动作触发配置</el-divider>
-    <el-form-item label="参数列表">
-      <el-row
-        v-for="(item, index) in paramList"
-        :key="index"
-        class="config-line"
+    <el-form-item
+      v-for="(item, index) in paramList"
+      :key="index"
+      :label="item.description"
+    >
+      <el-input
+        placeholder="输入默认值"
+        v-model="item.value"
+        @input="notifyParam"
       >
-        <el-col :span="5">
-          <el-input
-            placeholder="输入参数名"
-            v-model="item.name"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="6">
-          <el-input
-            placeholder="输入参数描述"
-            v-model="item.description"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="5">
-          <el-select
-            v-if="item.name == 'deployType'"
-            v-model="item.value"
-            placeholder="请选择"
-          >
-            <el-option
-              v-for="item in deployModes"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-          <el-input
-            v-else
-            placeholder="输入默认值"
-            v-model="item.value"
-            @input="notifyParam"
-          />
-        </el-col>
-      </el-row>
-    </el-form-item>
-
-    <el-divider content-position="left">状态查询配置</el-divider>
-    <el-form-item label="结果条件列表">
-      <el-row
-        v-for="(item, index) in compareList"
-        :key="index"
-        class="config-line"
-      >
-        <el-col :span="4">
-          <el-input
-            placeholder="比较Key"
-            v-model="item.compareKey"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-input
-            placeholder="描述"
-            v-model="item.description"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="item.valueType"
-            placeholder="选择数据类型"
-            disabled
-            @change="notifyParam"
-          >
-            <el-option
-              v-for="item in typeList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="item.operator"
-            placeholder="选择运算服符"
-            disabled
-            @change="notifyParam"
-          >
-            <el-option
-              v-for="item in operators"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-input
-            placeholder="设置期望值"
-            v-model="item.value"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-      </el-row>
+      </el-input>
     </el-form-item>
   </div>
 </template>

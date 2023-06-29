@@ -1,40 +1,18 @@
 <template>
   <div>
     <el-divider content-position="left">动作触发配置</el-divider>
-    <el-form-item label="参数列表">
-      <el-row
-        v-for="(item, index) in paramList"
-        :key="index"
-        class="config-line"
+    <el-form-item
+      v-for="(item, index) in paramList"
+      :key="index"
+      :label="item.description"
+    >
+      <el-input
+        placeholder="输入默认值"
+        v-model="item.value"
+        @input="notifyParam"
       >
-        <el-col :span="5">
-          <el-input
-            placeholder="输入参数名"
-            v-model="item.name"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="6">
-          <el-input
-            placeholder="输入参数描述"
-            v-model="item.description"
-            disabled
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="5">
-          <el-input
-            placeholder="输入默认值"
-            v-model="item.value"
-            @input="notifyParam"
-          >
-            <span slot="suffix">秒</span>
-          </el-input>
-        </el-col>
-      </el-row>
+        <span slot="suffix">秒</span>
+      </el-input>
     </el-form-item>
   </div>
 </template>

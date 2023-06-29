@@ -11,25 +11,20 @@ export default {
     //找到当前修改跟节点以及所有子节点
     let currentline = []
     let nodeIndex = 0
-    pipelineArray.forEach((e) => {
-      if (e.group == node.group) {
-        if (e.root) {
-          nodeIndex = pipelineArray.indexOf(e)
-          return
+    for (var i = 0; i < pipelineArray.length; ) {
+      if (pipelineArray[i].group == node.group) {
+        if (pipelineArray[i].root) {
+          nodeIndex = i
+          i++
+          continue
         }
-        currentline.push(e)
+        currentline.push(pipelineArray[i])
+        //删除子节点
+        pipelineArray.splice(i, 1)
+      } else {
+        i++
       }
-    })
-
-    //删除所有子节点
-    let reduceIndex = []
-    currentline.forEach((e) => {
-      let index = pipelineArray.indexOf(e)
-      reduceIndex.push(index)
-    })
-    reduceIndex.forEach((index) => {
-      pipelineArray.splice(index, 1)
-    })
+    }
 
     console.log('index======', nodeIndex)
     console.log('pipe======', JSON.parse(JSON.stringify(pipelineArray)))

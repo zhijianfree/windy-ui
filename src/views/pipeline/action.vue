@@ -200,11 +200,11 @@
       width="80%"
     >
       <el-form
-        v-model="actionForm"
+        :model="actionForm"
         ref="actionForm"
         :rules="actionRule"
         size="small"
-        label-width="120px"
+        label-width="150px"
       >
         <el-form-item label="执行点名称" prop="actionName">
           <el-input
@@ -366,7 +366,6 @@ export default {
       })
     },
     notifyParam(notifyData) {
-      console.log('444', notifyData)
       this.configList = notifyData.paramList
       this.compareList = notifyData.compareList
     },
@@ -430,7 +429,6 @@ export default {
     getNodes() {
       NodeApi.getNodePage(this.currentNodePage, 10, this.queryNodeName).then(
         (res) => {
-          console.log('get node list', res)
           this.nodeTotalSize = res.total
           this.nodeList = res.data
         }

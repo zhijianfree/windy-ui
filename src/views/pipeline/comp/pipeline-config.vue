@@ -14,7 +14,7 @@
       <el-form-item label="流水线类型" prop="pipelineType">
         <el-radio-group v-model="pipelineForm.pipelineType">
           <el-radio :label="1">发布流水线</el-radio>
-          <el-radio :label="2">日常流水线</el-radio>
+          <el-radio :label="2">定时流水线</el-radio>
           <el-radio :label="3">个人流水线</el-radio>
         </el-radio-group>
       </el-form-item>
@@ -93,7 +93,7 @@
         />
       </div>
       <el-form-item>
-        <div class="dialog-footer">
+        <div class="dialog-footer" v-if="!isView">
           <el-button @click="cancelCreatePipeline" size="mini">取 消</el-button>
           <el-button
             type="primary"
@@ -160,7 +160,7 @@
           <div class="step-title">执行步骤</div>
           <div class="item-list">
             <ul>
-              <draggable>
+              <draggable :list="itemList">
                 <li
                   v-for="(item, index) in itemList"
                   :key="index"
@@ -254,9 +254,9 @@ export default {
     draggable,
   },
   props: {
-    isEditPipeline: {
-      type: Boolean,
-      default: false,
+    operate: {
+      type: Number,
+      default: 1,
     },
     pipeline: {
       type: String,
@@ -264,6 +264,10 @@ export default {
     },
     service: {
       type: String,
+    },
+    enableView: {
+      type: Boolean,
+      default: false,
     },
   },
   watch: {
@@ -281,15 +285,25 @@ export default {
       deep: true,
       immediate: true,
     },
-    isEditPipeline: {
-      handler(val) {
-        if (!val) {
+    operate: {
+      handler(type) {
+        if (type == 1) {
+          this.isView = false
+          this.isEditPipeline = true
+          this.getPipeline()
+        }
+        if (type == 2) {
+          this.isView = true
+          this.isEditPipeline = false
+          this.getPipeline()
+        }
+        if (type == 3) {
+          this.isView = false
           this.pipelineForm = {}
           this.pipelineId = ''
           this.serviceId = ''
           this.getDefaultPipe()
-        } else {
-          this.getPipeline()
+          this.isEditPipeline = false
         }
       },
       deep: true,
@@ -298,6 +312,7 @@ export default {
   },
   data() {
     return {
+      isEditPipeline: false,
       pipelineForm: {},
       isView: false,
       dialogVisible: false,
@@ -306,7 +321,6 @@ export default {
       editPipelines: [],
       formLabelWidth: '120px',
       nodeForm: {},
-      // selectNodeType: '',
       stepOptions: [],
       itemList: [],
       configForm: {},
@@ -441,7 +455,6 @@ export default {
     },
     closeConfigNode() {
       this.nodeForm = {}
-      // this.selectNodeType = ''
       this.configForm = {}
       this.itemList = []
     },
@@ -484,7 +497,6 @@ export default {
             name: this.nodeForm.name,
             hint: this.nodeForm.hint,
             status: 'success',
-            // configId: this.selectNodeType,
             configId: this.nodeForm.configId,
             list: [],
             id: rootId,
@@ -565,7 +577,6 @@ export default {
 
       this.dialogVisible = true
       this.operateType = 2
-      // this.selectNodeType = selectItem.configId
       this.itemList = selectItem.list
       this.selectStep(selectItem.configId)
     },
@@ -609,7 +620,6 @@ export default {
     },
     resetNode() {
       this.dialogVisible = false
-      // this.selectNodeType = ''
       this.configForm = {}
       this.itemList = []
       this.nodeForm = {}

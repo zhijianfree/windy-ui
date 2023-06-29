@@ -1,107 +1,32 @@
 <template>
   <div>
     <el-divider content-position="left">动作触发配置</el-divider>
-    <el-form-item label="参数列表">
-      <el-row
-        v-for="(item, index) in paramList"
-        :key="index"
-        class="config-line"
+    <el-form-item
+      v-for="(item, index) in paramList"
+      :key="index"
+      :label="item.description"
+    >
+      <el-input
+        placeholder="输入默认值"
+        v-model="item.value"
+        @input="notifyParam"
       >
-        <el-col :span="5">
-          <el-input
-            disabled
-            placeholder="输入参数名"
-            v-model="item.name"
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="6">
-          <el-input
-            disabled
-            placeholder="输入参数描述"
-            v-model="item.description"
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="5">
-          <el-input
-            placeholder="输入默认值"
-            v-model="item.value"
-            @input="notifyParam"
-          />
-        </el-col>
-      </el-row>
+      </el-input>
     </el-form-item>
 
     <el-divider content-position="left">状态查询配置</el-divider>
-    <el-form-item label="结果条件列表">
-      <el-row
-        v-for="(item, index) in compareList"
-        :key="index"
-        class="config-line"
-      >
-        <el-col :span="4">
-          <el-input
-            disabled
-            placeholder="比较Key"
-            v-model="item.compareKey"
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-input
-            disabled
-            placeholder="描述"
-            v-model="item.description"
-            @input="notifyParam"
-          />
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-select
-            disabled
-            v-model="item.valueType"
-            placeholder="选择数据类型"
-            @change="notifyParam"
-          >
-            <el-option
-              v-for="item in typeList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-select
-            disabled
-            v-model="item.operator"
-            placeholder="选择运算服符"
-            @change="notifyParam"
-          >
-            <el-option
-              v-for="item in operators"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-col>
-        <el-col :span="1" class="separate-line">-</el-col>
-        <el-col :span="4">
-          <el-input
-            placeholder="设置期望值"
-            v-model="item.value"
-            @input="notifyParam"
-          />
-        </el-col>
-      </el-row>
+    <el-form-item
+      v-for="(item, index) in compareList"
+      :key="index"
+      :label="item.description"
+    >
+      <el-input-number
+        v-model="item.value"
+        @change="notifyParam"
+        :min="50"
+        :max="100"
+        label="请输入默认值"
+      ></el-input-number>
     </el-form-item>
   </div>
 </template>
@@ -140,7 +65,7 @@ export default {
       compareList: [
         {
           compareKey: 'percent',
-          description: '任务执行成功率百分比',
+          description: '执行成功率',
           operator: '>=',
           valueType: 'Integer',
           value: '90',
