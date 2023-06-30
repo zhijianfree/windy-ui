@@ -97,6 +97,15 @@
             </template>
           </el-table-column>
           <el-table-column label="操作">
+            <template slot="header">
+              <el-button
+                size="mini"
+                type="primary"
+                icon="el-icon-refresh"
+                @click="getTaskRecords(1)"
+                >刷新</el-button
+              >
+            </template>
             <template slot-scope="scope">
               <el-button
                 size="mini"
@@ -339,9 +348,13 @@ export default {
       }
     },
     deleteTask(row) {
-      taskApi.deleteTask(row.recordId).then(() => {
-        this.$message.success('删除成功')
-        this.getTasks(this.taskCurrentPage, this.queryForm.name)
+      taskApi.deleteTask(row.taskId).then((res) => {
+        if (res.data) {
+          this.$message.success('删除成功')
+          this.getTasks(this.taskCurrentPage, this.queryForm.name)
+        } else {
+          this.$message.error('删除失败')
+        }
       })
     },
     closeDialog() {

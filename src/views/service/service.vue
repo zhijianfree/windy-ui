@@ -97,7 +97,7 @@
         <el-form-item label="服务git地址" prop="gitUrl">
           <el-input
             v-model="serviceForm.gitUrl"
-            placeholder="请输入服务名称"
+            placeholder="请输入服务git地址"
           ></el-input>
         </el-form-item>
         <el-form-item>

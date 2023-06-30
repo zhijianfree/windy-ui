@@ -360,9 +360,8 @@ import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
 import utils from '../../lib/pipeline'
 import nodeApi from '../../http/NodeBind'
-import Template from '../feature/template.vue'
 export default {
-  components: { bind, PipelineConfig, Template },
+  components: { bind, PipelineConfig },
   data() {
     return {
       nodes: [],
@@ -519,6 +518,7 @@ export default {
     },
     selectService() {
       this.getPipelineList()
+      this.currentPipeline = { pipelineConfig: [] }
     },
 
     showNodeLog(node) {
