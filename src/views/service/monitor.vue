@@ -9,6 +9,16 @@
     >
     </el-alert>
     <div>
+      <div>
+        <el-button
+          type="primary"
+          icon="el-icon-refresh"
+          size="mini"
+          @click="refresh"
+        >
+          刷新状态</el-button
+        >
+      </div>
       <el-divider content-position="left">Master节点</el-divider>
       <div>
         <el-table :data="masterData">
@@ -20,7 +30,6 @@
           </el-table-column>
           <el-table-column label="cpu" prop="cpu"> </el-table-column>
           <el-table-column label="内存" prop="heap"> </el-table-column>
-          <el-table-column label="堆外内存" prop="noHeap"> </el-table-column>
           <el-table-column label="线程数" prop="threads"> </el-table-column>
           <el-table-column label="任务数" prop="size"> </el-table-column>
           <el-table-column label="垃圾收集">
@@ -64,7 +73,6 @@
         </el-table-column>
         <el-table-column label="cpu" prop="cpu"> </el-table-column>
         <el-table-column label="内存" prop="heap"> </el-table-column>
-        <el-table-column label="堆外内存" prop="noHeap"> </el-table-column>
         <el-table-column label="线程数" prop="threads"> </el-table-column>
         <el-table-column label="任务数" prop="size"> </el-table-column>
         <el-table-column label="垃圾收集">
@@ -98,43 +106,45 @@
   </div>
 </template>
 <script>
-import systemApi from '../../http/System'
+import systemApi from "../../http/System";
 export default {
   data() {
     return {
       clientData: [],
       masterData: [],
-    }
+    };
   },
   methods: {
+    refresh() {
+      this.getMonitor();
+    },
     getMonitor() {
-      this.clientData = []
-      this.masterData = []
+      this.clientData = [];
+      this.masterData = [];
       systemApi.getMonitor().then((res) => {
-        console.log('get result =', res)
         res.data.clients.forEach((e) => {
-          let item = e.physics
-          item.size = e.waitQuerySize
-          this.clientData.push(item)
-        })
+          let item = e.physics;
+          item.size = e.waitQuerySize;
+          this.clientData.push(item);
+        });
 
         res.data.masters.forEach((e) => {
-          let item = e.physics
-          item.size = e.taskCount
-          this.masterData.push(item)
-        })
-      })
+          let item = e.physics;
+          item.size = e.taskCount;
+          this.masterData.push(item);
+        });
+      });
     },
   },
   created() {
-    this.getMonitor()
+    this.getMonitor();
   },
-}
+};
 </script>
 <style scoped>
 .content {
-  width: 80%;
-  margin-left: 10%;
+  width: 90%;
+  margin-left: 5%;
 }
 .tips-info {
   margin: 10px;
