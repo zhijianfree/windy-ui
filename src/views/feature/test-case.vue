@@ -94,20 +94,26 @@
       @close="closeDialog"
       width="70%"
     >
-      <el-form :model="caseForm" size="small" label-width="120px">
-        <el-form-item label="测试集名称">
+      <el-form
+        :model="caseForm"
+        ref="caseForm"
+        :rules="rule"
+        size="small"
+        label-width="120px"
+      >
+        <el-form-item label="测试集名称" prop="testCaseName">
           <el-input
             v-model="caseForm.testCaseName"
             placeholder="请输入测试集名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="测试集描述">
+        <el-form-item label="测试集描述" prop="description">
           <el-input
             v-model="caseForm.description"
             placeholder="请输入测试集描述"
           ></el-input>
         </el-form-item>
-        <el-form-item label="选择服务">
+        <el-form-item label="选择服务" prop="serviceId">
           <el-select v-model="caseForm.serviceId" placeholder="请选择">
             <el-option
               v-for="item in serviceList"
@@ -119,7 +125,7 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submit">确认</el-button>
+          <el-button type="primary" @click="submit('caseForm')">确认</el-button>
 
           <el-button type="info" @click="closeDialog">取消</el-button>
         </el-form-item>
@@ -250,6 +256,17 @@ export default {
       treeData: [],
       allKeys: [],
       featureForm: {},
+      rule: {
+        testCaseName: [
+          { required: true, message: '请输入测试集名称', trigger: 'blur' },
+        ],
+        description: [
+          { required: true, message: '请输入详细描述', trigger: 'blur' },
+        ],
+        serviceId: [
+          { required: true, message: '请选择关联的服务', trigger: 'select' },
+        ],
+      },
     }
   },
   methods: {
@@ -343,15 +360,21 @@ export default {
       this.showDialog = false
       this.caseForm = {}
     },
-    submit() {
-      testCaseApi.createTestCase(this.caseForm).then((res) => {
-        this.closeDialog()
-        if (res.data) {
-          this.$message.success('添加测试集成功')
-          this.getTestCaseList(1)
-          return
+    submit(caseForm) {
+      this.$refs[caseForm].validate((valid) => {
+        if (!valid) {
+          return false
         }
-        this.$message.error('添加测试集失败')
+
+        testCaseApi.createTestCase(this.caseForm).then((res) => {
+          this.closeDialog()
+          if (res.data) {
+            this.$message.success('添加测试集成功')
+            this.getTestCaseList(1)
+            return
+          }
+          this.$message.error('添加测试集失败')
+        })
       })
     },
     startCreate() {

@@ -39,7 +39,7 @@
           >
           <el-menu-item index="/pipe/action">
             <i class="el-icon-s-promotion"></i>
-            执行点管理</el-menu-item
+            节点管理</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/">
@@ -60,6 +60,20 @@
             任务管理</el-menu-item
           >
         </el-submenu>
+        <el-submenu index="/system">
+          <template slot="title">
+            <i class="el-icon-s-promotion"></i>
+            <span slot="title">系统管理</span>
+          </template>
+          <el-menu-item index="/system">
+            <i class="el-icon-s-tools"></i>
+            系统配置</el-menu-item
+          >
+          <el-menu-item index="/monitor">
+            <i class="el-icon-s-platform"></i>
+            监控</el-menu-item
+          >
+        </el-submenu>
       </el-menu>
     </el-aside>
     <el-main>
@@ -72,24 +86,24 @@ export default {
   data() {
     return {
       isStartCollapse: false,
-      selectIndex: "/",
-    };
+      selectIndex: '/',
+    }
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse;
+      this.isStartCollapse = !this.isStartCollapse
     },
   },
   computed: {
     toggleButton() {
       if (this.isStartCollapse) {
-        return "minMargin";
+        return 'minMargin'
       } else {
-        return "maxMargin";
+        return 'maxMargin'
       }
     },
   },
-};
+}
 </script>
 <style>
 body {

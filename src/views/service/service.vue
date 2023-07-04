@@ -73,14 +73,20 @@
       @close="closeDialog"
       width="70%"
     >
-      <el-form :model="serviceForm" size="small" label-width="120px">
-        <el-form-item label="服务名称">
+      <el-form
+        :model="serviceForm"
+        :rules="rules"
+        ref="serviceForm"
+        size="small"
+        label-width="120px"
+      >
+        <el-form-item label="服务名称" prop="serviceName">
           <el-input
             v-model="serviceForm.serviceName"
             placeholder="请输入服务名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="服务描述">
+        <el-form-item label="服务描述" prop="description">
           <el-input
             v-model="serviceForm.description"
             type="textarea"
@@ -88,14 +94,16 @@
             placeholder="请输入服务描述"
           ></el-input>
         </el-form-item>
-        <el-form-item label="服务git地址">
+        <el-form-item label="服务git地址" prop="gitUrl">
           <el-input
             v-model="serviceForm.gitUrl"
-            placeholder="请输入服务名称"
+            placeholder="请输入服务git地址"
           ></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submit">确认</el-button>
+          <el-button type="primary" @click="submit('serviceForm')"
+            >确认</el-button
+          >
 
           <el-button type="info" @click="closeDialog">取消</el-button>
         </el-form-item>
@@ -117,6 +125,14 @@ export default {
       showServiceDialog: false,
       serviceForm: {},
       isEdit: false,
+      rules: {
+        serviceName: [
+          { required: true, message: "请输入服务名称", trigger: "blur" },
+        ],
+        gitUrl: [
+          { required: true, message: "请输入服务的git地址", trigger: "blur" },
+        ],
+      },
     };
   },
   methods: {
@@ -171,20 +187,26 @@ export default {
         this.serviceData = res.data.data;
       });
     },
-    submit() {
-      if (this.isEdit) {
-        serviceApi.updateService(this.serviceForm).then(() => {
-          this.$message.success("修改成功！");
+    submit(serviceForm) {
+      this.$refs[serviceForm].validate((valid) => {
+        if (!valid) {
+          return false;
+        }
+
+        if (this.isEdit) {
+          serviceApi.updateService(this.serviceForm).then(() => {
+            this.$message.success("修改成功！");
+            this.closeDialog();
+            this.getServices(1);
+          });
+          return;
+        }
+
+        serviceApi.createService(this.serviceForm).then(() => {
+          this.$message.success("添加成功！");
           this.closeDialog();
           this.getServices(1);
         });
-        return;
-      }
-
-      serviceApi.createService(this.serviceForm).then(() => {
-        this.$message.success("添加成功！");
-        this.closeDialog();
-        this.getServices(1);
       });
     },
   },

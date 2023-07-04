@@ -25,7 +25,7 @@
     <!-- 服务title结束 -->
 
     <!-- 流水线内容开始 -->
-    <div class="right-content">
+    <div class="content">
       <el-row>
         <!-- 流水线列表开始 -->
         <el-col :span="4">
@@ -76,7 +76,7 @@
                 </el-collapse-item>
                 <el-collapse-item name="2">
                   <template slot="title">
-                    <i class="el-icon-cpu title-icon" /> 日常流水线
+                    <i class="el-icon-cpu title-icon" /> 定时流水线
                   </template>
                   <div
                     v-for="(item, index) in buildList"
@@ -166,6 +166,7 @@
               type="primary"
               icon="el-icon-video-play"
               size="mini"
+              :disabled="currentPipeline.executeType != 1"
               @click="startPipeline"
               >运行</el-button
             >
@@ -180,6 +181,7 @@
             <el-button
               type="primary"
               icon="el-icon-setting"
+              v-if="currentPipeline.pipelineType != 1"
               size="mini"
               @click="showGitConfig = !showGitConfig"
               >Git配置</el-button
@@ -190,6 +192,14 @@
               size="mini"
               @click="startView"
               >查看</el-button
+            >
+            <el-button
+              type="primary"
+              icon="el-icon-upload"
+              size="mini"
+              v-if="currentPipeline.pipelineType != 1"
+              @click="publish"
+              >推送发布</el-button
             >
           </div>
           <!-- 流水线操作按钮结束 -->
@@ -204,8 +214,13 @@
                 {{ history.createTime | dateFormat }}
               </el-descriptions-item>
               <el-descriptions-item label="执行结果">
-                <el-tag :type="exchangeExecuteStatus(history.pipelineStatus)">{{
-                  exchangeStatusMessage(history.pipelineStatus)
+                <el-tag :type="history.pipelineStatus | statusFormat">{{
+                  history.pipelineStatus | statusName
+                }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="执行方式">
+                <el-tag type="primary">{{
+                  currentPipeline.executeType == 1 ? '手动执行' : '代码提交'
                 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
@@ -232,6 +247,34 @@
             />
           </div>
           <!-- 流水线ui结束 -->
+
+          <!-- 发布流水线关联分支开始 -->
+          <div v-if="currentPipeline.pipelineType == 1">
+            <el-table :data="publishData" style="width: 100%">
+              <el-table-column prop="branch" label="分支"> </el-table-column>
+              <el-table-column prop="status" label="状态">
+                <template slot-scope="scope">
+                  {{ scope.row.status | publisFormat }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="createTime" label="创建时间">
+                <template slot-scope="scope">
+                  {{ scope.row.createTime | dateFormat }}
+                </template>
+              </el-table-column>
+              <el-table-column fixed="right" label="操作" width="100">
+                <template slot-scope="scope">
+                  <el-button
+                    @click="removePublish(scope.row)"
+                    type="text"
+                    size="small"
+                    >移除发布</el-button
+                  >
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <!-- 发布流水线关联分支结束 -->
         </el-col>
         <!-- 流水线内容结束 -->
       </el-row>
@@ -280,19 +323,38 @@
       :before-close="cancelCreatePipeline"
     >
       <PipelineConfig
-        :isEditPipeline="piplienOperate == 1"
+        :operate="piplienOperate"
         :pipeline="currentPipeline.pipelineId"
         :service="serviceId"
         @complete="completeNotify"
       />
     </el-dialog>
     <!-- 创建/编辑流水线结束 -->
+    <!-- 审批开始 -->
+    <el-dialog
+      title="卡点审批"
+      :visible.sync="showApproval"
+      width="30%"
+      :before-close="approvalClose"
+    >
+      <span>审批是否通过?</span>
+      <span slot="footer">
+        <el-button size="mini" type="danger" @click="cancelApproval"
+          >不通过</el-button
+        >
+        <el-button size="mini" type="primary" @click="confirmApproval"
+          >通过</el-button
+        >
+      </span>
+    </el-dialog>
+    <!-- 审批结束 -->
   </div>
 </template>
 <script>
 import bind from './bindgit.vue'
 import PipelineConfig from './comp/pipeline-config.vue'
 import pipelineApi from '../../http/Pipeline'
+import publishApi from '../../http/Publish'
 import serviceApi from '../../http/Service'
 import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
@@ -317,28 +379,78 @@ export default {
       customList: [],
       isRunning: false,
       pipelineDialog: false,
-      pipelineForm: {
-        pipelineConfig: [],
-      },
-      isView: false,
       piplienOperate: 0,
       prenodeId: [],
-      chosedConfigItem: [],
       serviceId: '',
       titleName: '新增流水线',
       showGitConfig: false,
       uuid: 1,
       isShowNodeLog: false,
       logForm: {},
+      publishData: [],
+      approvalNode: {},
+      showApproval: false,
     }
   },
   methods: {
+    approvalClose() {
+      this.approvalNode = {}
+      this.showApproval = false
+    },
+    cancelApproval() {
+      this.approvalPipeline(2)
+    },
+    confirmApproval() {
+      this.approvalPipeline(1)
+    },
+    approvalPipeline(status) {
+      historyApi
+        .approval(this.history.historyId, this.approvalNode.nodeId, status)
+        .then((res) => {
+          if (res.data) {
+            this.$message.success('审批通过')
+          } else {
+            this.$message.error('审批失败，请重试')
+          }
+          this.approvalClose()
+        })
+    },
+    getServicePublishes() {
+      this.publishData = []
+      publishApi.getPublishes(this.serviceId).then((res) => {
+        this.publishData = res.data
+      })
+    },
+    publish() {
+      let data = {
+        pipelineId: this.currentPipeline.pipelineId,
+        serviceId: this.serviceId,
+      }
+      publishApi.createPublish(data).then((res) => {
+        console.log('=====', res)
+        if (res.data) {
+          this.$message.success('推送发布成功，请去发布流水线查看')
+        } else {
+          this.$message.error('推送发布失败')
+        }
+      })
+    },
+    removePublish(row) {
+      publishApi.deletePublish(row.publishId).then((res) => {
+        if (res.data) {
+          this.$message.success('删除成功')
+          this.getServicePublishes()
+        } else {
+          this.$message.error('删除失败')
+        }
+      })
+    },
     completeNotify() {
       this.pipelineDialog = false
       this.getPipelineList()
       if (this.piplienOperate == 1) {
         pipelineApi
-          .queryPipeline(this.serviceId, this.currentPipeline.pipelineId)
+          .queryPipeline(this.currentPipeline.pipelineId)
           .then((res) => {
             let config = utils.displayData(res.data.stageList)
             this.currentPipeline.pipelineConfig = config
@@ -406,7 +518,9 @@ export default {
     },
     selectService() {
       this.getPipelineList()
+      this.currentPipeline = { pipelineConfig: [] }
     },
+
     showNodeLog(node) {
       if (this.isRunning && node.originData && node.originData.actionId) {
         actionApi.getAction(node.originData.actionId).then((res) => {
@@ -414,14 +528,8 @@ export default {
             if (!this.history.historyId) {
               return
             }
-
-            this.$confirm('是否审批通过?').then(() => {
-              historyApi
-                .approval(this.history.historyId, node.nodeId)
-                .then(() => {
-                  this.$message.success('审批通过')
-                })
-            })
+            this.approvalNode = node
+            this.showApproval = true
           }
         })
         return
@@ -533,9 +641,7 @@ export default {
         return
       }
       this.piplienOperate = 1
-      this.isView = false
       this.pipelineDialog = true
-      this.pipelineForm = JSON.parse(JSON.stringify(this.currentPipeline))
     },
     startView() {
       if (!this.currentPipeline.pipelineConfig.length) {
@@ -545,8 +651,6 @@ export default {
       this.piplienOperate = 2
       this.titleName = '查看流水线'
       this.pipelineDialog = true
-      this.isView = true
-      this.pipelineForm = this.currentPipeline
     },
     selectPipeline(item) {
       this.publishList.forEach((e) => {
@@ -559,7 +663,7 @@ export default {
         e.selected = false
       })
       item.selected = true
-      pipelineApi.queryPipeline(this.serviceId, item.pipelineId).then((res) => {
+      pipelineApi.queryPipeline(item.pipelineId).then((res) => {
         let config = utils.displayData(res.data.stageList)
         this.currentPipeline.pipelineConfig = config
         this.currentPipeline.pipelineName = res.data.pipelineName
@@ -567,6 +671,10 @@ export default {
         this.currentPipeline.executeType = res.data.executeType
         this.currentPipeline.pipelineId = item.pipelineId
         this.uuid++
+
+        if (this.currentPipeline.pipelineType == 1) {
+          this.getServicePublishes()
+        }
       })
 
       historyApi
@@ -581,13 +689,14 @@ export default {
             let item = {}
             res.data.nodeStatusList.forEach((e) => {
               item[e.nodeId] = this.exchangeStatus(e.status)
-              console.log(item[e.nodeId])
             })
 
             this.currentPipeline.pipelineConfig.forEach((e) => {
               let status = item[e.nodeId]
               if (status) {
                 e.status = status
+              } else {
+                e.status = 'success'
               }
             })
             this.uuid++
@@ -610,7 +719,6 @@ export default {
         this.piplienOperate = 3
         this.titleName = '创建流水线'
         this.pipelineDialog = true
-        this.isView = false
       }
     },
     deletePipeline(pipeline) {
@@ -688,12 +796,7 @@ export default {
       }, 3000)
     },
     cancelCreatePipeline() {
-      this.rootList = []
       this.pipelineDialog = false
-      this.isView = false
-      this.pipelineForm = {}
-      this.editPipelines = []
-      this.configForm = {}
     },
   },
   created() {
@@ -767,7 +870,7 @@ export default {
 .title-icon {
   margin-right: 10px;
 }
-.right-content {
+.content {
   margin: 10px;
 }
 .service-name {

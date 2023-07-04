@@ -77,20 +77,29 @@
           /></span>
         </el-tooltip>
       </template>
-      <el-form :model="infoForm" size="small" label-width="120px">
-        <el-form-item label="模版名称">
+      <el-form
+        :model="infoForm"
+        ref="infoForm"
+        :rules="infoRule"
+        size="small"
+        label-width="120px"
+      >
+        <el-form-item label="模版名称" prop="name">
           <el-input
             v-model="infoForm.name"
             placeholder="请输入模版名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="模版类型">
+        <el-form-item label="模版类型" prop="invokeType">
           <el-radio-group v-model="infoForm.invokeType">
             <el-radio :label="1">默认模版</el-radio>
             <el-radio :label="2">Http</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item :label="infoForm.invokeType == 1 ? '类名' : 'Url'">
+        <el-form-item
+          :label="infoForm.invokeType == 1 ? '类名' : 'Url'"
+          prop="service"
+        >
           <el-input v-model="infoForm.service" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="请求header" v-if="infoForm.invokeType == 2">
@@ -125,9 +134,9 @@
             </el-col>
           </el-row>
         </el-form-item>
-        <el-form-item label="方法">
+        <el-form-item label="方法" prop="method">
           <el-input
-            v-if="infoForm.templateType == 1"
+            v-if="infoForm.invokeType == 1"
             v-model="infoForm.method"
             placeholder="请输入"
           ></el-input>
@@ -219,7 +228,7 @@
             </el-col>
           </el-row>
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item label="描述" prop="description">
           <el-input
             v-model="infoForm.description"
             placeholder="请输入模版功能描述"
@@ -228,7 +237,7 @@
           ></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submit">确认</el-button>
+          <el-button type="primary" @click="submit('infoForm')">确认</el-button>
 
           <el-button type="info" @click="closeDialog">取消</el-button>
         </el-form-item>
@@ -265,6 +274,17 @@ export default {
       isEdit: false,
       currentPage: 1,
       totalSize: 0,
+      infoRule: {
+        name: [{ required: true, message: '请输入模版名称', trigger: 'blur' }],
+        invokeType: [
+          { required: true, message: '请选择执行类型', trigger: 'blur' },
+        ],
+        service: [{ required: true, message: '此项不能为空', trigger: 'blur' }],
+        method: [{ required: true, message: '此项不能为空', trigger: 'blur' }],
+        description: [
+          { required: true, message: '模版描述不能为空', trigger: 'blur' },
+        ],
+      },
     }
   },
   methods: {
@@ -298,7 +318,7 @@ export default {
       this.isEdit = false
       this.showDialog = !this.showDialog
       this.dialogTitle = '创建模版'
-      this.infoForm = { params: [{}], headers: [{}] }
+      this.infoForm = { params: [{}], headers: [{}], invokeType: 1, method: '' }
     },
     refreshTemplate(row) {
       templateApi.refresh(row.templateId).then((res) => {
@@ -315,17 +335,16 @@ export default {
       this.dialogTitle = '编辑模版'
 
       let rowData = JSON.parse(JSON.stringify(row))
-      if (rowData.headers) {
+      if (rowData.headers && rowData.headers.length > 0) {
         let array = []
         Object.keys(rowData.headers).forEach((key) => {
           array.push({ key: key, value: rowData.headers[key] })
         })
         rowData.headers = array
       } else {
-        rowData.headers = [{}]
+        rowData.headers = [{ key: '', value: '' }]
       }
 
-      rowData.headers
       if (!rowData.params) {
         this.infoForm = rowData
         return
@@ -342,6 +361,7 @@ export default {
         e.defaultValue = e.defaultValue.defaultValue
       })
       this.infoForm = rowData
+      console.log('rrrr', this.infoForm)
     },
     handleDelete(row) {
       templateApi.deleteTemplate(row.templateId).then(() => {
@@ -359,36 +379,42 @@ export default {
       this.showDialog = false
       this.infoForm = { params: [{}] }
     },
-    submit() {
-      let requestParam = JSON.parse(JSON.stringify(this.infoForm))
-      requestParam.params.forEach((e) => {
-        e.defaultValue = {
-          defaultValue: e.defaultValue ? e.defaultValue : '',
+    submit(infoForm) {
+      this.$refs[infoForm].validate((valid) => {
+        if (!valid) {
+          return false
         }
-        if (e.type == 2) {
-          e.defaultValue.range = e.range
+
+        let requestParam = JSON.parse(JSON.stringify(this.infoForm))
+        requestParam.params.forEach((e) => {
+          e.defaultValue = {
+            defaultValue: e.defaultValue ? e.defaultValue : '',
+          }
+          if (e.type == 2) {
+            e.defaultValue.range = e.range
+          }
+        })
+
+        let headers = {}
+        requestParam.headers.forEach((e) => {
+          headers[e.key] = e.value
+        })
+        requestParam.headers = headers
+
+        if (this.isEdit) {
+          templateApi.updateTemplate(requestParam).then(() => {
+            this.$message.success(`${this.dialogTitle}成功`)
+            this.showDialog = false
+            this.getTemplatePage(1)
+          })
+          return
         }
-      })
 
-      let headers = {}
-      requestParam.headers.forEach((e) => {
-        headers[e.key] = e.value
-      })
-      requestParam.headers = headers
-
-      if (this.isEdit) {
-        templateApi.updateTemplate(requestParam).then(() => {
+        templateApi.createTemplate(requestParam).then(() => {
           this.$message.success(`${this.dialogTitle}成功`)
           this.showDialog = false
           this.getTemplatePage(1)
         })
-        return
-      }
-
-      templateApi.createTemplate(requestParam).then(() => {
-        this.$message.success(`${this.dialogTitle}成功`)
-        this.showDialog = false
-        this.getTemplatePage(1)
       })
     },
   },

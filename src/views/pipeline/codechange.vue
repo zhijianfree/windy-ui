@@ -60,15 +60,21 @@
       </div>
     </div>
     <el-dialog title="创建变更" :visible.sync="dialogFormVisible">
-      <el-form :model="changeForm" size="mini" label-width="120px">
-        <el-form-item label="变更描述">
+      <el-form
+        :model="changeForm"
+        ref="changeForm"
+        :rules="rule"
+        size="mini"
+        label-width="120px"
+      >
+        <el-form-item label="变更描述" prop="changeName">
           <el-input
             v-model="changeForm.changeName"
             placeholder="请输入变更详细说明"
             autocomplete="off"
           ></el-input>
         </el-form-item>
-        <el-form-item label="详细说明">
+        <el-form-item label="详细说明" prop="changeDesc">
           <el-input
             type="textarea"
             placeholder="请输入详细说明"
@@ -76,7 +82,7 @@
             :autosize="{ minRows: 2, maxRows: 4 }"
           ></el-input>
         </el-form-item>
-        <el-form-item label="选择分支">
+        <el-form-item label="选择分支" prop="branchType">
           <el-radio-group
             @change="selectBranchType"
             v-model="changeForm.branchType"
@@ -85,7 +91,7 @@
             <el-radio label="custom">自定义</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="变更分支">
+        <el-form-item label="变更分支" prop="changeBranch">
           <el-input
             v-model="changeForm.changeBranch"
             :disabled="editBranch"
@@ -93,29 +99,20 @@
             autocomplete="off"
           ></el-input>
         </el-form-item>
-        <el-form-item label="关联需求/bug">
-          <el-select
+        <el-form-item label="关联需求/bug" prop="relationId">
+          <el-input
             v-model="changeForm.relationId"
-            filterable
-            remote
-            reserve-keyword
-            placeholder="请输入关联的需求或缺陷的ID"
-            :remote-method="requestRelation"
-            :loading="loading"
-          >
-            <el-option
-              v-for="item in relations"
-              :key="item.value"
-              :label="item.name"
-              :value="item.relationId"
-            >
-            </el-option>
-          </el-select>
+            placeholder="请输入关联的需求或bugId"
+            autocomplete="off"
+          ></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="closeDialog" size="mini">取 消</el-button>
-        <el-button type="primary" @click="confirmChange" size="mini"
+        <el-button
+          type="primary"
+          @click="confirmChange('changeForm')"
+          size="mini"
           >确 定</el-button
         >
       </div>
@@ -123,100 +120,104 @@
   </div>
 </template>
 <script>
-import requestApi from '../../http/CodeChange'
-import serviceApi from '../../http/Service'
+import requestApi from "../../http/CodeChange";
+import serviceApi from "../../http/Service";
 export default {
   data() {
     return {
-      service: '',
+      service: "",
       serviceList: [],
       changeList: [],
       changeForm: {
-        branchType: 'custom',
+        branchType: "custom",
       },
       dialogFormVisible: false,
-      relations: [{ name: '123', relationId: '12' }],
       loading: false,
       editBranch: false,
-    }
+      rule: {
+        changeName: [
+          { required: true, message: "请输入变更描述", trigger: "blur" },
+        ],
+        changeBranch: [
+          { required: true, message: "请输入分支名称", trigger: "blur" },
+        ],
+      },
+    };
   },
   methods: {
     getServices() {
-      this.serviceList = []
+      this.serviceList = [];
       serviceApi.getServices().then((res) => {
-        this.serviceList = res.data
-        this.service = this.serviceList[0].serviceId
-        this.getCodeChangeList()
-      })
+        this.serviceList = res.data;
+        this.service = this.serviceList[0].serviceId;
+        this.getCodeChangeList();
+      });
     },
     addChangeCode() {
-      console.log('开始的')
-      this.dialogFormVisible = true
+      this.dialogFormVisible = true;
     },
     selectService() {
-      this.getCodeChangeList()
+      this.getCodeChangeList();
     },
     selectBranchType(value) {
-      if (value == 'default') {
-        let branchName = 'develop_'
-        var today = new Date()
-        var DD = String(today.getDate()).padStart(2, '0')
-        var MM = String(today.getMonth() + 1).padStart(2, '0')
-        var yyyy = today.getFullYear()
-        branchName += yyyy + MM + DD + '_' + this.$utils.randomString(6)
-        this.editBranch = true
-        this.changeForm.changeBranch = branchName
+      if (value == "default") {
+        let branchName = "develop_";
+        var today = new Date();
+        var DD = String(today.getDate()).padStart(2, "0");
+        var MM = String(today.getMonth() + 1).padStart(2, "0");
+        var yyyy = today.getFullYear();
+        branchName += yyyy + MM + DD + "_" + this.$utils.randomString(6);
+        this.editBranch = true;
+        this.changeForm.changeBranch = branchName;
       } else {
-        this.changeForm.changeBranch = ''
-        this.editBranch = false
+        this.changeForm.changeBranch = "";
+        this.editBranch = false;
       }
     },
-    requestRelation(query) {
-      console.log('query', query)
-      requestApi.relationList(query).then((res) => {
-        this.relations = res.data
-      })
-    },
     removeChange(item) {
-      this.$confirm('确认删除？').then(() => {
+      this.$confirm("确认删除？").then(() => {
         requestApi.deleteCodeChange(this.service, item.changeId).then(() => {
           this.$message({
-            message: '删除变更成功',
-            type: 'success',
-          })
-          this.getCodeChangeList()
-        })
-      })
+            message: "删除变更成功",
+            type: "success",
+          });
+          this.getCodeChangeList();
+        });
+      });
     },
     closeDialog() {
-      this.dialogFormVisible = false
-      this.changeForm = {}
+      this.dialogFormVisible = false;
+      this.changeForm = {};
     },
-    confirmChange() {
-      this.changeForm.serviceId = this.service
-      requestApi.saveCodeChange(this.changeForm).then(() => {
-        this.$message({
-          message: '创建变更成功',
-          type: 'success',
-        })
-        this.changeForm = {
-          branchType: 'custom',
+    confirmChange(confirmChange) {
+      this.$refs[confirmChange].validate((valid) => {
+        if (!valid) {
+          return false;
         }
-        this.dialogFormVisible = false
-        this.getCodeChangeList()
-      })
+        this.changeForm.serviceId = this.service;
+        requestApi.saveCodeChange(this.changeForm).then(() => {
+          this.$message({
+            message: "创建变更成功",
+            type: "success",
+          });
+          this.changeForm = {
+            branchType: "custom",
+          };
+          this.dialogFormVisible = false;
+          this.getCodeChangeList();
+        });
+      });
     },
     getCodeChangeList() {
       requestApi.codeChangeList(this.service).then((res) => {
-        this.changeList = res.data
-      })
+        this.changeList = res.data;
+      });
     },
   },
   created() {
-    this.getServices()
-    this.requestRelation('')
+    this.getServices();
   },
-}
+};
 </script>
 <style scoped>
 .add-btn {

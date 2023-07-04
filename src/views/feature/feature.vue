@@ -195,12 +195,14 @@
       :destroy-on-close="true"
     >
       <el-form
-        v-model="featureForm"
+        :model="featureForm"
+        :rules="featureRule"
+        ref="featureForm"
         size="small"
         label-width="80px"
         label-position="top"
       >
-        <el-form-item label="名称">
+        <el-form-item label="名称" prop="featureName">
           <el-input
             v-model="featureForm.featureName"
             placeholder="请输入名称"
@@ -277,7 +279,9 @@
           </el-steps>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitFeatureForm">确认</el-button>
+          <el-button type="primary" @click="submitFeatureForm('featureForm')"
+            >确认</el-button
+          >
           <el-button type="info" @click="closeFeatureDialog">取消</el-button>
         </el-form-item>
       </el-form>
@@ -373,19 +377,13 @@
   </div>
 </template>
 <script>
-import draggable from 'vuedraggable'
-import FeatureTemplate from '@/components/feature-template'
-import FeatureTool from '@/components/feature-tool'
 import history from './history.vue'
 import FeatureConfig from './comp/feature-config.vue'
 import featureApi from '../../http/Feature'
 import testCaseApi from '../../http/TestCase'
 export default {
   components: {
-    draggable,
     history,
-    FeatureTemplate,
-    FeatureTool,
     FeatureConfig,
   },
   watch: {
@@ -426,6 +424,11 @@ export default {
       createData: {},
       caseName: '',
       selectFeatureId: '',
+      featureRule: {
+        featureName: [
+          { required: true, message: '请输入名称', trigger: 'blur' },
+        ],
+      },
     }
   },
   methods: {
@@ -575,34 +578,40 @@ export default {
         })
       })
     },
-    submitFeatureForm() {
-      let request = JSON.parse(JSON.stringify(this.featureForm))
-      request.author = '古月澜'
-      request.modify = '古月澜'
-      request.featureType = 1
-      request.testCaseId = this.caseId
-      request.testFeatures = []
-      let str = ''
-      this.stepList.forEach((e) => {
-        str += e.content + '|'
-      })
-      request.testStep = str.substring(0, str.length - 1)
-      request.tags = JSON.parse(JSON.stringify(this.dynamicTags))
-      request.featureType = this.createData.type
-      request.parentId = this.createData.parentId
-      if (this.isEditFeature) {
-        featureApi.updateFeature(request).then(() => {
-          this.$message.success(`修改成功`)
+    submitFeatureForm(featureForm) {
+      this.$refs[featureForm].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+
+        let request = JSON.parse(JSON.stringify(this.featureForm))
+        request.author = '古月澜'
+        request.modify = '古月澜'
+        request.featureType = 1
+        request.testCaseId = this.caseId
+        request.testFeatures = []
+        let str = ''
+        this.stepList.forEach((e) => {
+          str += e.content + '|'
+        })
+        request.testStep = str.substring(0, str.length - 1)
+        request.tags = JSON.parse(JSON.stringify(this.dynamicTags))
+        request.featureType = this.createData.type
+        request.parentId = this.createData.parentId
+        if (this.isEditFeature) {
+          featureApi.updateFeature(request).then(() => {
+            this.$message.success(`修改成功`)
+            this.showFeatureDialog = !this.showFeatureDialog
+            this.requestCaseFeatures(this.caseId)
+          })
+          return
+        }
+
+        featureApi.createFeature(request).then(() => {
+          this.$message.success(`添加成功`)
           this.showFeatureDialog = !this.showFeatureDialog
           this.requestCaseFeatures(this.caseId)
         })
-        return
-      }
-
-      featureApi.createFeature(request).then(() => {
-        this.$message.success(`添加成功`)
-        this.showFeatureDialog = !this.showFeatureDialog
-        this.requestCaseFeatures(this.caseId)
       })
     },
     startDebug() {
@@ -613,7 +622,7 @@ export default {
       }
 
       this.tableData = []
-      featureApi.startFeature(this.infoForm.featureId).then((res) => {
+      featureApi.startFeature(this.infoForm.featureId).then(() => {
         this.$message.success('开始执行，请查看运行日志')
       })
     },

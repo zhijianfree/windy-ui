@@ -13,7 +13,7 @@ export default {
         })
     })
   },
-  queryPipeline(serviceId, pipelineId) {
+  queryPipeline(pipelineId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/pipeline/detail/${pipelineId}`
       http

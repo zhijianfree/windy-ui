@@ -18,15 +18,18 @@
               </div>
               <!--- 开始-->
               <div>
-                <el-empty
+                <!-- <el-empty
                   v-if="isShowEmpty"
                   description="请在右侧拖拽组件到此处"
-                ></el-empty>
-                <div v-else>
+                ></el-empty> -->
+                <!-- <div v-else> -->
+                <div>
                   <draggable
-                    v-model="displayList"
+                    style="min-height: 100px"
+                    class="huhuhu"
+                    :list="displayList"
                     @add="addItem"
-                    group="api"
+                    :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
                   >
                     <div
@@ -93,9 +96,7 @@
                             'right-icon': true,
                             'el-icon-arrow-right': !executePoint.isActive,
                           }"
-                          @click="
-                            executePoint.isActive = !executePoint.isActive
-                          "
+                          @click="closeDiv(executePoint)"
                         />
                       </div>
                       <collapse>
@@ -168,11 +169,8 @@
                 <el-collapse-item title="基础工具" name="1">
                   <draggable
                     @start="startDrag"
-                    v-model="featureItemList"
-                    v-bind="{
-                      group: { name: 'api', pull: 'clone' },
-                      sort: true,
-                    }"
+                    :list="featureItemList"
+                    :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
                   >
                     <div
@@ -197,11 +195,8 @@
                   <draggable
                     @start="startDrag"
                     style="height: 500px"
-                    v-model="featureItemList"
-                    v-bind="{
-                      group: { name: 'api', pull: 'clone' },
-                      sort: true,
-                    }"
+                    :list="featureItemList"
+                    :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
                   >
                     <div
@@ -274,7 +269,7 @@ export default {
   },
   data() {
     return {
-      displayList: [],
+      displayList: [{}],
       allPoints: [],
       menuType: '',
       toolType: '2',
@@ -287,6 +282,11 @@ export default {
     }
   },
   methods: {
+    closeDiv(executePoint) {
+      console.log('222223eeee')
+      executePoint.isActive = !executePoint.isActive
+      this.uuid = this.$utils.randomString(20)
+    },
     deleteExecutePoint(index, pointId) {
       this.$confirm('确认删除用例执行点?', '提示', {
         confirmButtonText: '确定',
@@ -372,17 +372,16 @@ export default {
       this.isEdit = !this.isEdit
     },
     addItem(e) {
+      console.log('1111', e)
       this.displayList = JSON.parse(JSON.stringify(this.displayList))
       let item = this.displayList[e.newIndex]
-      console.log(item)
+      item.isActive = true
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
       item.sortOrder = e.newIndex
-
+      item.testStage = parseInt(this.menuType)
       item.pointId = null
-      this.displayList.forEach((e) => {
-        e.testStage = parseInt(this.menuType)
-      })
+      this.allPoints.push(item)
       this.isEdit = true
       this.displayExepoints()
     },
@@ -429,7 +428,7 @@ export default {
             writeType: '1',
             executeType: e.executeType,
             randomId: this.$utils.randomString(20),
-            display: e.testStage,
+            testStage: e.testStage,
             isActive: false,
           }
           this.allPoints.push(item)
@@ -451,13 +450,13 @@ export default {
       let array = []
       let stage = parseInt(this.menuType)
       this.allPoints.forEach((e) => {
-        if (e.display == stage) {
+        if (e.testStage == stage) {
           array.push(e)
         }
       })
       this.displayList = array
       // this.uuid = this.$utils.randomString(20)
-      console.log(this.displayList)
+      console.log('展示', this.displayList)
     },
   },
   created() {

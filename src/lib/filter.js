@@ -38,3 +38,37 @@ Vue.filter('statusFormat', function (status) {
   }
   return 'info'
 })
+
+Vue.filter('publisFormat', function (status) {
+  if (!status) {
+    return '-'
+  }
+  switch (status) {
+    case 1:
+      return '待发布'
+    case 2:
+      return '发布中'
+  }
+  return '-'
+})
+
+Vue.filter('statusName', function (status) {
+  if (!status) {
+    return ''
+  }
+  switch (status) {
+    case 1:
+      return '处理成功'
+    case 2:
+      return '处理失败'
+    case 3:
+      return '处理超时'
+    case 4:
+      return '运行中'
+    case 5:
+      return '跳过失败'
+    case 6:
+      return '停止运行'
+  }
+  return 'info'
+})

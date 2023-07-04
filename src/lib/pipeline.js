@@ -11,44 +11,38 @@ export default {
     //找到当前修改跟节点以及所有子节点
     let currentline = []
     let nodeIndex = 0
-    pipelineArray.forEach((e) => {
-      if (e.group == node.group) {
-        if (e.root) {
-          nodeIndex = pipelineArray.indexOf(e)
-          return
+    for (var i = 0; i < pipelineArray.length; ) {
+      if (pipelineArray[i].group == node.group) {
+        if (pipelineArray[i].root) {
+          nodeIndex = i
+          i++
+          continue
         }
-        currentline.push(e)
+        currentline.push(pipelineArray[i])
+        //删除子节点
+        pipelineArray.splice(i, 1)
+      } else {
+        i++
       }
-    })
-
-    //删除所有子节点
-    let reduceIndex = []
-    currentline.forEach((e) => {
-      let index = pipelineArray.indexOf(e)
-      reduceIndex.push(index)
-    })
-    reduceIndex.forEach((index) => {
-      pipelineArray.splice(index, 1)
-    })
-
-    console.log('index======', nodeIndex)
+    }
+    
     console.log('pipe======', JSON.parse(JSON.stringify(pipelineArray)))
     let num = 1
     subNodes.forEach((e) => {
       let index = nodeIndex + num
       let item = {
         group: node.group,
-        hint: e.actionName,
+        hint: e.hint,
         id: index,
-        name: e.actionName,
+        name: e.name,
         next: [],
         root: false,
         nodeId: e.nodeId,
         status: 'success',
         originData: {
-          actionId: e.actionId,
-          compareInfo: e.compareResults,
-          paramList: e.paramList,
+          actionId: e.originData.actionId,
+          compareInfo: e.originData.compareResults,
+          paramList: e.originData.paramList,
         },
       }
       pipelineArray.splice(index, 0, item)
@@ -85,9 +79,9 @@ export default {
    * 添加节点
    *
    */
-  addNode(pipeline, node, subNodes) {
+  addNode(pipelineArray, node, subNodes) {
     //新加节点与最后节点互换位置
-    console.log(JSON.parse(JSON.stringify(pipeline)), '节点', node)
+    let pipeline = JSON.parse(JSON.stringify(pipelineArray))
     let lastNode = pipeline[pipeline.length - 1]
     let wIndex = lastNode.x
     let hIndex = lastNode.y
@@ -114,7 +108,7 @@ export default {
       //最后节点横坐标加一个单位，并且重新加入数组
       lastNode.x += width
       pipeline.push(lastNode)
-      return
+      return pipeline
     }
 
     //获取所有指向新节点的前置节点
@@ -165,12 +159,14 @@ export default {
 
     this.resetId(pipeline)
     console.log('sub result', pipeline)
+    return pipeline
   },
   /**
    * 删除节点
    */
   removeNode(pipeline, node) {
-    if (node.id != node.group) {
+    console.log('1qewqewq', node)
+    if (!node.root) {
       return this.removeSingleNode(pipeline, node)
     }
 
@@ -347,11 +343,6 @@ export default {
     pipeline[beforTwo.id].next = beforTwoArray
     console.log('beforTwo.id', beforTwo.id)
 
-    // let idx = 0
-    // pipeline.forEach((e) => {
-    //   e.id = idx
-    //   idx++
-    // })
     this.resetId(pipeline)
     console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
   },
@@ -458,18 +449,11 @@ export default {
           if (!data) {
             data = e.originData.compareInfo
           }
-          // 将触发的参数组装起来
-          let requestContext = {}
-          if (e.originData && e.originData.paramList) {
-            e.originData.paramList.forEach((el) => {
-              requestContext[el.name] = el.value
-            })
-          }
 
           let nodeConfig = {
             actionId: e.originData.actionId,
             compareInfo: data,
-            requestContext: requestContext,
+            paramList: e.originData.paramList,
           }
           subNode.push({
             nodeName: e.name,
