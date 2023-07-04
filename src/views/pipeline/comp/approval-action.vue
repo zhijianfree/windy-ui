@@ -24,7 +24,6 @@ export default {
   watch: {
     form: {
       handler(val) {
-        console.log('监听到新值', val)
         this.actionForm = val
         if (val.paramList && val.paramList.length > 0) {
           this.presetValue(val.paramList, this.paramList, 'name')

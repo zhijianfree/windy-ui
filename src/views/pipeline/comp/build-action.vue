@@ -53,6 +53,7 @@ export default {
           valueType: 'Integer',
           operator: '=',
           value: '1',
+          showCompare: false,
         },
       ],
       operators: [

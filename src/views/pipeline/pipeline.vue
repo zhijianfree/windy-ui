@@ -450,7 +450,7 @@ export default {
       this.getPipelineList()
       if (this.piplienOperate == 1) {
         pipelineApi
-          .queryPipeline(this.serviceId, this.currentPipeline.pipelineId)
+          .queryPipeline(this.currentPipeline.pipelineId)
           .then((res) => {
             let config = utils.displayData(res.data.stageList)
             this.currentPipeline.pipelineConfig = config
@@ -663,7 +663,7 @@ export default {
         e.selected = false
       })
       item.selected = true
-      pipelineApi.queryPipeline(this.serviceId, item.pipelineId).then((res) => {
+      pipelineApi.queryPipeline(item.pipelineId).then((res) => {
         let config = utils.displayData(res.data.stageList)
         this.currentPipeline.pipelineConfig = config
         this.currentPipeline.pipelineName = res.data.pipelineName

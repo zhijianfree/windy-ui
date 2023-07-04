@@ -7,8 +7,9 @@
       :label="item.description"
     >
       <el-input
-        placeholder="输入默认值"
+        placeholder="编辑流水线时选择"
         v-model="item.value"
+        disabled
         @input="notifyParam"
       >
       </el-input>
@@ -38,7 +39,6 @@ export default {
   watch: {
     form: {
       handler(val) {
-        console.log('监听到新值', val)
         this.actionForm = val
         if (val.paramList && val.paramList.length > 0) {
           this.presetValue(val.paramList, this.paramList, 'name')
@@ -57,9 +57,8 @@ export default {
       paramList: [
         {
           name: 'taskId',
-          description: '选择的执行的任务',
+          description: '选择任务',
           value: '',
-          persist: true,
         },
       ],
       compareList: [
@@ -69,7 +68,7 @@ export default {
           operator: '>=',
           valueType: 'Integer',
           value: '90',
-          persist: true,
+          showCompare: true,
         },
       ],
       operators: [

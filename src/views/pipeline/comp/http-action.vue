@@ -140,7 +140,7 @@ export default {
     return {
       dataForm: {},
       paramList: [{}],
-      compareList: [{}],
+      compareList: [{ showCompare: true }],
       operators: [
         { label: 'equals', value: 'equal' },
         { label: '等于', value: '=' },
@@ -168,7 +168,7 @@ export default {
       this.paramList.push({})
     },
     addNewCondition() {
-      this.compareList.push({})
+      this.compareList.push({ showCompare: true })
     },
   },
   created() {

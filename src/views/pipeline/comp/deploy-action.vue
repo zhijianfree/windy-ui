@@ -23,7 +23,6 @@ export default {
   watch: {
     form: {
       handler(val) {
-        console.log('监听到新值', val)
         this.dataForm = val
         if (val.paramList && val.paramList.length > 0) {
           this.presetValue(val.paramList, this.paramList, 'name')
@@ -53,6 +52,7 @@ export default {
           value: '',
           valueType: 'Integer',
           operator: '=',
+          showCompare: false,
         },
       ],
       operators: [

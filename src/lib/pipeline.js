@@ -25,8 +25,7 @@ export default {
         i++
       }
     }
-
-    console.log('index======', nodeIndex)
+    
     console.log('pipe======', JSON.parse(JSON.stringify(pipelineArray)))
     let num = 1
     subNodes.forEach((e) => {

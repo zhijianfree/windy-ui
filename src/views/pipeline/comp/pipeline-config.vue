@@ -212,20 +212,21 @@
                   v-model="configForm[item.compareKey]"
                 />
               </el-form-item>
-              <el-divider content-position="left" v-if="stepConfigs.length > 0"
+              <el-divider content-position="left" v-if="calculateShow"
                 >节点配置</el-divider
               >
-              <el-form-item
-                v-for="(item, index) in stepConfigs"
-                :key="index"
-                :label-width="formLabelWidth"
-              >
-                <span slot="label">{{ item.description }}</span>
-                <el-input
-                  @input="datachange(item.compareKey)"
-                  v-model="configForm[item.compareKey]"
-                />
-              </el-form-item>
+              <div v-for="(item, index) in stepConfigs" :key="index">
+                <el-form-item
+                  v-if="item.showCompare"
+                  :label-width="formLabelWidth"
+                >
+                  <span slot="label">{{ item.description }}</span>
+                  <el-input
+                    @input="datachange(item.compareKey)"
+                    v-model="configForm[item.compareKey]"
+                  />
+                </el-form-item>
+              </div>
             </el-form>
           </div>
         </el-col>
@@ -308,6 +309,20 @@ export default {
       },
       deep: true,
       immediate: true,
+    },
+  },
+  computed: {
+    calculateShow() {
+      if (!this.stepConfigs || this.stepConfigs.length == 0) {
+        return false
+      }
+      let flag = false
+      this.stepConfigs.forEach((e) => {
+        if (e.showCompare) {
+          flag = true
+        }
+      })
+      return flag
     },
   },
   data() {
