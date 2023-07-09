@@ -69,6 +69,10 @@
             <i class="el-icon-s-tools"></i>
             系统配置</el-menu-item
           >
+          <el-menu-item index="/env">
+            <i class="el-icon-s-platform"></i>
+            环境管理</el-menu-item
+          >
           <el-menu-item index="/monitor">
             <i class="el-icon-s-platform"></i>
             监控</el-menu-item
@@ -86,24 +90,24 @@ export default {
   data() {
     return {
       isStartCollapse: false,
-      selectIndex: '/',
-    }
+      selectIndex: "/",
+    };
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse
+      this.isStartCollapse = !this.isStartCollapse;
     },
   },
   computed: {
     toggleButton() {
       if (this.isStartCollapse) {
-        return 'minMargin'
+        return "minMargin";
       } else {
-        return 'maxMargin'
+        return "maxMargin";
       }
     },
   },
-}
+};
 </script>
 <style>
 body {
