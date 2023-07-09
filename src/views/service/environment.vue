@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="content">
     <div class="title">
       <!-- 表单查询开始 -->
       <div>
@@ -46,19 +46,14 @@
             <el-popover placement="right" width="600" trigger="click">
               <el-table :data="scope.row.paramsList" max-height="250">
                 <el-table-column
-                  width="150"
+                  width="300"
                   property="name"
                   label="参数名"
                 ></el-table-column>
                 <el-table-column
-                  width="150"
+                  width="300"
                   property="value"
                   label="参数值"
-                ></el-table-column>
-                <el-table-column
-                  width="300"
-                  property="desc"
-                  label="参数描述"
                 ></el-table-column>
               </el-table>
               <el-button size="mini" type="primary" slot="reference"
@@ -114,7 +109,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item>
-          <el-form label-width="80px" size="mini">
+          <el-form label-width="120px" size="mini">
             <el-form-item
               v-for="(item, index) in paramsList"
               :key="index"
@@ -180,7 +175,65 @@ export default {
         { key: "host", value: "", name: "访问IP", desc: "请输入访问ssh的IP" },
         {
           key: "port",
+          value: "22",
+          name: "访问端口",
+          desc: "请输入访问ssh的端口",
+        },
+        {
+          key: "user",
           value: "",
+          name: "ssh用户",
+          desc: "请输入访问ssh所使用的用户",
+        },
+        {
+          key: "password",
+          value: "",
+          name: "ssh密码",
+          desc: "请输入访问ssh所使用的密码",
+        },
+      ],
+      k8sParams: [
+        {
+          key: "url",
+          value: "",
+          name: "Api服务",
+          desc: "请输入访问k8s的api地址",
+        },
+        {
+          key: "token",
+          value: "",
+          name: "访问token",
+          desc: "请输入访问k8s的地址",
+        },
+        {
+          key: "repository",
+          value: "",
+          name: "镜像仓库",
+          desc: "请输入访问k8s镜像仓库的地址",
+        },
+        {
+          key: "namespace",
+          value: "",
+          name: "Namespace",
+          desc: "请输入部署的Namespace",
+        },
+      ],
+      dockerParams: [
+        {
+          key: "dcokerUrl",
+          value: "",
+          name: "docker镜像仓库",
+          desc: "请输入docker镜像仓库地址",
+        },
+        {
+          key: "host",
+          value: "",
+          name: "部署服务IP",
+          desc: "请输入访问ssh的IP",
+        },
+        {
+          key: "port",
+          value: "22",
           name: "访问端口",
           desc: "请输入访问ssh的端口",
         },
@@ -201,15 +254,24 @@ export default {
     };
   },
   methods: {
-    pageChange(page) {},
+    pageChange(page) {
+      this.currentPage = page;
+      this.getEnvs();
+    },
     handleDelete(row) {
-      envApi.deleteEnv(row.envId).then((res) => {
-        if (res.data) {
-          this.$message.success("删除环境成功");
-          this.getEnvs();
-        } else {
-          this.$message.error("删除环境失败");
-        }
+      this.$confirm(`确认删除环境【${row.envName}】?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(() => {
+        envApi.deleteEnv(row.envId).then((res) => {
+          if (res.data) {
+            this.$message.success("删除环境成功");
+            this.getEnvs();
+          } else {
+            this.$message.error("删除环境失败");
+          }
+        });
       });
     },
     handleEdit(row) {
@@ -262,10 +324,18 @@ export default {
       if (type == 1) {
         this.paramsList = JSON.parse(JSON.stringify(this.sshParams));
       }
+
+      if (type == 2) {
+        this.paramsList = JSON.parse(JSON.stringify(this.k8sParams));
+      }
+
+      if (type == 3) {
+        this.paramsList = JSON.parse(JSON.stringify(this.dockerParams));
+      }
     },
     getEnvs() {
       this.envData = [];
-      envApi.getEnvs(this.currentPage, 10).then((res) => {
+      envApi.getEnvs(this.currentPage, 10, this.queryName).then((res) => {
         console.log("环境列表", res);
         res.data.data.forEach((element) => {
           element.paramsList = JSON.parse(element.envParams);
@@ -275,11 +345,25 @@ export default {
       });
     },
     checkStatus() {
-      this.$message.success("校验成功");
-      this.limited = false;
-      this.checked = false;
+      let data = {};
+      this.paramsList.forEach((e) => {
+        data[e.key] = e.value;
+      });
+      envApi.checkEnv(this.envForm.envType, data).then((res) => {
+        if (res.data) {
+          this.$message.success("环境校验成功");
+          this.limited = false;
+          this.checked = true;
+        } else {
+          this.checked = false;
+          this.limited = true;
+          this.$message.error("环境校验失败");
+        }
+      });
     },
-    startQuery() {},
+    startQuery() {
+      this.getEnvs();
+    },
     createEnv() {
       this.showEnvDialog = true;
       this.envForm = { envType: 1 };
@@ -301,5 +385,8 @@ export default {
 }
 .check {
   margin-left: 20px;
+}
+.content {
+  margin: 10px;
 }
 </style>

@@ -1,8 +1,8 @@
 import http from "../lib/http";
 export default {
-  getEnvs(page, size) {
+  getEnvs(page, size, name) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/environments?page=${page}&size=${size}`;
+      let url = `/v1/devops/environments?page=${page}&size=${size}&name=${name}`;
       http
         .get(url)
         .then((res) => {
@@ -16,6 +16,19 @@ export default {
   createEnv(data) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/environments`;
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+  },
+  checkEnv(checkType, data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/environment/check?checkType=${checkType}`;
       http
         .post(url, data)
         .then((res) => {
