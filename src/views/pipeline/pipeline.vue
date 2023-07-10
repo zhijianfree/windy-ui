@@ -324,7 +324,7 @@
     >
       <PipelineConfig
         :operate="piplienOperate"
-        :pipeline="currentPipeline.pipelineId"
+        :pipeline="pipelineId"
         :service="serviceId"
         @complete="completeNotify"
       />
@@ -373,6 +373,7 @@ export default {
       currentPipeline: {
         pipelineConfig: [],
       },
+      pipelineId: '',
       history: {},
       publishList: [],
       buildList: [],
@@ -670,6 +671,7 @@ export default {
         this.currentPipeline.pipelineType = res.data.pipelineType
         this.currentPipeline.executeType = res.data.executeType
         this.currentPipeline.pipelineId = item.pipelineId
+        this.pipelineId = item.pipelineId
         this.uuid++
 
         if (this.currentPipeline.pipelineType == 1) {

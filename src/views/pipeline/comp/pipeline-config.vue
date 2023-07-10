@@ -195,7 +195,7 @@
                 <el-select
                   v-if="item.type == 'select'"
                   v-model="configForm[item.compareKey]"
-                  @change="selectChange"
+                  @change="selectChange($event, item)"
                   placeholder="请选择"
                 >
                   <el-option
@@ -250,6 +250,7 @@ import utils from '../../../lib/pipeline'
 import nodeApi from '../../../http/NodeBind'
 import pipelineApi from '../../../http/Pipeline'
 import taskApi from '../../../http/Task'
+import envApi from '../../../http/Environment'
 export default {
   components: {
     draggable,
@@ -274,6 +275,7 @@ export default {
   watch: {
     pipeline: {
       handler(val) {
+        console.log('hhhhhh', val)
         this.pipelineId = val
       },
       deep: true,
@@ -391,9 +393,10 @@ export default {
       this.editPipelines = array
       this.uuid++
     },
-    selectChange(value) {
+    selectChange(value, item) {
+      console.log('2222', value, item)
       this.chosedConfigItem.paramList.forEach((e) => {
-        if (e.name == 'taskId') {
+        if (e.name == item.compareKey) {
           e.value = value
         }
       })
@@ -614,24 +617,48 @@ export default {
       })
       //用例测试为了选择节点所有特殊处理
       if (item.executeType == 'TEST') {
-        taskApi.getAllTaskList(this.serviceId).then((res) => {
-          let list = []
-          res.data.forEach((e) => {
-            list.push({
-              label: e.taskName,
-              value: e.taskId,
-            })
-          })
-          this.paramConfigs.forEach((e) => {
-            if (e.compareKey == 'taskId') {
-              e.list = list
-            }
-          })
-          this.$forceUpdate()
-        })
+        this.getFeatureTasks()
+      }
+      //用例测试为了选择节点所有特殊处理
+      if (item.executeType == 'DEPLOY') {
+        this.getAllEnvs()
       }
       this.chosedConfigItem = item
       this.$forceUpdate()
+    },
+    getFeatureTasks() {
+      taskApi.getAllTaskList(this.serviceId).then((res) => {
+        let list = []
+        res.data.forEach((e) => {
+          list.push({
+            label: e.taskName,
+            value: e.taskId,
+          })
+        })
+        this.paramConfigs.forEach((e) => {
+          if (e.compareKey == 'taskId') {
+            e.list = list
+          }
+        })
+        this.$forceUpdate()
+      })
+    },
+    getAllEnvs() {
+      envApi.getAllEnvs().then((res) => {
+        let list = []
+        res.data.forEach((e) => {
+          list.push({
+            label: e.envName,
+            value: e.envId,
+          })
+        })
+        this.paramConfigs.forEach((e) => {
+          if (e.compareKey == 'envId') {
+            e.list = list
+          }
+        })
+        this.$forceUpdate()
+      })
     },
     resetNode() {
       this.dialogVisible = false
@@ -657,7 +684,7 @@ export default {
     },
     getPipeline() {
       this.pipelineForm = {}
-      pipelineApi.queryPipeline(this.serviceId, this.pipelineId).then((res) => {
+      pipelineApi.queryPipeline(this.pipelineId).then((res) => {
         this.editPipelines = utils.displayData(res.data.stageList)
         this.pipelineForm = res.data
         this.uuid++
@@ -668,6 +695,7 @@ export default {
     this.getConfigNodes()
     this.serviceId = this.service
     this.pipelineId = this.pipeline
+    console.log('初始化值:', this.pipelineId)
   },
 }
 </script>

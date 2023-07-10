@@ -7,8 +7,9 @@
       :label="item.description"
     >
       <el-input
-        placeholder="输入默认值"
+        placeholder="在流水线选择部署的环境"
         v-model="item.value"
+        disabled
         @input="notifyParam"
       >
       </el-input>
@@ -39,11 +40,7 @@ export default {
     return {
       dataForm: {},
       paramList: [
-        { name: 'remotePath', description: '服务端路径', value: '' },
-        { name: 'sshIp', description: '远程SSH的IP', value: '' },
-        { name: 'sshPort', description: '远程SSH的端口', value: '' },
-        { name: 'serverPort', description: '应用监听端口', value: '' },
-        { name: 'deployType', description: '部署类型', value: 'JAR' },
+        { name: 'envId', description: '环境Id', value: '', type: 'select' },
       ],
       compareList: [
         {

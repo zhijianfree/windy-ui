@@ -59,6 +59,7 @@ export default {
           name: 'taskId',
           description: '选择任务',
           value: '',
+          type: 'select',
         },
       ],
       compareList: [
