@@ -44,7 +44,7 @@
         <el-table-column label="环境参数" prop="envParams">
           <template slot-scope="scope">
             <el-popover placement="right" width="600" trigger="click">
-              <el-table :data="scope.row.paramsList" max-height="250">
+              <el-table :data="scope.row.configList" max-height="250">
                 <el-table-column
                   width="300"
                   property="name"
@@ -172,9 +172,9 @@ export default {
       isEdit: false,
       checked: false,
       sshParams: [
-        { key: 'host', value: '', name: '访问IP', desc: '请输入访问ssh的IP' },
+        { key: 'sshIp', value: '', name: '访问IP', desc: '请输入访问ssh的IP' },
         {
-          key: 'port',
+          key: 'sshPort',
           value: '22',
           name: '访问端口',
           desc: '请输入访问ssh的端口',
@@ -187,6 +187,12 @@ export default {
         },
         {
           key: 'password',
+          value: '',
+          name: 'ssh密码',
+          desc: '请输入访问ssh所使用的密码',
+        },
+        {
+          key: 'remotePath',
           value: '',
           name: 'ssh密码',
           desc: '请输入访问ssh所使用的密码',
@@ -278,14 +284,43 @@ export default {
       this.showEnvDialog = true
       this.isEdit = true
       this.titleName = '修改环境'
-      this.paramsList = JSON.parse(row.envParams)
+      this.paramsList = this.translate(row)
       this.limited = row.envStatus == 2
       this.envForm = JSON.parse(JSON.stringify(row))
       this.checked = row.envStatus == 1
     },
+    translate(data) {
+      let result = []
+      let params = JSON.parse(data.envParams)
+      if (data.envType == 1) {
+        this.setValue(this.sshParams, params)
+        result = this.sshParams
+      }
+      if (data.envType == 2) {
+        this.setValue(this.k8sParams, params)
+        result = this.k8sParams
+      }
+      if (data.envType == 3) {
+        this.setValue(this.dockerParams, params)
+        result = this.sshParams
+      }
+      return result
+    },
+    setValue(array, data) {
+      array.forEach((e) => {
+        let value = data[e.key]
+        if (value) {
+          e.value = value
+        }
+      })
+    },
     submit() {
       let data = this.envForm
-      data.envParams = JSON.stringify(this.paramsList)
+      let param = {}
+      this.paramsList.forEach((e) => {
+        param[e.key] = e.value
+      })
+      data.envParams = JSON.stringify(param)
       data.envStatus = 2
       if (this.checked) {
         data.envStatus = 1
@@ -341,7 +376,7 @@ export default {
           return
         }
         res.data.data.forEach((element) => {
-          element.paramsList = JSON.parse(element.envParams)
+          element.configList = this.translate(element)
           this.envData.push(element)
         })
         this.totalSize = res.data.total

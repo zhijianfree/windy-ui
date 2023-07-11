@@ -1,14 +1,12 @@
 <template>
   <el-container>
     <!-- 侧边栏 -->
-    <el-aside class="aside" :width="isStartCollapse ? '64px' : '200px'">
-      <div @click="togleCollapse" class="tigger-class">
-        <i class="el-icon-s-fold" />
-      </div>
+    <el-header class="header">
       <!-- 侧边导航 -->
       <el-menu
+        mode="horizontal"
+        class="title-menu"
         :default-active="$route.path"
-        :collapse="isStartCollapse"
         background-color="#545c64"
         text-color="#fff"
         :router="true"
@@ -79,8 +77,8 @@
           >
         </el-submenu>
       </el-menu>
-    </el-aside>
-    <el-main>
+    </el-header>
+    <el-main class="main-bg">
       <router-view></router-view>
     </el-main>
   </el-container>
@@ -89,25 +87,16 @@
 export default {
   data() {
     return {
-      isStartCollapse: false,
-      selectIndex: "/",
-    };
+      // isStartCollapse: false,
+      selectIndex: '/',
+    }
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse;
+      this.isStartCollapse = !this.isStartCollapse
     },
   },
-  computed: {
-    toggleButton() {
-      if (this.isStartCollapse) {
-        return "minMargin";
-      } else {
-        return "maxMargin";
-      }
-    },
-  },
-};
+}
 </script>
 <style>
 body {
@@ -120,40 +109,21 @@ body,
 .el-container {
   height: 100%;
 }
+.header {
+  padding: 0 !important;
+}
 
 .aside {
-  width: 178px;
   background-color: rgb(84, 92, 100);
-  overflow: hidden;
-}
-.el-aside {
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-.minMargin {
-  width: 10px;
-  height: 100%;
-  position: absolute;
-  cursor: pointer;
-  margin-left: 64px;
-}
-.maxMargin {
-  width: 10px;
-  height: 100%;
-  position: absolute;
-  cursor: pointer;
-  margin-left: 170px;
 }
 .el-main {
   padding: 0px !important;
 }
-.tigger-class {
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 18px;
-  cursor: pointer;
+.main-bg {
+  /* background-color: #f1f4f9; */
+}
+.el-submenu__title {
+  height: 50px !important;
+  line-height: 50px !important;
 }
 </style>
