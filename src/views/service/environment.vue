@@ -194,8 +194,8 @@ export default {
         {
           key: 'remotePath',
           value: '',
-          name: 'ssh密码',
-          desc: '请输入访问ssh所使用的密码',
+          name: '远端路径',
+          desc: '请输入ssh远端服务的运行路径',
         },
       ],
       k8sParams: [

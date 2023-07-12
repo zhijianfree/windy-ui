@@ -283,6 +283,7 @@ export default {
     },
     service: {
       handler(val) {
+        console.log('service change', val)
         this.serviceId = val
       },
       deep: true,

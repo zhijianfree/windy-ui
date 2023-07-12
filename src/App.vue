@@ -111,13 +111,17 @@ body,
 }
 .header {
   padding: 0 !important;
+  background-color: #545c64;
+  height: 50px !important;
 }
 
-.aside {
-  background-color: rgb(84, 92, 100);
-}
 .el-main {
   padding: 0px !important;
+}
+.title-menu {
+  width: 600px;
+  left: 50%;
+  transform: translate(-50%);
 }
 .main-bg {
   /* background-color: #f1f4f9; */

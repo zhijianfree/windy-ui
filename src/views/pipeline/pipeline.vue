@@ -520,6 +520,7 @@ export default {
     selectService() {
       this.getPipelineList()
       this.currentPipeline = { pipelineConfig: [] }
+      console.log('数据变化', this.serviceId)
     },
 
     showNodeLog(node) {
