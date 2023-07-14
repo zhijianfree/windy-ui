@@ -24,6 +24,12 @@
           @click="startCreate"
           >新增模版</el-button
         >
+        <el-button
+          type="primary"
+          icon="el-icon-upload"
+          @click="showUploadDialog = !showUploadDialog"
+          >上传模版文件</el-button
+        >
       </el-form-item>
     </el-form>
     <el-table :data="templateData" size="mini" style="width: 100%">
@@ -244,6 +250,30 @@
       </el-form>
     </el-dialog>
     <!-- 创建模版结束 -->
+    <!-- 文件上传开始 -->
+    <el-dialog
+      :visible.sync="showUploadDialog"
+      title="模版上传文件"
+      width="60%"
+    >
+      <el-upload
+        drag
+        action="#"
+        :auto-upload="true"
+        :on-remove="removefile"
+        :on-change="fileChange"
+        :http-request="httpRequest"
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__tip" slot="tip">只能上传jar文件</div>
+      </el-upload>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="uploadFile">确定</el-button>
+        <el-button type="primary" @click="cancelUpload">取消</el-button>
+      </span>
+    </el-dialog>
+    <!-- 文件上传结束 -->
   </div>
 </template>
 <script>
@@ -285,9 +315,37 @@ export default {
           { required: true, message: '模版描述不能为空', trigger: 'blur' },
         ],
       },
+      showUploadDialog: false,
+      fileList: [],
     }
   },
   methods: {
+    httpRequest(param) {
+      console.log('httpRequest', param)
+    },
+    uploadFile() {
+      const formData = new FormData()
+      formData.append(`file`, this.fileList[0])
+      templateApi.upload(formData).then((res) => {
+        if (res.data) {
+          this.$message.success('上传文件成功')
+        } else {
+          this.$message.error('上传文件失败')
+        }
+      })
+    },
+    cancelUpload() {
+      this.fileList = []
+    },
+    removefile(file, fileList) {},
+    fileChange(file, fileList) {
+      this.fileList = []
+      fileList.forEach((e) => {
+        this.fileList.push(e.raw)
+      })
+
+      console.log('fileChange', file, this.fileList)
+    },
     removeHeader(index) {
       this.infoForm.headers.splice(index, 1)
     },

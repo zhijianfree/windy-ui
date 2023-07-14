@@ -1,11 +1,14 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
+
 axios.interceptors.response.use(
   (res) => {
     return res
   },
   (error) => {
-    Message.error(`[${error.response.data.code}] ${error.response.data.message}`)
+    Message.error(
+      `[${error.response.data.code}] ${error.response.data.message}`
+    )
     return Promise.reject(error)
   }
 )
@@ -32,6 +35,26 @@ export default {
     return new Promise((resolve, reject) => {
       axios
         .delete(base + url)
+        .then((res) => {
+          if (res.status == 200) {
+            resolve(res.data)
+          } else {
+            reject(res.data)
+          }
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  postFile(url, form) {
+    return new Promise((resolve, reject) => {
+      axios
+        .post(base + url, form, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        })
         .then((res) => {
           if (res.status == 200) {
             resolve(res.data)

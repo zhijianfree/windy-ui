@@ -52,6 +52,19 @@ export default {
         })
     })
   },
+  upload(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/template/upload`
+      http
+        .postFile(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   updateTemplate(template) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/template`
