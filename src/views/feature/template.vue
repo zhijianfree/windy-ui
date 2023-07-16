@@ -255,29 +255,39 @@
       :visible.sync="showUploadDialog"
       title="模版上传文件"
       width="60%"
+      :multiple="false"
     >
-      <el-upload
-        drag
-        action="#"
-        :auto-upload="true"
-        :on-remove="removefile"
-        :on-change="fileChange"
-        :http-request="httpRequest"
-      >
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-        <div class="el-upload__tip" slot="tip">只能上传jar文件</div>
-      </el-upload>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="uploadFile">确定</el-button>
-        <el-button type="primary" @click="cancelUpload">取消</el-button>
-      </span>
+      <div v-if="parseData.length <= 0">
+        <el-upload
+          drag
+          action="#"
+          :auto-upload="true"
+          :http-request="httpRequest"
+        >
+          <i class="el-icon-upload"></i>
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          <div class="el-upload__tip" slot="tip">只能上传jar文件</div>
+        </el-upload>
+      </div>
+
+      <div v-else>
+        <el-collapse v-model="activeNames">
+          <el-collapse-item
+            title="一致性 Consistency"
+            name="1"
+            v-for="(item, index) in parseData"
+            :key="index"
+          >
+            名称:{{ item.name }} 类名:{{ item.source }}
+          </el-collapse-item>
+        </el-collapse>
+      </div>
     </el-dialog>
     <!-- 文件上传结束 -->
   </div>
 </template>
 <script>
-import templateApi from '../../http/Template'
+import templateApi from "../../http/Template";
 export default {
   data() {
     return {
@@ -285,201 +295,199 @@ export default {
       queryForm: {},
       showDialog: false,
       infoForm: { params: [{}] },
-      dialogTitle: '添加执行点模版',
+      dialogTitle: "添加执行点模版",
       options: [],
       paramTypeList: [
-        { label: 'String', value: 0 },
-        { label: 'Map', value: 1 },
-        { label: 'List', value: 2 },
-        { label: 'Integer', value: 3 },
-        { label: 'Float', value: 4 },
-        { label: 'Double', value: 5 },
+        { label: "String", value: 0 },
+        { label: "Map", value: 1 },
+        { label: "List", value: 2 },
+        { label: "Integer", value: 3 },
+        { label: "Float", value: 4 },
+        { label: "Double", value: 5 },
       ],
       httpMethods: [
-        { label: 'Post', value: 'Post' },
-        { label: 'Get', value: 'Get' },
-        { label: 'Put', value: 'Put' },
-        { label: 'Delete', value: 'Delete' },
+        { label: "Post", value: "Post" },
+        { label: "Get", value: "Get" },
+        { label: "Put", value: "Put" },
+        { label: "Delete", value: "Delete" },
       ],
       isEdit: false,
       currentPage: 1,
       totalSize: 0,
       infoRule: {
-        name: [{ required: true, message: '请输入模版名称', trigger: 'blur' }],
+        name: [{ required: true, message: "请输入模版名称", trigger: "blur" }],
         invokeType: [
-          { required: true, message: '请选择执行类型', trigger: 'blur' },
+          { required: true, message: "请选择执行类型", trigger: "blur" },
         ],
-        service: [{ required: true, message: '此项不能为空', trigger: 'blur' }],
-        method: [{ required: true, message: '此项不能为空', trigger: 'blur' }],
+        service: [{ required: true, message: "此项不能为空", trigger: "blur" }],
+        method: [{ required: true, message: "此项不能为空", trigger: "blur" }],
         description: [
-          { required: true, message: '模版描述不能为空', trigger: 'blur' },
+          { required: true, message: "模版描述不能为空", trigger: "blur" },
         ],
       },
       showUploadDialog: false,
-      fileList: [],
-    }
+      activeNames: [],
+      parseData: [],
+      pluginId: "",
+    };
   },
   methods: {
     httpRequest(param) {
-      console.log('httpRequest', param)
-    },
-    uploadFile() {
-      const formData = new FormData()
-      formData.append(`file`, this.fileList[0])
+      console.log("httpRequest", param);
+      const formData = new FormData();
+      formData.append(`file`, param.file);
       templateApi.upload(formData).then((res) => {
         if (res.data) {
-          this.$message.success('上传文件成功')
+          this.$message.success("上传文件成功");
+          this.parseData = res.data.templateDefines;
+          console.log(res.data.templateDefines);
         } else {
-          this.$message.error('上传文件失败')
+          this.$message.error("上传文件失败");
         }
-      })
+      });
     },
     cancelUpload() {
-      this.fileList = []
-    },
-    removefile(file, fileList) {},
-    fileChange(file, fileList) {
-      this.fileList = []
-      fileList.forEach((e) => {
-        this.fileList.push(e.raw)
-      })
-
-      console.log('fileChange', file, this.fileList)
+      this.fileList = [];
     },
     removeHeader(index) {
-      this.infoForm.headers.splice(index, 1)
+      this.infoForm.headers.splice(index, 1);
     },
     addHeader() {
-      this.infoForm.headers.push({})
+      this.infoForm.headers.push({});
     },
     inputChange() {
-      this.getTemplatePage(1)
+      this.getTemplatePage(1);
     },
     pageChange(page) {
-      this.getTemplatePage(page)
+      this.getTemplatePage(page);
     },
     getTemplatePage(page) {
-      let name = this.queryForm.name
+      let name = this.queryForm.name;
       if (!name) {
-        name = ''
+        name = "";
       }
 
       templateApi.getTemplatePage(page, 10, name).then((res) => {
-        this.templateData = res.data.data
-        this.totalSize = res.data.total
-      })
+        this.templateData = res.data.data;
+        this.totalSize = res.data.total;
+      });
     },
     startQuery() {
-      this.getTemplatePage(1)
+      this.getTemplatePage(1);
     },
     startCreate() {
-      this.isEdit = false
-      this.showDialog = !this.showDialog
-      this.dialogTitle = '创建模版'
-      this.infoForm = { params: [{}], headers: [{}], invokeType: 1, method: '' }
+      this.isEdit = false;
+      this.showDialog = !this.showDialog;
+      this.dialogTitle = "创建模版";
+      this.infoForm = {
+        params: [{}],
+        headers: [{}],
+        invokeType: 1,
+        method: "",
+      };
     },
     refreshTemplate(row) {
       templateApi.refresh(row.templateId).then((res) => {
         if (res.data) {
-          this.$message.success('刷新成功')
+          this.$message.success("刷新成功");
         } else {
-          this.$message.error('刷新失败')
+          this.$message.error("刷新失败");
         }
-      })
+      });
     },
     handleEdit(row) {
-      this.isEdit = true
-      this.showDialog = true
-      this.dialogTitle = '编辑模版'
+      this.isEdit = true;
+      this.showDialog = true;
+      this.dialogTitle = "编辑模版";
 
-      let rowData = JSON.parse(JSON.stringify(row))
+      let rowData = JSON.parse(JSON.stringify(row));
       if (rowData.headers && rowData.headers.length > 0) {
-        let array = []
+        let array = [];
         Object.keys(rowData.headers).forEach((key) => {
-          array.push({ key: key, value: rowData.headers[key] })
-        })
-        rowData.headers = array
+          array.push({ key: key, value: rowData.headers[key] });
+        });
+        rowData.headers = array;
       } else {
-        rowData.headers = [{ key: '', value: '' }]
+        rowData.headers = [{ key: "", value: "" }];
       }
 
       if (!rowData.params) {
-        this.infoForm = rowData
-        return
+        this.infoForm = rowData;
+        return;
       }
 
       rowData.params.forEach((e) => {
         if (e.defaultValue === null) {
-          return
+          return;
         }
         if (e.type == 2) {
-          e.range = e.defaultValue.range
+          e.range = e.defaultValue.range;
         }
 
-        e.defaultValue = e.defaultValue.defaultValue
-      })
-      this.infoForm = rowData
-      console.log('rrrr', this.infoForm)
+        e.defaultValue = e.defaultValue.defaultValue;
+      });
+      this.infoForm = rowData;
+      console.log("rrrr", this.infoForm);
     },
     handleDelete(row) {
       templateApi.deleteTemplate(row.templateId).then(() => {
-        this.$message.success('删除模版成功')
-        this.getTemplatePage(1)
-      })
+        this.$message.success("删除模版成功");
+        this.getTemplatePage(1);
+      });
     },
     deleteItem(item, index) {
-      this.infoForm.params.splice(index, 1)
+      this.infoForm.params.splice(index, 1);
     },
     addItem() {
-      this.infoForm.params.push({})
+      this.infoForm.params.push({});
     },
     closeDialog() {
-      this.showDialog = false
-      this.infoForm = { params: [{}] }
+      this.showDialog = false;
+      this.infoForm = { params: [{}] };
     },
     submit(infoForm) {
       this.$refs[infoForm].validate((valid) => {
         if (!valid) {
-          return false
+          return false;
         }
 
-        let requestParam = JSON.parse(JSON.stringify(this.infoForm))
+        let requestParam = JSON.parse(JSON.stringify(this.infoForm));
         requestParam.params.forEach((e) => {
           e.defaultValue = {
-            defaultValue: e.defaultValue ? e.defaultValue : '',
-          }
+            defaultValue: e.defaultValue ? e.defaultValue : "",
+          };
           if (e.type == 2) {
-            e.defaultValue.range = e.range
+            e.defaultValue.range = e.range;
           }
-        })
+        });
 
-        let headers = {}
+        let headers = {};
         requestParam.headers.forEach((e) => {
-          headers[e.key] = e.value
-        })
-        requestParam.headers = headers
+          headers[e.key] = e.value;
+        });
+        requestParam.headers = headers;
 
         if (this.isEdit) {
           templateApi.updateTemplate(requestParam).then(() => {
-            this.$message.success(`${this.dialogTitle}成功`)
-            this.showDialog = false
-            this.getTemplatePage(1)
-          })
-          return
+            this.$message.success(`${this.dialogTitle}成功`);
+            this.showDialog = false;
+            this.getTemplatePage(1);
+          });
+          return;
         }
 
         templateApi.createTemplate(requestParam).then(() => {
-          this.$message.success(`${this.dialogTitle}成功`)
-          this.showDialog = false
-          this.getTemplatePage(1)
-        })
-      })
+          this.$message.success(`${this.dialogTitle}成功`);
+          this.showDialog = false;
+          this.getTemplatePage(1);
+        });
+      });
     },
   },
   created() {
-    this.getTemplatePage(1)
+    this.getTemplatePage(1);
   },
-}
+};
 </script>
 <style scoped>
 .content {
