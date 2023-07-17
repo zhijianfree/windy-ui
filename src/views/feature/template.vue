@@ -83,179 +83,15 @@
           /></span>
         </el-tooltip>
       </template>
-      <el-form
-        :model="infoForm"
-        ref="infoForm"
-        :rules="infoRule"
-        size="small"
-        label-width="120px"
-      >
-        <el-form-item label="模版名称" prop="name">
-          <el-input
-            v-model="infoForm.name"
-            placeholder="请输入模版名称"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="模版类型" prop="invokeType">
-          <el-radio-group v-model="infoForm.invokeType">
-            <el-radio :label="1">默认模版</el-radio>
-            <el-radio :label="2">Http</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item
-          :label="infoForm.invokeType == 1 ? '类名' : 'Url'"
-          prop="service"
-        >
-          <el-input v-model="infoForm.service" placeholder="请输入"></el-input>
-        </el-form-item>
-        <el-form-item label="请求header" v-if="infoForm.invokeType == 2">
-          <el-row v-for="(item, index) in infoForm.headers" :key="index">
-            <el-col :span="10">
-              <el-input
-                size="mini"
-                v-model="item.key"
-                placeholder="请输入"
-              ></el-input>
-            </el-col>
-            <el-col :span="2">
-              <div class="header-line">-</div>
-            </el-col>
-            <el-col :span="10">
-              <el-input
-                size="mini"
-                v-model="item.value"
-                placeholder="请输入默认值"
-              ></el-input>
-            </el-col>
-            <el-col :span="2">
-              <i
-                class="el-icon-remove-outline op-icon"
-                @click="removeHeader(index)"
-              />
-              <i
-                class="el-icon-circle-plus-outline op-icon"
-                v-if="index == infoForm.headers.length - 1"
-                @click="addHeader"
-              />
-            </el-col>
-          </el-row>
-        </el-form-item>
-        <el-form-item label="方法" prop="method">
-          <el-input
-            v-if="infoForm.invokeType == 1"
-            v-model="infoForm.method"
-            placeholder="请输入"
-          ></el-input>
-          <el-select v-else v-model="infoForm.method" placeholder="请选择">
-            <el-option
-              v-for="item in httpMethods"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="参数列表">
-          <el-row v-for="(item, num) in infoForm.params" :key="num">
-            <el-col :span="3">
-              <el-input
-                size="mini"
-                v-model="item.paramKey"
-                placeholder="请输入参数名"
-              ></el-input>
-            </el-col>
-            <el-col :span="1">
-              <div class="header-line">-</div>
-            </el-col>
-            <el-col :span="3">
-              <el-select v-model="item.type" placeholder="请选择参数类型">
-                <el-option
-                  v-for="item in paramTypeList"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                >
-                </el-option>
-              </el-select>
-            </el-col>
-            <el-col :span="1">
-              <div class="header-line">-</div>
-            </el-col>
-            <el-col :span="3">
-              <el-input
-                size="mini"
-                v-model="item.description"
-                placeholder="请输入参数描述"
-              ></el-input>
-            </el-col>
-            <el-col :span="1">
-              <div class="header-line">-</div>
-            </el-col>
-            <el-col :span="3">
-              <el-input
-                size="mini"
-                v-model="item.defaultValue"
-                placeholder="请输入默认值"
-              ></el-input>
-            </el-col>
-            <el-col :span="1" v-if="item.type == 2">
-              <div class="header-line">-</div>
-            </el-col>
-            <el-col :span="4" v-if="item.type == 2">
-              <el-select
-                v-model="item.range"
-                multiple
-                filterable
-                allow-create
-                placeholder="请添加枚举类型"
-              >
-                <el-option
-                  v-for="item in options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                >
-                </el-option>
-              </el-select>
-            </el-col>
-            <el-col :span="2">
-              <div class="delete-icon">
-                <i
-                  class="el-icon-remove-outline op-icon"
-                  @click="deleteItem(item, num)"
-                />
-                <i
-                  class="el-icon-circle-plus-outline op-icon"
-                  v-if="num == infoForm.params.length - 1"
-                  @click="addItem"
-                />
-              </div>
-            </el-col>
-          </el-row>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input
-            v-model="infoForm.description"
-            placeholder="请输入模版功能描述"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4 }"
-          ></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submit('infoForm')">确认</el-button>
-
-          <el-button type="info" @click="closeDialog">取消</el-button>
-        </el-form-item>
-      </el-form>
+      <TemplateConfig :config="infoForm" @dataChange="templateChange" />
     </el-dialog>
     <!-- 创建模版结束 -->
     <!-- 文件上传开始 -->
     <el-dialog
       :visible.sync="showUploadDialog"
-      title="模版上传文件"
+      title="模版扫描"
+      :destroy-on-close="true"
       width="60%"
-      :multiple="false"
     >
       <div v-if="parseData.length <= 0">
         <el-upload
@@ -269,225 +105,242 @@
           <div class="el-upload__tip" slot="tip">只能上传jar文件</div>
         </el-upload>
       </div>
-
       <div v-else>
-        <el-collapse v-model="activeNames">
+        <h3>扫描结果</h3>
+        <el-collapse>
           <el-collapse-item
-            title="一致性 Consistency"
             name="1"
             v-for="(item, index) in parseData"
             :key="index"
           >
-            名称:{{ item.name }} 类名:{{ item.source }}
+            <template slot="title">
+              {{ item.name }} - {{ item.description }}
+            </template>
+            <TemplateConfig
+              :config="item"
+              @dataChange="uploadChange($event, index)"
+            />
           </el-collapse-item>
         </el-collapse>
       </div>
+
+      <span slot="footer" class="dialog-footer" v-if="parseData.length > 0">
+        <el-button size="mini" @click="deletePlugin">取消</el-button>
+        <el-button type="primary" size="mini" @click="submitTemplates"
+          >确定</el-button
+        >
+      </span>
     </el-dialog>
     <!-- 文件上传结束 -->
   </div>
 </template>
 <script>
-import templateApi from "../../http/Template";
+import templateApi from '../../http/Template'
+import TemplateConfig from './comp/template-config.vue'
 export default {
+  components: {
+    TemplateConfig,
+  },
   data() {
     return {
       templateData: [],
       queryForm: {},
       showDialog: false,
       infoForm: { params: [{}] },
-      dialogTitle: "添加执行点模版",
-      options: [],
-      paramTypeList: [
-        { label: "String", value: 0 },
-        { label: "Map", value: 1 },
-        { label: "List", value: 2 },
-        { label: "Integer", value: 3 },
-        { label: "Float", value: 4 },
-        { label: "Double", value: 5 },
-      ],
-      httpMethods: [
-        { label: "Post", value: "Post" },
-        { label: "Get", value: "Get" },
-        { label: "Put", value: "Put" },
-        { label: "Delete", value: "Delete" },
-      ],
+      dialogTitle: '添加执行点模版',
       isEdit: false,
       currentPage: 1,
       totalSize: 0,
-      infoRule: {
-        name: [{ required: true, message: "请输入模版名称", trigger: "blur" }],
-        invokeType: [
-          { required: true, message: "请选择执行类型", trigger: "blur" },
-        ],
-        service: [{ required: true, message: "此项不能为空", trigger: "blur" }],
-        method: [{ required: true, message: "此项不能为空", trigger: "blur" }],
-        description: [
-          { required: true, message: "模版描述不能为空", trigger: "blur" },
-        ],
-      },
       showUploadDialog: false,
-      activeNames: [],
       parseData: [],
-      pluginId: "",
-    };
+      pluginId: '',
+    }
   },
   methods: {
+    deletePlugin() {
+      templateApi.deletePlugin(this.pluginId).then((res) => {
+        console.log(res)
+        if (res.data) {
+          this.$message.success('未使用插件，已清理相关数据')
+        } else {
+          this.$message.warning('未使用插件，清理数据错误')
+        }
+      })
+    },
+    templateChange(data) {
+      this.infoForm = data
+    },
+    submitTemplates() {
+      let data = {
+        templates: this.parseData,
+        pluginId: this.pluginId,
+      }
+      templateApi.batchCreateTemplate(data).then((res) => {
+        if (res.data) {
+          this.$message.success('添加模版成功')
+          this.showUploadDialog = false
+          this.parseData = []
+          this.pluginId = ''
+          this.getTemplatePage(1)
+        } else {
+          this.$message.error('添加模版失败')
+        }
+      })
+    },
+    uploadChange(data, index) {
+      this.parseData[index] = data
+    },
     httpRequest(param) {
-      console.log("httpRequest", param);
-      const formData = new FormData();
-      formData.append(`file`, param.file);
+      const formData = new FormData()
+      formData.append(`file`, param.file)
       templateApi.upload(formData).then((res) => {
         if (res.data) {
-          this.$message.success("上传文件成功");
-          this.parseData = res.data.templateDefines;
-          console.log(res.data.templateDefines);
+          this.$message.success('上传文件成功')
+          this.parseData = res.data.templateDefines
+          this.pluginId = res.data.pluginId
+          console.log(res.data.templateDefines)
         } else {
-          this.$message.error("上传文件失败");
+          this.$message.error('上传文件失败')
         }
-      });
-    },
-    cancelUpload() {
-      this.fileList = [];
+      })
     },
     removeHeader(index) {
-      this.infoForm.headers.splice(index, 1);
+      this.infoForm.headers.splice(index, 1)
     },
     addHeader() {
-      this.infoForm.headers.push({});
+      this.infoForm.headers.push({})
     },
     inputChange() {
-      this.getTemplatePage(1);
+      this.getTemplatePage(1)
     },
     pageChange(page) {
-      this.getTemplatePage(page);
+      this.getTemplatePage(page)
     },
     getTemplatePage(page) {
-      let name = this.queryForm.name;
+      let name = this.queryForm.name
       if (!name) {
-        name = "";
+        name = ''
       }
 
       templateApi.getTemplatePage(page, 10, name).then((res) => {
-        this.templateData = res.data.data;
-        this.totalSize = res.data.total;
-      });
+        this.templateData = res.data.data
+        this.totalSize = res.data.total
+      })
     },
     startQuery() {
-      this.getTemplatePage(1);
+      this.getTemplatePage(1)
     },
     startCreate() {
-      this.isEdit = false;
-      this.showDialog = !this.showDialog;
-      this.dialogTitle = "创建模版";
-      this.infoForm = {
-        params: [{}],
-        headers: [{}],
-        invokeType: 1,
-        method: "",
-      };
+      this.isEdit = false
+      this.showDialog = !this.showDialog
+      this.dialogTitle = '创建模版'
+      this.infoForm = { params: [{}], invokeType: 1, method: '' }
     },
     refreshTemplate(row) {
       templateApi.refresh(row.templateId).then((res) => {
         if (res.data) {
-          this.$message.success("刷新成功");
+          this.$message.success('刷新成功')
         } else {
-          this.$message.error("刷新失败");
+          this.$message.error('刷新失败')
         }
-      });
+      })
     },
     handleEdit(row) {
-      this.isEdit = true;
-      this.showDialog = true;
-      this.dialogTitle = "编辑模版";
+      this.isEdit = true
+      this.showDialog = true
+      this.dialogTitle = '编辑模版'
 
-      let rowData = JSON.parse(JSON.stringify(row));
+      let rowData = JSON.parse(JSON.stringify(row))
       if (rowData.headers && rowData.headers.length > 0) {
-        let array = [];
+        let array = []
         Object.keys(rowData.headers).forEach((key) => {
-          array.push({ key: key, value: rowData.headers[key] });
-        });
-        rowData.headers = array;
+          array.push({ key: key, value: rowData.headers[key] })
+        })
+        rowData.headers = array
       } else {
-        rowData.headers = [{ key: "", value: "" }];
+        rowData.headers = [{ key: '', value: '' }]
       }
 
       if (!rowData.params) {
-        this.infoForm = rowData;
-        return;
+        this.infoForm = rowData
+        return
       }
 
       rowData.params.forEach((e) => {
         if (e.defaultValue === null) {
-          return;
+          return
         }
         if (e.type == 2) {
-          e.range = e.defaultValue.range;
+          e.range = e.defaultValue.range
         }
 
-        e.defaultValue = e.defaultValue.defaultValue;
-      });
-      this.infoForm = rowData;
-      console.log("rrrr", this.infoForm);
+        e.defaultValue = e.defaultValue.defaultValue
+      })
+      this.infoForm = rowData
     },
     handleDelete(row) {
-      templateApi.deleteTemplate(row.templateId).then(() => {
-        this.$message.success("删除模版成功");
-        this.getTemplatePage(1);
-      });
-    },
-    deleteItem(item, index) {
-      this.infoForm.params.splice(index, 1);
-    },
-    addItem() {
-      this.infoForm.params.push({});
+      this.$confirm(`确认删除模版【${row.name}】?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        templateApi.deleteTemplate(row.templateId).then((res) => {
+          if (res.data) {
+            this.$message.success('删除模版成功')
+            this.getTemplatePage(1)
+          } else {
+            this.$message.error('删除模版失败')
+          }
+        })
+      })
     },
     closeDialog() {
-      this.showDialog = false;
-      this.infoForm = { params: [{}] };
+      this.showDialog = false
+      this.infoForm = { params: [{}] }
     },
     submit(infoForm) {
       this.$refs[infoForm].validate((valid) => {
         if (!valid) {
-          return false;
+          return false
         }
 
-        let requestParam = JSON.parse(JSON.stringify(this.infoForm));
+        let requestParam = JSON.parse(JSON.stringify(this.infoForm))
         requestParam.params.forEach((e) => {
           e.defaultValue = {
-            defaultValue: e.defaultValue ? e.defaultValue : "",
-          };
-          if (e.type == 2) {
-            e.defaultValue.range = e.range;
+            defaultValue: e.defaultValue ? e.defaultValue : '',
           }
-        });
+          if (e.type == 2) {
+            e.defaultValue.range = e.range
+          }
+        })
 
-        let headers = {};
+        let headers = {}
         requestParam.headers.forEach((e) => {
-          headers[e.key] = e.value;
-        });
-        requestParam.headers = headers;
+          headers[e.key] = e.value
+        })
+        requestParam.headers = headers
 
         if (this.isEdit) {
           templateApi.updateTemplate(requestParam).then(() => {
-            this.$message.success(`${this.dialogTitle}成功`);
-            this.showDialog = false;
-            this.getTemplatePage(1);
-          });
-          return;
+            this.$message.success(`${this.dialogTitle}成功`)
+            this.showDialog = false
+            this.getTemplatePage(1)
+          })
+          return
         }
 
         templateApi.createTemplate(requestParam).then(() => {
-          this.$message.success(`${this.dialogTitle}成功`);
-          this.showDialog = false;
-          this.getTemplatePage(1);
-        });
-      });
+          this.$message.success(`${this.dialogTitle}成功`)
+          this.showDialog = false
+          this.getTemplatePage(1)
+        })
+      })
     },
   },
   created() {
-    this.getTemplatePage(1);
+    this.getTemplatePage(1)
   },
-};
+}
 </script>
 <style scoped>
 .content {

@@ -283,7 +283,6 @@ export default {
   },
   methods: {
     closeDiv(executePoint) {
-      console.log('222223eeee')
       executePoint.isActive = !executePoint.isActive
       this.uuid = this.$utils.randomString(20)
     },
@@ -455,8 +454,6 @@ export default {
         }
       })
       this.displayList = array
-      // this.uuid = this.$utils.randomString(20)
-      console.log('展示', this.displayList)
     },
   },
   created() {
