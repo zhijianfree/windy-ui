@@ -18,7 +18,7 @@
             <span slot="title">服务管理</span>
           </template>
           <el-menu-item index="/service">
-            <i class="el-icon-s-unfold"></i>
+            <i class="el-icon-s-opportunity"></i>
             服务列表</el-menu-item
           >
         </el-submenu>
@@ -32,11 +32,11 @@
             变更列表</el-menu-item
           >
           <el-menu-item index="/pipeline">
-            <i class="el-icon-s-unfold"></i>
+            <i class="el-icon-share"></i>
             Pipeline</el-menu-item
           >
           <el-menu-item index="/pipe/action">
-            <i class="el-icon-s-promotion"></i>
+            <i class="el-icon-coin"></i>
             节点管理</el-menu-item
           >
         </el-submenu>
@@ -46,7 +46,7 @@
             <span slot="title">用例管理</span>
           </template>
           <el-menu-item index="/">
-            <i class="el-icon-s-unfold"></i>
+            <i class="el-icon-cpu"></i>
             测试集列表</el-menu-item
           >
           <el-menu-item index="/template">
@@ -68,7 +68,7 @@
             系统配置</el-menu-item
           >
           <el-menu-item index="/env">
-            <i class="el-icon-s-platform"></i>
+            <i class="el-icon-place"></i>
             环境管理</el-menu-item
           >
           <el-menu-item index="/monitor">

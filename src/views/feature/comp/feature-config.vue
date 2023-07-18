@@ -528,6 +528,7 @@ export default {
 .menu-type {
   width: 200px;
   margin-left: 50%;
+  margin-top: 10px;
   transform: translateX(-50%);
   margin-bottom: 10px;
 }

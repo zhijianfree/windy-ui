@@ -69,13 +69,18 @@
         </el-table-column>
         <el-table-column align="right" label="操作">
           <template slot-scope="scope">
-            <el-button size="mini" @click="handleEdit(scope.row)" type="primary"
+            <el-button
+              size="mini"
+              @click="handleEdit(scope.row)"
+              type="primary"
+              plain
               >编辑</el-button
             >
             <el-button
               size="mini"
               type="danger"
               @click="handleDelete(scope.row)"
+              plain
               >删除</el-button
             >
           </template>

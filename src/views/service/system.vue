@@ -4,6 +4,7 @@
       class="tips-info"
       title="消息提示"
       type="info"
+      :closable="false"
       description="系统配置作用于全局，请谨慎操作"
       show-icon
     >

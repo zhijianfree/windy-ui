@@ -113,107 +113,110 @@
   </div>
 </template>
 <script>
-import serviceApi from "../../http/Service";
+import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
       serviceData: [],
       currentPage: 1,
       totalSize: 0,
-      queryName: "",
-      dialogTitle: "创建服务",
+      queryName: '',
+      dialogTitle: '创建服务',
       showServiceDialog: false,
       serviceForm: {},
       isEdit: false,
       rules: {
         serviceName: [
-          { required: true, message: "请输入服务名称", trigger: "blur" },
+          { required: true, message: '请输入服务名称', trigger: 'blur' },
+        ],
+        description: [
+          { required: true, message: '请输入服务描述', trigger: 'blur' },
         ],
         gitUrl: [
-          { required: true, message: "请输入服务的git地址", trigger: "blur" },
+          { required: true, message: '请输入服务的git地址', trigger: 'blur' },
         ],
       },
-    };
+    }
   },
   methods: {
     startEdit(row) {
-      this.dialogTitle = "修改服务";
-      this.isEdit = true;
-      this.showServiceDialog = true;
-      this.serviceForm = JSON.parse(JSON.stringify(row));
+      this.dialogTitle = '修改服务'
+      this.isEdit = true
+      this.showServiceDialog = true
+      this.serviceForm = JSON.parse(JSON.stringify(row))
     },
     startDelete(row) {
-      this.$confirm("确认删除服务?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm(`确认删除服务【${row.serviceName}】?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       }).then(() => {
         serviceApi.deleteService(row.serviceId).then((res) => {
           if (res.data == 1) {
-            this.$message.success("删除服务成功");
-            this.closeDialog();
-            this.getServices(1);
-            return;
+            this.$message.success('删除服务成功')
+            this.closeDialog()
+            this.getServices(1)
+            return
           }
-          this.$message.warning("删除服务失败");
-        });
-      });
+          this.$message.warning('删除服务失败')
+        })
+      })
     },
     startQuery() {
-      this.getServices(1);
+      this.getServices(1)
     },
     startCreate() {
-      this.dialogTitle = "添加服务";
-      this.isEdit = false;
-      this.showServiceDialog = true;
-      this.serviceForm = {};
+      this.dialogTitle = '添加服务'
+      this.isEdit = false
+      this.showServiceDialog = true
+      this.serviceForm = {}
     },
     closeDialog() {
-      this.isEdit = false;
-      this.showServiceDialog = false;
-      this.serviceForm = {};
+      this.isEdit = false
+      this.showServiceDialog = false
+      this.serviceForm = {}
     },
     pageChange(page) {
-      this.getServices(page);
+      this.getServices(page)
     },
     getServices(page) {
-      let name = this.queryName;
+      let name = this.queryName
       if (name == null || name == undefined) {
-        name = "";
+        name = ''
       }
       serviceApi.getServicesPage(page, 10, name).then((res) => {
-        this.totalSize = res.data.total;
-        this.currentPage = page;
-        this.serviceData = res.data.data;
-      });
+        this.totalSize = res.data.total
+        this.currentPage = page
+        this.serviceData = res.data.data
+      })
     },
     submit(serviceForm) {
       this.$refs[serviceForm].validate((valid) => {
         if (!valid) {
-          return false;
+          return false
         }
 
         if (this.isEdit) {
           serviceApi.updateService(this.serviceForm).then(() => {
-            this.$message.success("修改成功！");
-            this.closeDialog();
-            this.getServices(1);
-          });
-          return;
+            this.$message.success('修改成功！')
+            this.closeDialog()
+            this.getServices(1)
+          })
+          return
         }
 
         serviceApi.createService(this.serviceForm).then(() => {
-          this.$message.success("添加成功！");
-          this.closeDialog();
-          this.getServices(1);
-        });
-      });
+          this.$message.success('添加成功！')
+          this.closeDialog()
+          this.getServices(1)
+        })
+      })
     },
   },
   created() {
-    this.getServices(1);
+    this.getServices(1)
   },
-};
+}
 </script>
 <style scoped>
 .all {

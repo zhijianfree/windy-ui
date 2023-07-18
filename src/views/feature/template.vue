@@ -47,11 +47,18 @@
           <el-button
             type="primary"
             size="mini"
+            plain
             @click="refreshTemplate(scope.row)"
             >刷新</el-button
           >
-          <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(scope.row)"
+          <el-button size="mini" @click="handleEdit(scope.row)" plain
+            >编辑</el-button
+          >
+          <el-button
+            size="mini"
+            type="danger"
+            plain
+            @click="handleDelete(scope.row)"
             >删除</el-button
           >
         </template>
