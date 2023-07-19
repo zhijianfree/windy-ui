@@ -220,7 +220,7 @@
               </el-descriptions-item>
               <el-descriptions-item label="执行方式">
                 <el-tag type="primary">{{
-                  currentPipeline.executeType == 1 ? '手动执行' : '代码提交'
+                  executeWay(currentPipeline.executeType)
                 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
@@ -394,6 +394,21 @@ export default {
     }
   },
   methods: {
+    executeWay(executeType) {
+      let label = '-'
+      switch (executeType) {
+        case 1:
+          label = '手动执行'
+          break
+        case 2:
+          label = '代码提交'
+          break
+        case 3:
+          label = '定时执行'
+          break
+      }
+      return label
+    },
     approvalClose() {
       this.approvalNode = {}
       this.showApproval = false

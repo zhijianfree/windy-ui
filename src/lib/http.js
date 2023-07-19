@@ -6,9 +6,14 @@ axios.interceptors.response.use(
     return res
   },
   (error) => {
-    Message.error(
-      `[${error.response.data.code}] ${error.response.data.message}`
-    )
+    if (error.response.data.code) {
+      Message.error(
+        `[${error.response.data.code}] ${error.response.data.message}`
+      )
+    } else {
+      Message.error(`访问服务器失败`)
+    }
+
     return Promise.reject(error)
   }
 )

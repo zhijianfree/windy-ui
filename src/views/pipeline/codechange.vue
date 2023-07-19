@@ -39,10 +39,12 @@
             <el-table-column prop="changeBranch" label="分支">
             </el-table-column>
             <el-table-column prop="changeDesc" label="描述"> </el-table-column>
-            <el-table-column prop="creator" label="创建者"> </el-table-column>
-            <el-table-column prop="relationId" label="关联Id">
+            <el-table-column prop="relationId" label="需求/缺陷Id">
             </el-table-column>
             <el-table-column prop="createTime" label="创建时间">
+              <template slot-scope="scope">
+                {{ scope.row.createTime | dateFormat }}
+              </template>
             </el-table-column>
             <el-table-column fixed="right" label="操作" width="100">
               <template slot-scope="scope">
