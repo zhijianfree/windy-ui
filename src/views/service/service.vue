@@ -1,5 +1,12 @@
 <template>
   <div class="all">
+    <div class="page-title">
+      <el-breadcrumb separator="/">
+        <el-breadcrumb-item>服务管理</el-breadcrumb-item>
+        <el-breadcrumb-item>服务列表</el-breadcrumb-item>
+      </el-breadcrumb>
+    </div>
+
     <!-- 查询条件开始 -->
     <div>
       <el-form :inline="true" size="mini">
@@ -221,5 +228,9 @@ export default {
 <style scoped>
 .all {
   margin: 10px;
+}
+.page-title {
+  margin: 10px 0;
+  font-size: 15px;
 }
 </style>

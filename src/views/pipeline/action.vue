@@ -402,7 +402,6 @@ export default {
           return false
         }
 
-        console.log('node 节点', this.nodeForm)
         if (this.isEditNode) {
           NodeApi.updateNode(this.nodeForm).then((res) => {
             if (res.data) {
@@ -448,7 +447,6 @@ export default {
       this.actionForm.executeType = 'HTTP'
     },
     editAction(row) {
-      console.log('row', row)
       this.isEditAction = true
       this.title = '编辑执行点'
       this.showCreateExecuter = true
@@ -530,13 +528,11 @@ export default {
         (res) => {
           this.totalSize = res.total
           this.actionList = res.data
-          console.log(res)
         }
       )
     },
     getAllActions() {
       ActionApi.getActionPage(1, 100, '').then((res) => {
-        console.log(res)
         this.executeList = []
         res.data.forEach((e) => {
           this.executeList.push({ label: e.actionName, value: e.actionId })

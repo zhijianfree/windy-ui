@@ -697,6 +697,12 @@ export default {
       pipelineApi.queryPipeline(this.pipelineId).then((res) => {
         this.editPipelines = utils.displayData(res.data.stageList)
         this.pipelineForm = res.data
+        let config = JSON.parse(res.data.pipelineConfig)
+        let hour = config.schedule.split(' ')[2]
+        //解析表达式 0 0 2 * * ? 获取对应的执行时间点
+        let time = new Date(2023, 7, 20, hour)
+        // this.pipelineForm.scheduleTime = time
+        this.$set(this.pipelineForm, 'scheduleTime', time)
         this.uuid++
       })
     },

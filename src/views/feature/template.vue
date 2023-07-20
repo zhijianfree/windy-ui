@@ -166,7 +166,6 @@ export default {
   methods: {
     deletePlugin() {
       templateApi.deletePlugin(this.pluginId).then((res) => {
-        console.log(res)
         if (res.data) {
           this.$message.success('未使用插件，已清理相关数据')
         } else {
@@ -205,7 +204,6 @@ export default {
           this.$message.success('上传文件成功')
           this.parseData = res.data.templateDefines
           this.pluginId = res.data.pluginId
-          console.log(res.data.templateDefines)
         } else {
           this.$message.error('上传文件失败')
         }

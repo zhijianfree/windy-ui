@@ -18,16 +18,14 @@
               </div>
               <!--- 开始-->
               <div>
-                <!-- <el-empty
+                <el-empty
                   v-if="isShowEmpty"
                   description="请在右侧拖拽组件到此处"
-                ></el-empty> -->
-                <!-- <div v-else> -->
-                <div>
+                ></el-empty>
+                <div v-else>
                   <draggable
                     style="min-height: 100px"
-                    class="huhuhu"
-                    :list="displayList"
+                    v-model="displayList"
                     @add="addItem"
                     :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
@@ -244,7 +242,6 @@ export default {
   watch: {
     feature: {
       handler(val) {
-        console.log('监听到新值', val)
         this.featureId = val
         this.getExecutePoint()
       },
@@ -309,8 +306,12 @@ export default {
       })
     },
     startDebug() {
-      featureApi.startFeature(this.featureId).then(() => {
-        this.$message.success('开始执行，请查看运行日志')
+      featureApi.startFeature(this.featureId).then((res) => {
+        if (res.data) {
+          this.$message.success('开始执行，请查看运行日志')
+        } else {
+          this.$message.error('执行失败')
+        }
       })
     },
     saveConfig() {
@@ -356,7 +357,6 @@ export default {
       })
     },
     exchangeEditStatus(item, isUpdateText) {
-      console.log('点击aaaa')
       if (isUpdateText) {
         item.description = item.desc
       }
@@ -371,7 +371,6 @@ export default {
       this.isEdit = !this.isEdit
     },
     addItem(e) {
-      console.log('1111', e)
       this.displayList = JSON.parse(JSON.stringify(this.displayList))
       let item = this.displayList[e.newIndex]
       item.isActive = true
@@ -432,7 +431,6 @@ export default {
           }
           this.allPoints.push(item)
         })
-        console.log('1111', this.allPoints)
         this.menuType = '1'
         this.displayExepoints()
       })

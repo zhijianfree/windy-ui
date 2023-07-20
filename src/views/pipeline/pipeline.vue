@@ -443,7 +443,6 @@ export default {
         serviceId: this.serviceId,
       }
       publishApi.createPublish(data).then((res) => {
-        console.log('=====', res)
         if (res.data) {
           this.$message.success('推送发布成功，请去发布流水线查看')
         } else {
@@ -535,7 +534,6 @@ export default {
     selectService() {
       this.getPipelineList()
       this.currentPipeline = { pipelineConfig: [] }
-      console.log('数据变化', this.serviceId)
     },
 
     showNodeLog(node) {

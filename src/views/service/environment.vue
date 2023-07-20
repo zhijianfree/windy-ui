@@ -344,7 +344,6 @@ export default {
       }
 
       envApi.createEnv(data).then((res) => {
-        console.log('create result', res)
         if (res.data) {
           this.$message.success('添加环境成功')
           this.cancellDialog()
@@ -359,7 +358,6 @@ export default {
       this.envForm = {}
     },
     selectType(type) {
-      console.log('1111', type)
       this.paramsList = []
       if (type == 1) {
         this.paramsList = JSON.parse(JSON.stringify(this.sshParams))
@@ -376,7 +374,6 @@ export default {
     getEnvs() {
       this.envData = []
       envApi.getEnvs(this.currentPage, 10, this.queryName).then((res) => {
-        console.log('环境列表', res)
         if (!res.data.data) {
           return
         }

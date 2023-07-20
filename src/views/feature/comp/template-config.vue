@@ -189,7 +189,6 @@ export default {
   watch: {
     config: {
       handler(val) {
-        console.log('1111', JSON.parse(JSON.stringify(val)))
         let rowData = JSON.parse(JSON.stringify(val))
         if (rowData.headers) {
           let array = []
@@ -217,7 +216,6 @@ export default {
           e.defaultValue = e.defaultValue.defaultValue
         })
         this.infoForm = rowData
-        console.log('wwww', this.infoForm)
       },
       deep: true,
       immediate: true,
