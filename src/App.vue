@@ -12,6 +12,12 @@
         :router="true"
         active-text-color="#ffd04b"
       >
+        <el-menu-item index="/">
+          <template slot="title">
+            <i class="el-icon-s-home"></i>
+            <span slot="title">首页</span>
+          </template>
+        </el-menu-item>
         <el-submenu index="/service">
           <template slot="title">
             <i class="el-icon-s-help"></i>
@@ -45,7 +51,7 @@
             <i class="el-icon-s-promotion"></i>
             <span slot="title">用例管理</span>
           </template>
-          <el-menu-item index="/">
+          <el-menu-item index="/case">
             <i class="el-icon-cpu"></i>
             测试集列表</el-menu-item
           >
@@ -119,7 +125,7 @@ body,
   padding: 0px !important;
 }
 .title-menu {
-  width: 600px;
+  width: 800px;
   left: 50%;
   transform: translate(-50%);
 }
@@ -127,6 +133,10 @@ body,
   /* background-color: #f1f4f9; */
 }
 .el-submenu__title {
+  height: 50px !important;
+  line-height: 50px !important;
+}
+.el-menu-item {
   height: 50px !important;
   line-height: 50px !important;
 }

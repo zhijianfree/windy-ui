@@ -27,66 +27,42 @@
       <!-- 表单查询结束 -->
     </div>
     <div>
-      <el-table :data="envData">
-        <el-table-column label="环境名称" prop="envName"></el-table-column>
-        <el-table-column label="环境状态" prop="envStatus">
-          <template slot-scope="scope">
-            <el-tag :type="scope.row.envStatus | statusFormat" size="medium">{{
-              scope.row.envStatus | deployFormat
-            }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="环境类型" prop="envType">
-          <template slot-scope="scope">
-            {{ scope.row.envType | deployType }}
-          </template>
-        </el-table-column>
-        <el-table-column label="环境参数" prop="envParams">
-          <template slot-scope="scope">
-            <el-popover placement="right" width="600" trigger="click">
-              <el-table :data="scope.row.configList" max-height="250">
-                <el-table-column
-                  width="300"
-                  property="name"
-                  label="参数名"
-                ></el-table-column>
-                <el-table-column
-                  width="300"
-                  property="value"
-                  label="参数值"
-                ></el-table-column>
-              </el-table>
-              <el-button size="mini" type="primary" slot="reference"
-                >查看参数</el-button
-              >
-            </el-popover>
-          </template>
-        </el-table-column>
-        <el-table-column label="修改时间" prop="updateTime">
-          <template slot-scope="scope">
-            {{ scope.row.updateTime | dateFormat }}
-          </template>
-        </el-table-column>
-        <el-table-column align="right" label="操作">
-          <template slot-scope="scope">
-            <el-button
-              size="mini"
-              @click="handleEdit(scope.row)"
-              type="primary"
-              plain
-              >编辑</el-button
-            >
-            <el-button
-              size="mini"
-              type="danger"
-              @click="handleDelete(scope.row)"
-              plain
-              >删除</el-button
-            >
-          </template>
-        </el-table-column>
-      </el-table>
-      <div>
+      <el-row>
+        <el-col :span="6" v-for="(item, index) in envData" :key="index">
+          <el-card
+            shadow="always"
+            class="env-card"
+            :body-style="{ padding: '15px' }"
+          >
+            <div>
+              <span class="env-name">{{ item.envName }} </span>
+              <img class="env-img" :src="item.img" width="40" height="40" />
+            </div>
+            <div>
+              <div class="status-icon">
+                <el-tag :type="item.envStatus | statusFormat" size="medium">{{
+                  item.envStatus | deployFormat
+                }}</el-tag>
+              </div>
+              <div class="op-line">
+                <el-button
+                  icon="el-icon-edit-outline"
+                  type="text"
+                  @click="handleEdit(item)"
+                  >编辑</el-button
+                >
+                <el-button
+                  icon="el-icon-delete"
+                  type="text"
+                  @click="handleDelete(item)"
+                  >删除</el-button
+                >
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <div class="page-index">
         <el-pagination
           :page-size="10"
           :current-page="currentPage"
@@ -162,6 +138,9 @@
 </template>
 
 <script>
+import k8sIcon from '../../assets/k8s.png'
+import dockerIcon from '../../assets/k8s.png'
+import sshIcon from '../../assets/ssh.png'
 import envApi from '../../http/Environment'
 export default {
   data() {
@@ -379,6 +358,15 @@ export default {
         }
         res.data.data.forEach((element) => {
           element.configList = this.translate(element)
+          if (element.envType == 1) {
+            element.img = sshIcon
+          }
+          if (element.envType == 2) {
+            element.img = k8sIcon
+          }
+          if (element.envType == 3) {
+            element.img = dockerIcon
+          }
           this.envData.push(element)
         })
         this.totalSize = res.data.total
@@ -428,5 +416,41 @@ export default {
 }
 .content {
   margin: 10px;
+}
+.env-name {
+  vertical-align: middle;
+  line-height: 50px;
+
+  color: #303133;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.env-name i {
+  margin-left: 10px;
+}
+.env-img {
+  float: right;
+  margin-right: 20px;
+}
+.status-icon {
+  float: right;
+  margin-right: 20px;
+}
+.config-line {
+  color: #c0c4cc;
+  font-weight: 500;
+  margin: 2px;
+  opacity: 0.5;
+}
+.env-card {
+  height: 150px;
+  overflow: hidden;
+}
+.op-line {
+  margin-top: 20px;
+}
+.page-index {
+  margin-top: 20px;
 }
 </style>
