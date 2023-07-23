@@ -26,6 +26,7 @@
                   <draggable
                     style="min-height: 100px"
                     v-model="displayList"
+                    :disabled="!isEdit"
                     @add="addItem"
                     :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
@@ -66,7 +67,10 @@
                             </el-tag>
                           </el-col>
 
-                          <el-col :span="8" v-if="executePoint.editDesc">
+                          <el-col
+                            :span="8"
+                            v-if="executePoint.editDesc && isEdit"
+                          >
                             <div>
                               <el-input
                                 placeholder="输入功能描述"
@@ -224,11 +228,11 @@
   </div>
 </template>
 <script>
-import FeatureTemplate from '@/components/feature-template'
-import FeatureTool from '@/components/feature-tool'
-import draggable from 'vuedraggable'
-import featureApi from '../../../http/Feature'
-import collapse from '../../../lib/collapse'
+import FeatureTemplate from "@/components/feature-template";
+import FeatureTool from "@/components/feature-tool";
+import draggable from "vuedraggable";
+import featureApi from "../../../http/Feature";
+import collapse from "../../../lib/collapse";
 export default {
   props: {
     feature: String,
@@ -242,8 +246,8 @@ export default {
   watch: {
     feature: {
       handler(val) {
-        this.featureId = val
-        this.getExecutePoint()
+        this.featureId = val;
+        this.getExecutePoint();
       },
       deep: true,
       immediate: true,
@@ -251,72 +255,90 @@ export default {
   },
   computed: {
     isShowEmpty() {
-      let flag = false
+      let flag = false;
       if (
         this.displayList.length == 0 ||
         this.displayList.length == undefined
       ) {
-        flag = true
+        flag = true;
       }
       if (this.isDrag) {
-        flag = false
+        flag = false;
       }
-      return flag
+      return flag;
     },
   },
   data() {
     return {
       displayList: [{}],
       allPoints: [],
-      menuType: '',
-      toolType: '2',
+      menuType: "",
+      toolType: "2",
       isDrag: false,
       featureItemList: [],
       isEdit: false,
-      uuid: '',
+      uuid: "",
       isActive: false,
-      featureId: '',
-    }
+      featureId: "",
+    };
   },
   methods: {
     closeDiv(executePoint) {
-      executePoint.isActive = !executePoint.isActive
-      this.uuid = this.$utils.randomString(20)
+      executePoint.isActive = !executePoint.isActive;
+      this.uuid = this.$utils.randomString(20);
     },
     deleteExecutePoint(index, pointId) {
-      this.$confirm('确认删除用例执行点?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
+      this.$confirm("确认删除用例执行点?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       }).then(() => {
         if (!pointId) {
-          this.displayList.splice(index, 1)
-          this.updateFeatureList()
-          return
+          this.displayList.splice(index, 1);
+          this.updateFeatureList();
+          return;
         }
         featureApi.deleteExecutePoint(pointId).then((res) => {
           if (res.data == 1) {
-            this.displayList.splice(index, 1)
-            this.updateFeatureList()
-            this.$message.success('删除执行点成功')
-            return
+            this.displayList.splice(index, 1);
+            this.updateFeatureList();
+            this.$message.success("删除执行点成功");
+            return;
           }
-          this.$message.warning('删除执行点失败')
-        })
-      })
+          this.$message.warning("删除执行点失败");
+        });
+      });
     },
     startDebug() {
       featureApi.startFeature(this.featureId).then((res) => {
         if (res.data) {
-          this.$message.success('开始执行，请查看运行日志')
+          this.$message.success("开始执行，请查看运行日志");
         } else {
-          this.$message.error('执行失败')
+          this.$message.error("执行失败");
         }
-      })
+      });
+    },
+    resetOrder() {
+      this.bindStepPoints();
+      this.allPoints.sort((m, n) => {
+        let before = m.testStage;
+        let current = n.testStage;
+        if (before > current) {
+          return 1;
+        }
+        if (before < current) {
+          return -1;
+        }
+        return 0;
+      });
     },
     saveConfig() {
-      let index = 0
-      let array = []
+      this.displayList.forEach((e) => {
+        e.editDesc = false;
+      });
+      let index = 0;
+      let array = [];
+      this.resetOrder();
       this.allPoints.forEach((e) => {
         let item = {
           method: e.method,
@@ -324,12 +346,12 @@ export default {
           invokeType: e.invokeType,
           description: e.description,
           service: e.service,
-        }
+        };
 
         if (e.executeType != 1) {
-          item.executePoints = e.executePoints
+          item.executePoints = e.executePoints;
         } else {
-          item.params = e.params
+          item.params = e.params;
         }
 
         array.push({
@@ -343,75 +365,86 @@ export default {
           variableDefine: e.variableDefine,
           executeType: e.executeType,
           description: e.description,
-        })
-        index++
-      })
+        });
+        index++;
+      });
       let data = {
         featureId: this.featureId,
         testFeatures: array,
-      }
+      };
 
       featureApi.updateFeature(data).then(() => {
-        this.$message.success('保存成功')
-        this.isEdit = false
-      })
+        this.$message.success("保存成功");
+        this.isEdit = false;
+      });
     },
     exchangeEditStatus(item, isUpdateText) {
       if (isUpdateText) {
-        item.description = item.desc
+        item.description = item.desc;
       }
-      item.editDesc = !item.editDesc
-      this.uuid = this.$utils.randomString(20)
+      item.editDesc = !item.editDesc;
+      this.uuid = this.$utils.randomString(20);
     },
     cancelEdit() {
-      this.getExecutePoint()
-      this.isEdit = false
+      this.getExecutePoint();
+      this.isEdit = false;
     },
     clickEdit() {
-      this.isEdit = !this.isEdit
+      this.isEdit = !this.isEdit;
     },
     addItem(e) {
-      this.displayList = JSON.parse(JSON.stringify(this.displayList))
-      let item = this.displayList[e.newIndex]
-      item.isActive = true
-      item.randomId = this.$utils.randomString(20)
-      item.writeType = '1'
-      item.sortOrder = e.newIndex
-      item.testStage = parseInt(this.menuType)
-      item.pointId = null
-      this.allPoints.push(item)
-      this.isEdit = true
-      this.displayExepoints()
+      this.displayList = JSON.parse(JSON.stringify(this.displayList));
+      let item = this.displayList[e.newIndex];
+      item.isActive = true;
+      item.randomId = this.$utils.randomString(20);
+      item.writeType = "1";
+      item.sortOrder = e.newIndex;
+      item.testStage = parseInt(this.menuType);
+      item.pointId = null;
+      this.allPoints.push(item);
+      this.isEdit = true;
+      this.displayExepoints();
     },
     refreshValue(update) {
       this.allPoints.forEach((e) => {
         if (e.randomId == update.data.randomId) {
-          e = update.data
+          e = update.data;
         }
-      })
-      this.displayExepoints()
+      });
+      this.displayExepoints();
     },
     startDrag() {
-      this.isDrag = true
+      this.isDrag = true;
     },
     selectTestStep() {
-      this.displayExepoints()
-      this.$forceUpdate()
+      this.bindStepPoints();
+      this.displayExepoints();
+      this.$forceUpdate();
+    },
+    bindStepPoints() {
+      if (this.displayList.length == 0) {
+        return;
+      }
+      let currentStage = this.displayList[0].testStage;
+      let array = this.allPoints.filter((e) => {
+        return e.testStage != currentStage;
+      });
+      this.allPoints = array.concat(this.displayList);
     },
     refreshArray(data) {
-      this.displayList = []
-      let index = 0
+      this.displayList = [];
+      let index = 0;
       data.forEach((e) => {
-        this.$set(this.displayList, index, e)
-        index++
-      })
+        this.$set(this.displayList, index, e);
+        index++;
+      });
     },
     getExecutePoint() {
       featureApi.getExecutePoints(this.featureId).then((res) => {
-        this.allPoints = []
+        this.allPoints = [];
         res.data.data.forEach((e) => {
-          let executePoint = e.executorUnit
-          let data = executePoint.params
+          let executePoint = e.executorUnit;
+          let data = executePoint.params;
           let item = {
             id: e.id,
             pointId: e.pointId,
@@ -423,41 +456,41 @@ export default {
             executePoints: executePoint.executePoints,
             compareDefine: e.compareDefine,
             variableDefine: e.variableDefine,
-            writeType: '1',
+            writeType: "1",
             executeType: e.executeType,
             randomId: this.$utils.randomString(20),
             testStage: e.testStage,
             isActive: false,
-          }
-          this.allPoints.push(item)
-        })
-        this.menuType = '1'
-        this.displayExepoints()
-      })
+          };
+          this.allPoints.push(item);
+        });
+        this.menuType = "1";
+        this.displayExepoints();
+      });
 
       featureApi.getFeatureTemplates().then((res) => {
-        let array = res.data
+        let array = res.data;
         array.forEach((e) => {
-          e.executeType = e.templateType
-        })
-        this.featureItemList = array
-      })
+          e.executeType = e.templateType;
+        });
+        this.featureItemList = array;
+      });
     },
     displayExepoints() {
-      let array = []
-      let stage = parseInt(this.menuType)
+      let array = [];
+      let stage = parseInt(this.menuType);
       this.allPoints.forEach((e) => {
         if (e.testStage == stage) {
-          array.push(e)
+          array.push(e);
         }
-      })
-      this.displayList = array
+      });
+      this.displayList = array;
     },
   },
   created() {
-    this.getExecutePoint()
+    this.getExecutePoint();
   },
-}
+};
 </script>
 <style scoped>
 .operate {

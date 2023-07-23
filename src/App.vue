@@ -12,18 +12,12 @@
         :router="true"
         active-text-color="#ffd04b"
       >
-        <el-menu-item index="/">
-          <template slot="title">
-            <i class="el-icon-s-home"></i>
-            <span slot="title">首页</span>
-          </template>
-        </el-menu-item>
-        <el-submenu index="/service">
+        <el-submenu index="/">
           <template slot="title">
             <i class="el-icon-s-help"></i>
             <span slot="title">服务管理</span>
           </template>
-          <el-menu-item index="/service">
+          <el-menu-item index="/">
             <i class="el-icon-s-opportunity"></i>
             服务列表</el-menu-item
           >
@@ -46,7 +40,7 @@
             节点管理</el-menu-item
           >
         </el-submenu>
-        <el-submenu index="/">
+        <el-submenu index="/case">
           <template slot="title">
             <i class="el-icon-s-promotion"></i>
             <span slot="title">用例管理</span>
@@ -94,22 +88,22 @@ export default {
   data() {
     return {
       // isStartCollapse: false,
-      selectIndex: '/',
-    }
+      selectIndex: "/",
+    };
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse
+      this.isStartCollapse = !this.isStartCollapse;
     },
   },
-}
+};
 </script>
 <style>
 body {
   padding: 0px;
   margin: 0px;
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
 }
 html,
 body,
