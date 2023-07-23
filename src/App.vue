@@ -33,11 +33,11 @@
           >
           <el-menu-item index="/pipeline">
             <i class="el-icon-share"></i>
-            Pipeline</el-menu-item
+            流水线</el-menu-item
           >
           <el-menu-item index="/pipe/action">
             <i class="el-icon-coin"></i>
-            节点管理</el-menu-item
+            流水线节点</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/case">
