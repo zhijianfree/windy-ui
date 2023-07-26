@@ -47,7 +47,7 @@
           </template>
           <el-menu-item index="/case">
             <i class="el-icon-cpu"></i>
-            测试集列表</el-menu-item
+            测试集</el-menu-item
           >
           <el-menu-item index="/template">
             <i class="el-icon-s-platform"></i>
@@ -88,22 +88,22 @@ export default {
   data() {
     return {
       // isStartCollapse: false,
-      selectIndex: "/",
-    };
+      selectIndex: '/',
+    }
   },
   methods: {
     togleCollapse() {
-      this.isStartCollapse = !this.isStartCollapse;
+      this.isStartCollapse = !this.isStartCollapse
     },
   },
-};
+}
 </script>
 <style>
 body {
   padding: 0px;
   margin: 0px;
-  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
-    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 }
 html,
 body,
@@ -124,9 +124,6 @@ body,
   width: 800px;
   left: 50%;
   transform: translate(-50%);
-}
-.main-bg {
-  /* background-color: #f1f4f9; */
 }
 .el-submenu__title {
   height: 50px !important;
