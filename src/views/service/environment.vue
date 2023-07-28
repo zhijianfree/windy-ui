@@ -27,7 +27,7 @@
       <!-- 表单查询结束 -->
     </div>
     <div>
-      <el-row>
+      <el-row :gutter="40">
         <el-col :span="6" v-for="(item, index) in envData" :key="index">
           <el-card
             shadow="always"
@@ -184,10 +184,10 @@ export default {
       ],
       k8sParams: [
         {
-          key: 'url',
+          key: 'apiService',
           value: '',
           name: 'Api服务',
-          desc: '请输入访问k8s的api地址',
+          desc: '请输入访问k8s的ApiService地址',
         },
         {
           key: 'token',
