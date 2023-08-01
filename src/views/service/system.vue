@@ -10,8 +10,8 @@
     >
     </el-alert>
     <div class="content">
-      <el-tabs tab-position="left">
-        <el-tab-pane label="Git配置">
+      <el-tabs tab-position="left" v-model="configType" @tab-click="clickTab">
+        <el-tab-pane label="Git配置" name="git">
           <el-form :model="systemForm" size="mini" label-width="120px">
             <el-form-item label="类型" prop="gitType">
               <el-radio-group v-model="systemForm.gitType">
@@ -45,6 +45,34 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
+        <el-tab-pane label="镜像仓库配置" name="repo">
+          <el-form :model="repoForm" size="mini" label-width="120px">
+            <el-form-item label="仓库地址" prop="repositoryUrl">
+              <el-input
+                type="text"
+                v-model="repoForm.repositoryUrl"
+                placeholder="请输入镜像仓库地址"
+              />
+            </el-form-item>
+            <el-form-item label="用户" prop="userName">
+              <el-input
+                type="text"
+                v-model="repoForm.userName"
+                placeholder="访问镜像仓库的用户"
+              />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input
+                type="text"
+                v-model="repoForm.password"
+                placeholder="访问镜像仓库的密码"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submit">提交</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
       </el-tabs>
     </div>
   </div>
@@ -55,28 +83,50 @@ export default {
   data() {
     return {
       systemForm: {},
-      configId: '',
+      repoForm: {},
+      configType: 'git',
     }
   },
   methods: {
     getGitConfig() {
       systemApi.requestGitConfig().then((res) => {
-        this.configId = res.data.configId
-        this.systemForm = JSON.parse(res.data.configDetail)
+        this.systemForm = res.data
+      })
+    },
+    getRepoConfig() {
+      systemApi.getImageRepository().then((res) => {
+        this.repoForm = res.data
       })
     },
     submit() {
-      let data = {
-        configId: this.configId,
-        configDetail: JSON.stringify(this.systemForm),
+      if (this.configType == 'git') {
+        systemApi.updateGitConfig(this.systemForm).then((res) => {
+          if (res.data) {
+            this.$message.success('修改Git配置成功')
+          } else {
+            this.$message.error('修改Git配置失败')
+          }
+        })
       }
-      systemApi.updateGitConfig(data).then((res) => {
-        if (res.data) {
-          this.$message.success('修改配置成功')
-        } else {
-          this.$message.error('修改配置失败')
-        }
-      })
+
+      if (this.configType == 'repo') {
+        systemApi.updateRepository(this.repoForm).then((res) => {
+          if (res.data) {
+            this.$message.success('修改镜像仓库成功')
+          } else {
+            this.$message.error('修改镜像仓库失败')
+          }
+        })
+      }
+    },
+    clickTab(type) {
+      if (this.configType == 'git') {
+        this.getGitConfig()
+      }
+
+      if (this.configType == 'repo') {
+        this.getRepoConfig()
+      }
     },
   },
   created() {
