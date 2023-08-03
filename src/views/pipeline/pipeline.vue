@@ -632,6 +632,10 @@ export default {
         this.$message.success('开始运行流水线')
         this.getLatestHistory(this.currentPipeline.pipelineId)
         this.isRunning = true
+        this.currentPipeline.pipelineConfig.forEach((e) => {
+          e.status = 'success'
+        })
+        this.uuid++
       })
     },
     exchangeStatus(status) {
