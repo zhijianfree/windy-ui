@@ -128,7 +128,7 @@
             <el-input
               size="mini"
               @input="dataChange"
-              v-model="item.defaultValue"
+              v-model="item.initValue"
               placeholder="请输入默认值"
             ></el-input>
           </el-col>
@@ -177,19 +177,27 @@
           :autosize="{ minRows: 2, maxRows: 4 }"
         ></el-input>
       </el-form-item>
-      <el-form-item> </el-form-item>
+      <el-form-item>
+        <el-button size="mini" type="primary" @click="submit('infoForm')"
+          >确定</el-button
+        >
+        <el-button size="mini" type="info" @click="closeDialog">取消</el-button>
+      </el-form-item>
     </el-form>
   </div>
 </template>
 <script>
+import templateApi from '../../../http/Template'
 export default {
   props: {
     config: Object,
+    isEdit: Boolean,
   },
   watch: {
     config: {
       handler(val) {
         let rowData = JSON.parse(JSON.stringify(val))
+        console.log('oooo', rowData)
         if (rowData.headers) {
           let array = []
           Object.keys(rowData.headers).forEach((key) => {
@@ -206,15 +214,16 @@ export default {
         }
 
         rowData.params.forEach((e) => {
-          if (!e.defaultValue) {
+          if (this.isEmpty(e.defaultValue)) {
             return
           }
           if (e.type == 2) {
             e.range = e.defaultValue.range
           }
-
-          e.defaultValue = e.defaultValue.defaultValue
+          console.log('进来了')
+          e.initValue = e.defaultValue.defaultValue
         })
+        console.log('ddddd', JSON.parse(JSON.stringify(rowData)))
         this.infoForm = rowData
       },
       deep: true,
@@ -254,6 +263,9 @@ export default {
     }
   },
   methods: {
+    isEmpty(value) {
+      return !value || value == '' || value == null
+    },
     removeHeader(index) {
       this.headerList.splice(index, 1)
     },
@@ -269,9 +281,8 @@ export default {
     dataChange() {
       let data = JSON.parse(JSON.stringify(this.infoForm))
       data.params.forEach((e) => {
-        let defaultValue = e.defaultValue
         e.defaultValue = {
-          defaultValue: defaultValue,
+          defaultValue: e.initValue,
           range: e.range,
         }
       })
@@ -283,16 +294,70 @@ export default {
       data.headers = header
       this.$emit('dataChange', data)
     },
+    submit(infoForm) {
+      this.$refs[infoForm].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+
+        let requestParam = JSON.parse(JSON.stringify(this.infoForm))
+        requestParam.params.forEach((e) => {
+          e.defaultValue = {
+            defaultValue: e.initValue ? e.initValue : '',
+          }
+          if (e.type == 2) {
+            e.defaultValue.range = e.range
+          }
+
+          if (e.type == 1 && this.isEmpty(e.value)) {
+            e.defaultValue.defaultValue = '{}'
+          }
+        })
+
+        let headers = {}
+        console.log('ddddd', JSON.parse(JSON.stringify(requestParam.headers)))
+        if (this.headerList.length > 0) {
+          this.headerList.forEach((e) => {
+            if (this.isEmpty(e.key) || this.isEmpty(e.value)) {
+              return
+            }
+            headers[e.key] = e.value
+          })
+        }
+        requestParam.headers = headers
+
+        if (this.isEdit) {
+          templateApi.updateTemplate(requestParam).then(() => {
+            this.$message.success(`修改成功`)
+            this.$emit('complete')
+          })
+          return
+        }
+
+        templateApi.createTemplate(requestParam).then(() => {
+          this.$message.success(`添加成功`)
+          this.$emit('complete')
+        })
+      })
+    },
+    closeDialog() {
+      this.infoForm = { params: [{}] }
+      this.$emit('complete')
+    },
   },
 }
 </script>
 <style scoped>
+.header-line {
+  text-align: center;
+}
+.delete-icon {
+  font-size: 20px;
+  cursor: pointer;
+}
 .op-icon {
   margin-left: 10px;
   font-size: 16px;
   cursor: pointer;
-}
-.header-line {
-  text-align: center;
 }
 </style>

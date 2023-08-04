@@ -90,7 +90,12 @@
           /></span>
         </el-tooltip>
       </template>
-      <TemplateConfig :config="infoForm" @dataChange="templateChange" />
+      <TemplateConfig
+        :isEdit="isEdit"
+        :config="infoForm"
+        @dataChange="templateChange"
+        @complete="closeDialog"
+      />
     </el-dialog>
     <!-- 创建模版结束 -->
     <!-- 文件上传开始 -->
@@ -254,34 +259,35 @@ export default {
       this.isEdit = true
       this.showDialog = true
       this.dialogTitle = '编辑模版'
+      this.infoForm = row
 
-      let rowData = JSON.parse(JSON.stringify(row))
-      if (rowData.headers && rowData.headers.length > 0) {
-        let array = []
-        Object.keys(rowData.headers).forEach((key) => {
-          array.push({ key: key, value: rowData.headers[key] })
-        })
-        rowData.headers = array
-      } else {
-        rowData.headers = [{ key: '', value: '' }]
-      }
+      // let rowData = JSON.parse(JSON.stringify(row))
+      // if (rowData.headers && rowData.headers.length > 0) {
+      //   let array = []
+      //   Object.keys(rowData.headers).forEach((key) => {
+      //     array.push({ key: key, value: rowData.headers[key] })
+      //   })
+      //   rowData.headers = array
+      // } else {
+      //   rowData.headers = [{ key: '', value: '' }]
+      // }
 
-      if (!rowData.params) {
-        this.infoForm = rowData
-        return
-      }
+      // if (!rowData.params) {
+      //   this.infoForm = rowData
+      //   return
+      // }
 
-      rowData.params.forEach((e) => {
-        if (e.defaultValue === null) {
-          return
-        }
-        if (e.type == 2) {
-          e.range = e.defaultValue.range
-        }
+      // rowData.params.forEach((e) => {
+      //   if (e.defaultValue === null) {
+      //     return
+      //   }
+      //   if (e.type == 2) {
+      //     e.range = e.defaultValue.range
+      //   }
 
-        e.defaultValue = e.defaultValue.defaultValue
-      })
-      this.infoForm = rowData
+      //   e.defaultValue = e.defaultValue.defaultValue
+      // })
+      // this.infoForm = rowData
     },
     handleDelete(row) {
       this.$confirm(`确认删除模版【${row.name}】?`, '提示', {
@@ -302,44 +308,7 @@ export default {
     closeDialog() {
       this.showDialog = false
       this.infoForm = { params: [{}] }
-    },
-    submit(infoForm) {
-      this.$refs[infoForm].validate((valid) => {
-        if (!valid) {
-          return false
-        }
-
-        let requestParam = JSON.parse(JSON.stringify(this.infoForm))
-        requestParam.params.forEach((e) => {
-          e.defaultValue = {
-            defaultValue: e.defaultValue ? e.defaultValue : '',
-          }
-          if (e.type == 2) {
-            e.defaultValue.range = e.range
-          }
-        })
-
-        let headers = {}
-        requestParam.headers.forEach((e) => {
-          headers[e.key] = e.value
-        })
-        requestParam.headers = headers
-
-        if (this.isEdit) {
-          templateApi.updateTemplate(requestParam).then(() => {
-            this.$message.success(`${this.dialogTitle}成功`)
-            this.showDialog = false
-            this.getTemplatePage(1)
-          })
-          return
-        }
-
-        templateApi.createTemplate(requestParam).then(() => {
-          this.$message.success(`${this.dialogTitle}成功`)
-          this.showDialog = false
-          this.getTemplatePage(1)
-        })
-      })
+      this.getTemplatePage(1)
     },
   },
   created() {
@@ -350,17 +319,5 @@ export default {
 <style scoped>
 .content {
   margin: 5px;
-}
-.header-line {
-  text-align: center;
-}
-.delete-icon {
-  font-size: 20px;
-  cursor: pointer;
-}
-.op-icon {
-  margin-left: 10px;
-  font-size: 16px;
-  cursor: pointer;
 }
 </style>
