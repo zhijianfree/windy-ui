@@ -21,6 +21,10 @@
             <i class="el-icon-s-opportunity"></i>
             服务列表</el-menu-item
           >
+          <el-menu-item index="/service/api">
+            <i class="el-icon-s-opportunity"></i>
+            api管理</el-menu-item
+          >
         </el-submenu>
         <el-submenu index="/code/change">
           <template slot="title">
