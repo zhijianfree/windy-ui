@@ -2,22 +2,34 @@
   <div>
     <div>
       <el-row :gutter="10">
-        <el-col :span="4">
-          <el-card class="api-list">
-            <div>
-              <el-row :gutter="20">
-                <el-col :span="16">
-                  <el-input
-                    v-model="filterText"
-                    size="mini"
-                    clearable
-                    placeholder="输入api名称过滤"
-                  ></el-input>
-                </el-col>
-                <el-col :span="8">
-                  <el-button type="primary" size="mini">添加接口</el-button>
-                </el-col>
-              </el-row>
+        <el-col :span="5">
+          <div class="api-list">
+            <el-row>
+              <el-col :span="8">服务列表</el-col>
+              <el-col :span="16">
+                <el-select
+                  v-model="serviceId"
+                  size="mini"
+                  @change="selectService"
+                  placeholder="选择服务"
+                >
+                  <el-option
+                    v-for="(item, index) in serviceList"
+                    :key="index"
+                    :label="item.serviceName"
+                    :value="item.serviceId"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-row>
+
+            <div class="filter-text">
+              <el-input
+                v-model="filterText"
+                size="mini"
+                clearable
+                placeholder="输入api名称过滤"
+              ></el-input>
             </div>
             <el-tree
               :data="treeData"
@@ -26,11 +38,11 @@
               ref="tree"
             >
             </el-tree>
-          </el-card>
+          </div>
         </el-col>
         <el-col :span="19">
           <div class="api-detail">
-            <el-tabs v-model="activeName">
+            <el-tabs v-model="activeName" @tab-click="selectTab">
               <el-tab-pane label="接口预览" name="preview">
                 <el-descriptions title="接口属性">
                   <el-descriptions-item label="接口名称">{{
@@ -53,7 +65,87 @@
                   </el-descriptions-item>
                 </el-descriptions>
                 <h4>请求参数</h4>
+                <div class="display-param" v-if="pathData.length > 0">
+                  <h5>Path路径参数</h5>
+                  <el-table :data="pathData" border size="mini">
+                    <el-table-column
+                      prop="paramKey"
+                      label="参数名称"
+                      width="150px"
+                    >
+                    </el-table-column>
+                    <el-table-column prop="type" label="参数类型" width="150px">
+                    </el-table-column>
+                    <el-table-column
+                      prop="position"
+                      label="参数位置"
+                      width="150px"
+                    >
+                    </el-table-column>
+                    <el-table-column prop="description" label="参数描述">
+                    </el-table-column>
+                  </el-table>
+                </div>
+
+                <div class="display-param" v-if="headerData.length > 0">
+                  <h5>Header</h5>
+                  <el-table :data="headerData" border size="mini"
+                    ><el-table-column
+                      prop="paramKey"
+                      label="参数名称"
+                      width="150px"
+                    >
+                    </el-table-column>
+                    <el-table-column prop="type" label="参数类型" width="150px">
+                    </el-table-column>
+                    <el-table-column prop="description" label="参数描述">
+                    </el-table-column
+                  ></el-table>
+                </div>
+
+                <div class="display-param" v-if="bodyData.length > 0">
+                  <h5>请求body</h5>
+                  <el-table
+                    :data="bodyData"
+                    size="mini"
+                    border
+                    row-key="id"
+                    :tree-props="{
+                      children: 'children',
+                      hasChildren: 'hasChildren',
+                    }"
+                    ><el-table-column
+                      prop="paramKey"
+                      label="参数名称"
+                      width="150px"
+                    >
+                    </el-table-column>
+                    <el-table-column prop="type" label="参数类型" width="150px">
+                    </el-table-column>
+                    <el-table-column prop="description" label="参数描述">
+                    </el-table-column
+                  ></el-table>
+                </div>
+
                 <h4>响应参数</h4>
+                <div class="display-param">
+                  <el-table
+                    :data="previewRes"
+                    border
+                    size="mini"
+                    row-key="id"
+                    :tree-props="{
+                      children: 'children',
+                      hasChildren: 'hasChildren',
+                    }"
+                    ><el-table-column prop="paramKey" label="参数名称">
+                    </el-table-column>
+                    <el-table-column prop="type" label="参数类型">
+                    </el-table-column>
+                    <el-table-column prop="type" label="参数描述">
+                    </el-table-column
+                  ></el-table>
+                </div>
               </el-tab-pane>
               <el-tab-pane label="接口配置" name="edit">
                 <el-form v-model="apiForm" size="small" label-width="80px">
@@ -245,7 +337,7 @@
                             />
                             <i
                               class="el-icon-circle-plus-outline"
-                              @click="addResSubParam(data)"
+                              @click="addSubParam(data)"
                               v-if="data.type == 'Object'"
                             />
                           </div>
@@ -260,9 +352,19 @@
         </el-col>
       </el-row>
     </div>
+    <div class="save-btn" v-if="activeName == 'edit'">
+      <el-button
+        type="primary"
+        icon="el-icon-upload"
+        size="small"
+        @click="saveApi"
+        >保存配置</el-button
+      >
+    </div>
   </div>
 </template>
 <script>
+import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
@@ -271,60 +373,19 @@ export default {
       apiForm: {},
       paramData: [],
       responseData: [],
-      treeData: [
-        {
-          id: 1,
-          label: '一级 1',
-          children: [
-            {
-              id: 4,
-              label: '二级 1-1',
-              children: [
-                {
-                  id: 9,
-                  label: '三级 1-1-1',
-                },
-                {
-                  id: 10,
-                  label: '三级 1-1-2',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 2,
-          label: '一级 2',
-          children: [
-            {
-              id: 5,
-              label: '二级 2-1',
-            },
-            {
-              id: 6,
-              label: '二级 2-2',
-            },
-          ],
-        },
-        {
-          id: 3,
-          label: '一级 3',
-          children: [
-            {
-              id: 7,
-              label: '二级 3-1',
-            },
-            {
-              id: 8,
-              label: '二级 3-2',
-            },
-          ],
-        },
-      ],
+      treeData: [],
       defaultProps: {
         children: 'children',
         label: 'paramKey',
       },
+      pathData: [],
+      headerData: [],
+      bodyData: [],
+      previewRes: [],
+      uuid: 1,
+      serviceList: [],
+      serviceId: '',
+      currentApi: '',
     }
   },
   watch: {
@@ -333,6 +394,42 @@ export default {
     },
   },
   methods: {
+    saveApi() {
+      if (this.currentApi != '') {
+        return
+      }
+      let data = this.apiForm
+      data.serviceId = this.serviceId
+      data.requestParams = JSON.stringify(this.paramData)
+      data.responseParam = JSON.stringify(this.responseData)
+      serviceApi.createApi(data).then((res) => {
+        if (res.data) {
+          this.$message.success('添加接口成功')
+        } else {
+          this.$message.error('添加接口失败')
+        }
+      })
+    },
+    selectTab() {
+      if (this.activeName == 'preview') {
+        this.pathData = []
+        this.headerData = []
+        this.bodyData = []
+        this.paramData.forEach((e) => {
+          console.log('xxxx', e)
+          if (e.position == 'Path' || e.position == 'Query') {
+            this.pathData.push(e)
+          }
+          if (e.position == 'Header') {
+            this.headerData.push(e)
+          }
+          if (e.position == 'Body') {
+            this.bodyData.push(e)
+          }
+        })
+        console.log('dssad', this.pathData, this.headerData, this.bodyData)
+      }
+    },
     filterNode(value, data) {
       if (!value) return true
       return data.label.indexOf(value) !== -1
@@ -344,35 +441,60 @@ export default {
       children.splice(index, 1)
     },
     addParam() {
-      this.paramData.push({ id: 1 })
+      this.paramData.push({ id: this.uuid, paramKey: '', children: [] })
+      this.uuid++
     },
     addSubParam(data) {
       if (data.children) {
-        data.children.push({})
-        console.log(this.paramData)
+        data.children.push({ id: this.uuid, paramKey: '', children: [] })
+        this.uuid++
         return
       }
-      data.children = [{}]
-      console.log(this.paramData)
+      data.children = [{ id: this.uuid, paramKey: '', children: [] }]
+      this.uuid++
     },
     addResParam() {
-      this.responseData.push({})
+      this.responseData.push({ id: this.uuid, paramKey: '', children: [] })
+      this.uuid++
     },
-    addResSubParam(data) {
-      if (data.children) {
-        data.children.push({})
-        console.log(this.responseData)
-        return
-      }
-      data.children = [{}]
-      console.log(this.responseData)
+    selectService() {
+      serviceApi.getApiList(this.serviceId).then((res) => {
+        this.treeData = res.data
+      })
     },
+    getServices() {
+      this.serviceList = []
+      serviceApi.getServices().then((res) => {
+        this.serviceList = res.data
+        this.serviceId = this.serviceList[0].serviceId
+        this.selectService()
+      })
+    },
+  },
+  created() {
+    this.getServices()
   },
 }
 </script>
 <style scoped>
+.save-btn {
+  position: absolute;
+  bottom: 50px;
+  right: 100px;
+  z-index: 1000;
+}
+.display-param {
+  margin-left: 50px;
+}
+.filter-text {
+  margin-top: 20px;
+}
 .api-list {
   min-height: 90vh;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+  border-radius: 4px;
+  padding: 10px;
 }
 .api-detail {
   min-height: 90vh;

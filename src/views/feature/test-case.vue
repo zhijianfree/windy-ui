@@ -34,7 +34,6 @@
             </el-form-item>
           </el-form>
         </el-col>
-        <el-col :span="2"> </el-col>
       </el-row>
     </div>
     <!-- 测试集表格开始 -->
