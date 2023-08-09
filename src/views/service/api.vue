@@ -246,7 +246,7 @@
                         <el-col :span="5">
                           <el-input
                             size="mini"
-                            v-model="data.desciption"
+                            v-model="data.description"
                             placeholder="请输入参数描述"
                           ></el-input>
                         </el-col>
@@ -306,20 +306,6 @@
                             </el-option>
                             <el-option label="Integer" value="Integer">
                             </el-option>
-                          </el-select>
-                        </el-col>
-                        <el-col :span="5">
-                          <el-select
-                            v-model="data.position"
-                            style="with: 100%"
-                            size="mini"
-                            placeholder="请选择参数位置"
-                          >
-                            <el-option label="Path" value="Path"> </el-option>
-                            <el-option label="Query" value="Query"> </el-option>
-                            <el-option label="Header" value="Header">
-                            </el-option>
-                            <el-option label="Body" value="Body"> </el-option>
                           </el-select>
                         </el-col>
                         <el-col :span="5">
@@ -400,8 +386,8 @@ export default {
       }
       let data = this.apiForm
       data.serviceId = this.serviceId
-      data.requestParams = JSON.stringify(this.paramData)
-      data.responseParam = JSON.stringify(this.responseData)
+      data.requestParams = this.paramData
+      data.responseParams = this.responseData
       serviceApi.createApi(data).then((res) => {
         if (res.data) {
           this.$message.success('添加接口成功')
