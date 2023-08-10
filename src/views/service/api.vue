@@ -24,24 +24,73 @@
             </el-row>
 
             <div class="filter-text">
-              <el-input
-                v-model="filterText"
-                size="mini"
-                clearable
-                placeholder="输入api名称过滤"
-              ></el-input>
+              <el-row :gutter="10">
+                <el-col :span="16">
+                  <el-input
+                    v-model="filterText"
+                    size="mini"
+                    clearable
+                    placeholder="输入api名称过滤"
+                  ></el-input>
+                </el-col>
+                <el-col :span="5">
+                  <el-dropdown @command="selectCommand">
+                    <el-button type="primary" size="mini">
+                      操作<i class="el-icon-arrow-down el-icon--right"></i>
+                    </el-button>
+                    <el-dropdown-menu slot="dropdown">
+                      <el-dropdown-item command="api"
+                        >新增接口</el-dropdown-item
+                      >
+                      <el-dropdown-item command="dir"
+                        >新增目录</el-dropdown-item
+                      >
+                      <el-dropdown-item command="delete">删除</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                </el-col>
+              </el-row>
             </div>
             <el-tree
               :data="treeData"
+              show-checkbox
               default-expand-all
               :filter-node-method="filterNode"
+              :props="apiProps"
+              @check-change="selectTreeNode"
+              @node-click="treeNodeSelect"
               ref="tree"
             >
+              <div class="tree-node" slot-scope="{ node, data }">
+                <i
+                  v-if="!data.isApi"
+                  class="el-icon-folder-opened folder-icon"
+                />
+                {{ node.label }}
+                <div class="tree-op-list">
+                  <el-dropdown @command="selectItemCommand($event, data)">
+                    <span> ... </span>
+                    <el-dropdown-menu slot="dropdown">
+                      <el-dropdown-item command="api" v-if="!data.isApi"
+                        >新增接口</el-dropdown-item
+                      >
+                      <el-dropdown-item command="dir" v-if="!data.isApi"
+                        >新增目录</el-dropdown-item
+                      >
+                      <el-dropdown-item command="delete">删除</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                </div>
+              </div>
             </el-tree>
           </div>
         </el-col>
         <el-col :span="19">
-          <div class="api-detail">
+          <el-empty
+            v-if="!apiForm.apiId"
+            description="请在左侧选择接口"
+          ></el-empty>
+          <div v-else class="api-detail">
             <el-tabs v-model="activeName" @tab-click="selectTab">
               <el-tab-pane label="接口预览" name="preview">
                 <el-descriptions title="接口属性">
@@ -157,28 +206,49 @@
                     ></el-input>
                   </el-form-item>
                   <el-form-item label="接口类型">
-                    <el-select v-model="apiForm.type" placeholder="请选择">
+                    <el-select
+                      v-model="apiForm.type"
+                      placeholder="请选择"
+                      @change="apiForm.method = ''"
+                    >
                       <el-option label="Rest Http" value="http"> </el-option>
                       <el-option label="Dubbo" value="dubbo"> </el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="接口定义">
-                    <el-input
-                      placeholder="请输入内容"
-                      v-model="apiForm.api"
-                      class="input-with-select"
-                    >
-                      <el-select
-                        v-model="apiForm.method"
-                        slot="prepend"
-                        placeholder="请选择请求方法"
-                      >
-                        <el-option label="GET" value="GET"></el-option>
-                        <el-option label="POST" value="POST"></el-option>
-                        <el-option label="PUT" value="PUT"></el-option>
-                        <el-option label="DELETE" value="DELETE"></el-option>
-                      </el-select>
-                    </el-input>
+                    <el-row :gutter="10">
+                      <el-col v-if="apiForm.type == 'http'" :span="4"
+                        ><el-select
+                          v-model="apiForm.method"
+                          placeholder="请选择HTTP请求方法"
+                        >
+                          <el-option label="GET" value="GET"></el-option>
+                          <el-option label="POST" value="POST"></el-option>
+                          <el-option label="PUT" value="PUT"></el-option>
+                          <el-option
+                            label="DELETE"
+                            value="DELETE"
+                          ></el-option> </el-select
+                      ></el-col>
+                      <el-col :span="18">
+                        <el-input
+                          :placeholder="
+                            apiForm.type == 'http'
+                              ? '请输入uri'
+                              : '请输入dubbo的类名'
+                          "
+                          v-model="apiForm.api"
+                          class="input-with-select"
+                        >
+                        </el-input>
+                      </el-col>
+                      <el-col :span="5" v-if="apiForm.type == 'dubbo'">
+                        <el-input
+                          v-model="apiForm.method"
+                          placeholder="请输入方法名"
+                        ></el-input>
+                      </el-col>
+                    </el-row>
                   </el-form-item>
                   <el-form-item label="接口说明">
                     <el-input
@@ -347,6 +417,66 @@
         >保存配置</el-button
       >
     </div>
+    <el-dialog
+      title="创建目录"
+      :visible.sync="showCreateApi"
+      width="50%"
+      :before-close="cancelCreate"
+    >
+      <el-form
+        :model="dataForm"
+        label-width="80px"
+        size="mini"
+        :rules="apiRule"
+        ref="dataForm"
+      >
+        <el-form-item label="名称" prop="apiName">
+          <el-input v-model="dataForm.apiName"></el-input>
+        </el-form-item>
+        <el-form-item label="接口类型" prop="type" v-if="!createDir">
+          <el-select v-model="dataForm.type" placeholder="请选择">
+            <el-option label="Rest Http" value="http"> </el-option>
+            <el-option label="Dubbo" value="dubbo"> </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="接口定义" prop="api" v-if="!createDir">
+          <el-row :gutter="10">
+            <el-col v-if="dataForm.type == 'http'" :span="4"
+              ><el-select v-model="dataForm.method" placeholder="选择请求方法">
+                <el-option label="GET" value="GET"></el-option>
+                <el-option label="POST" value="POST"></el-option>
+                <el-option label="PUT" value="PUT"></el-option>
+                <el-option
+                  label="DELETE"
+                  value="DELETE"
+                ></el-option> </el-select
+            ></el-col>
+            <el-col :span="18">
+              <el-input
+                :placeholder="
+                  dataForm.type == 'http' ? '请输入uri' : '请输入dubbo的类名'
+                "
+                v-model="dataForm.api"
+                class="input-with-select"
+              >
+              </el-input>
+            </el-col>
+            <el-col :span="5" v-if="dataForm.type == 'dubbo'">
+              <el-input
+                v-model="dataForm.method"
+                placeholder="请输入方法名"
+              ></el-input>
+            </el-col>
+          </el-row>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelCreate" size="mini">取 消</el-button>
+        <el-button type="primary" @click="submitApi('dataForm')" size="mini"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -364,6 +494,10 @@ export default {
         children: 'children',
         label: 'paramKey',
       },
+      apiProps: {
+        children: 'children',
+        label: 'apiName',
+      },
       pathData: [],
       headerData: [],
       bodyData: [],
@@ -372,6 +506,38 @@ export default {
       serviceList: [],
       serviceId: '',
       currentApi: '',
+      showCreateApi: false,
+      dataForm: { type: 'http' },
+      apiRule: {
+        apiName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+        type: [{ required: true, message: '请选择接口类型', trigger: 'blur' }],
+        api: [
+          { required: true, message: '请输入api', trigger: 'blur' },
+          {
+            validator: this.validApi,
+            message: '请填写方法',
+            trigger: 'blur',
+          },
+        ],
+      },
+      createDir: false,
+      selectNodes: [],
+      options: [
+        {
+          value: '',
+          label: '...',
+          children: [
+            {
+              value: 'dir',
+              label: '创建目录',
+            },
+            {
+              value: 'api',
+              label: '创建api',
+            },
+          ],
+        },
+      ],
     }
   },
   watch: {
@@ -380,6 +546,100 @@ export default {
     },
   },
   methods: {
+    selectTreeNode(data, checked, indeterminate) {
+      if (checked) {
+        this.selectNodes.push(data.apiId)
+      } else {
+        let index = this.selectNodes.indexOf(data.apiId)
+        if (index != -1) {
+          this.selectNodes.splice(index, 1)
+        }
+      }
+      console.log(data, checked, indeterminate)
+    },
+    validApi(rule, value, callback) {
+      if (this.dataForm.method == '' || this.dataForm.method == null) {
+        callback(new Error())
+      } else {
+        callback()
+      }
+    },
+    selectItemCommand(command, data) {
+      console.log('sssss', command, data)
+      if (command == 'dir') {
+        this.addFolder(data)
+        return
+      }
+      if (command == 'api') {
+        this.addApi(data)
+        return
+      }
+      if (command == 'delete') {
+        serviceApi.deleteApi(data.apiId).then((res) => {
+          if (res.data) {
+            this.$message.success('删除成功')
+            this.selectService()
+          } else {
+            this.$message.error('删除失败')
+          }
+        })
+      }
+    },
+    treeNodeSelect(data) {
+      if (!data.isApi) {
+        return
+      }
+      this.apiForm = data
+    },
+    addFolder(node) {
+      this.createDir = true
+      this.showCreateApi = true
+      this.dataForm.parentId = node.apiId
+      this.dataForm.isApi = false
+    },
+    addApi(node) {
+      this.createDir = false
+      this.showCreateApi = true
+      this.dataForm.parentId = node.apiId
+      this.dataForm.isApi = true
+    },
+    submitApi(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+
+        this.dataForm.serviceId = this.serviceId
+        serviceApi.createApi(this.dataForm).then((res) => {
+          if (res.data) {
+            this.$message.success('添加成功')
+            this.selectService()
+            this.cancelCreate()
+          } else {
+            this.$message.error('添加失败')
+          }
+        })
+      })
+    },
+    selectCommand(command) {
+      if (command == 'delete') {
+        serviceApi.batchDeleteApi(this.selectNodes).then((res) => {
+          if (res.data) {
+            this.$message.success('删除成功')
+            this.selectService()
+          } else {
+            this.$message.error('删除失败')
+          }
+        })
+        return
+      }
+      this.createDir = command == 'dir'
+      this.showCreateApi = true
+    },
+    cancelCreate() {
+      this.showCreateApi = false
+      this.dataForm = { type: 'http' }
+    },
     saveApi() {
       if (this.currentApi != '') {
         return
@@ -445,9 +705,26 @@ export default {
     },
     selectService() {
       serviceApi.getApiList(this.serviceId).then((res) => {
-        this.treeData = res.data
+        this.treeData = this.buildTree(res.data)
       })
     },
+    buildTree(data, parentId = null) {
+      let tree = []
+      for (let item of data) {
+        if (item.parentId === parentId) {
+          let children = this.buildTree(data, item.apiId)
+          if (children.length > 0) {
+            item.children = children
+          }
+          if (!item.children) {
+            item.children = []
+          }
+          tree.push(item)
+        }
+      }
+      return tree
+    },
+
     getServices() {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
@@ -463,6 +740,23 @@ export default {
 }
 </script>
 <style scoped>
+.folder-icon {
+  color: #e6a23c;
+}
+.tree-node {
+  position: relative;
+  width: 100%;
+}
+.tree-op-list i {
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 18px;
+}
+.tree-op-list {
+  position: absolute;
+  right: 10px;
+  top: 0px;
+}
 .save-btn {
   position: absolute;
   bottom: 50px;
@@ -501,8 +795,8 @@ export default {
 }
 </style>
 <style>
-.el-select .el-input {
-  width: 140px;
+.el-input .el-input {
+  width: 200px;
 }
 .input-with-select .el-input-group__prepend {
   background-color: #fff;

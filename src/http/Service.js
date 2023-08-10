@@ -93,7 +93,20 @@ export default {
   },
   deleteApi(apiId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops//service/resources/${apiId}`
+      let url = `/v1/devops/service/resources/${apiId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  batchDeleteApi(apis) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/resources?apis=${apis}`
       http
         .delete(url)
         .then((res) => {
@@ -106,7 +119,7 @@ export default {
   },
   updateApi(api) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops//service/resources`
+      let url = `/v1/devops/service/resources`
       http
         .put(url, api)
         .then((res) => {
@@ -119,7 +132,7 @@ export default {
   },
   createApi(api) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops//service/resources`
+      let url = `/v1/devops/service/resources`
       http
         .post(url, api)
         .then((res) => {
