@@ -4,9 +4,9 @@
       <el-row :gutter="10">
         <el-col :span="5">
           <div class="api-list">
-            <el-row>
-              <el-col :span="8">服务列表</el-col>
-              <el-col :span="16">
+            <!-- 服务列表开始 -->
+            <el-form inline size="mini">
+              <el-form-item label="服务列表">
                 <el-select
                   v-model="serviceId"
                   size="mini"
@@ -20,9 +20,11 @@
                     :value="item.serviceId"
                   ></el-option>
                 </el-select>
-              </el-col>
-            </el-row>
+              </el-form-item>
+            </el-form>
+            <!-- 服务列表结束 -->
 
+            <!-- api操作开始 -->
             <div class="filter-text">
               <el-row :gutter="10">
                 <el-col :span="16">
@@ -51,6 +53,9 @@
                 </el-col>
               </el-row>
             </div>
+            <!-- api操作结束 -->
+
+            <!-- api列表开始 -->
             <el-tree
               :data="treeData"
               show-checkbox
@@ -83,6 +88,7 @@
                 </div>
               </div>
             </el-tree>
+            <!-- api列表结束 -->
           </div>
         </el-col>
         <el-col :span="19">
@@ -91,17 +97,19 @@
             description="请在左侧选择接口"
           ></el-empty>
           <div v-else class="api-detail">
-            <el-tabs v-model="activeName" @tab-click="selectTab">
+            <el-tabs
+              v-model="activeName"
+              @tab-click="selectTab"
+              :before-leave="beforeLeave"
+            >
+              <!-- 接口预览开始 -->
               <el-tab-pane label="接口预览" name="preview">
-                <el-descriptions title="接口属性">
+                <el-descriptions title="接口属性" :column="2">
                   <el-descriptions-item label="接口名称">{{
                     apiForm.apiName
                   }}</el-descriptions-item>
                   <el-descriptions-item label="接口类型">{{
                     apiForm.type
-                  }}</el-descriptions-item>
-                  <el-descriptions-item label="修改时间">{{
-                    apiForm.updateTime
                   }}</el-descriptions-item>
                   <el-descriptions-item label="接口定义"
                     ><el-tag type="success" size="small">{{
@@ -109,6 +117,9 @@
                     }}</el-tag>
                     {{ apiForm.api }}</el-descriptions-item
                   >
+                  <el-descriptions-item label="修改时间">{{
+                    apiForm.updateTime | dateFormat
+                  }}</el-descriptions-item>
                   <el-descriptions-item label="接口说明">
                     {{ apiForm.description }}
                   </el-descriptions-item>
@@ -131,6 +142,21 @@
                       width="150px"
                     >
                     </el-table-column>
+                    <el-table-column
+                      prop="required"
+                      label="是否必选"
+                      width="150px"
+                    >
+                      <template slot-scope="scope">
+                        <el-switch
+                          disabled
+                          v-model="scope.row.required"
+                          active-color="#13ce66"
+                          inactive-color="#909399"
+                        >
+                        </el-switch>
+                      </template>
+                    </el-table-column>
                     <el-table-column prop="description" label="参数描述">
                     </el-table-column>
                   </el-table>
@@ -146,6 +172,21 @@
                     >
                     </el-table-column>
                     <el-table-column prop="type" label="参数类型" width="150px">
+                    </el-table-column>
+                    <el-table-column
+                      prop="required"
+                      label="是否必选"
+                      width="150px"
+                    >
+                      <template slot-scope="scope">
+                        <el-switch
+                          disabled
+                          v-model="scope.row.required"
+                          active-color="#13ce66"
+                          inactive-color="#909399"
+                        >
+                        </el-switch>
+                      </template>
                     </el-table-column>
                     <el-table-column prop="description" label="参数描述">
                     </el-table-column
@@ -171,6 +212,21 @@
                     </el-table-column>
                     <el-table-column prop="type" label="参数类型" width="150px">
                     </el-table-column>
+                    <el-table-column
+                      prop="required"
+                      label="是否必选"
+                      width="150px"
+                    >
+                      <template slot-scope="scope">
+                        <el-switch
+                          disabled
+                          v-model="scope.row.required"
+                          active-color="#13ce66"
+                          inactive-color="#909399"
+                        >
+                        </el-switch>
+                      </template>
+                    </el-table-column>
                     <el-table-column prop="description" label="参数描述">
                     </el-table-column
                   ></el-table>
@@ -181,8 +237,8 @@
                   <el-table
                     :data="previewRes"
                     border
-                    size="mini"
                     row-key="id"
+                    size="mini"
                     :tree-props="{
                       children: 'children',
                       hasChildren: 'hasChildren',
@@ -191,11 +247,29 @@
                     </el-table-column>
                     <el-table-column prop="type" label="参数类型">
                     </el-table-column>
+                    <el-table-column
+                      prop="required"
+                      label="是否必选"
+                      width="150px"
+                    >
+                      <template slot-scope="scope">
+                        <el-switch
+                          disabled
+                          v-model="scope.row.required"
+                          active-color="#13ce66"
+                          inactive-color="#909399"
+                        >
+                        </el-switch>
+                      </template>
+                    </el-table-column>
                     <el-table-column prop="type" label="参数描述">
                     </el-table-column
                   ></el-table>
                 </div>
               </el-tab-pane>
+              <!-- 接口预览结束 -->
+
+              <!-- 接口配置开始 -->
               <el-tab-pane label="接口配置" name="edit">
                 <el-form v-model="apiForm" size="small" label-width="80px">
                   <h4>接口属性</h4>
@@ -271,14 +345,29 @@
                   >
                     <div class="custom-node" slot-scope="{ node, data }">
                       <el-row :gutter="10">
-                        <el-col :span="5">
+                        <el-col :span="4">
                           <el-input
                             size="mini"
                             v-model="data.paramKey"
                             placeholder="请输入参数名称"
                           ></el-input>
                         </el-col>
-                        <el-col :span="5">
+                        <el-col :span="4">
+                          <el-select
+                            v-model="data.position"
+                            style="with: 100%"
+                            size="mini"
+                            :disabled="data.freezed"
+                            placeholder="请选择参数位置"
+                          >
+                            <el-option label="Path" value="Path"> </el-option>
+                            <el-option label="Query" value="Query"> </el-option>
+                            <el-option label="Header" value="Header">
+                            </el-option>
+                            <el-option label="Body" value="Body"> </el-option>
+                          </el-select>
+                        </el-col>
+                        <el-col :span="4">
                           <el-select
                             class="select-type"
                             v-model="data.type"
@@ -290,8 +379,17 @@
                               value="String"
                             ></el-option>
                             <el-option label="Long" value="Long"> </el-option>
-                            <el-option label="Array" value="Array"> </el-option>
-                            <el-option label="Object" value="Object">
+                            <el-option
+                              label="Array"
+                              value="Array"
+                              v-if="data.position == 'Body'"
+                            >
+                            </el-option>
+                            <el-option
+                              label="Object"
+                              value="Object"
+                              v-if="data.position == 'Body'"
+                            >
                             </el-option>
                             <el-option label="Boolean" value="Boolean">
                             </el-option>
@@ -299,18 +397,18 @@
                             </el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="5">
+
+                        <el-col :span="4">
                           <el-select
-                            v-model="data.position"
-                            style="with: 100%"
                             size="mini"
-                            placeholder="请选择参数位置"
+                            v-model="data.required"
+                            placeholder="选择参数是否必选"
                           >
-                            <el-option label="Path" value="Path"> </el-option>
-                            <el-option label="Query" value="Query"> </el-option>
-                            <el-option label="Header" value="Header">
-                            </el-option>
-                            <el-option label="Body" value="Body"> </el-option>
+                            <el-option label="必需" :value="true"></el-option>
+                            <el-option
+                              label="非必需"
+                              :value="false"
+                            ></el-option>
                           </el-select>
                         </el-col>
                         <el-col :span="5">
@@ -320,7 +418,7 @@
                             placeholder="请输入参数描述"
                           ></el-input>
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="3">
                           <div class="op-icon">
                             <i
                               class="el-icon-remove-outline"
@@ -329,7 +427,9 @@
                             <i
                               class="el-icon-circle-plus-outline"
                               @click="addSubParam(data)"
-                              v-if="data.type == 'Object'"
+                              v-if="
+                                data.type == 'Object' || data.type == 'Array'
+                              "
                             />
                           </div>
                         </el-col>
@@ -378,10 +478,23 @@
                             </el-option>
                           </el-select>
                         </el-col>
+                        <el-col :span="4">
+                          <el-select
+                            size="mini"
+                            v-model="data.required"
+                            placeholder="选择参数是否必选"
+                          >
+                            <el-option label="必需" :value="true"></el-option>
+                            <el-option
+                              label="非必需"
+                              :value="false"
+                            ></el-option>
+                          </el-select>
+                        </el-col>
                         <el-col :span="5">
                           <el-input
                             size="mini"
-                            v-model="data.desciption"
+                            v-model="data.description"
                             placeholder="请输入参数描述"
                           ></el-input>
                         </el-col>
@@ -394,7 +507,9 @@
                             <i
                               class="el-icon-circle-plus-outline"
                               @click="addSubParam(data)"
-                              v-if="data.type == 'Object'"
+                              v-if="
+                                data.type == 'Object' || data.type == 'Array'
+                              "
                             />
                           </div>
                         </el-col>
@@ -403,6 +518,7 @@
                   </el-tree>
                 </el-form>
               </el-tab-pane>
+              <!-- 接口配置结束 -->
             </el-tabs>
           </div>
         </el-col>
@@ -522,22 +638,7 @@ export default {
       },
       createDir: false,
       selectNodes: [],
-      options: [
-        {
-          value: '',
-          label: '...',
-          children: [
-            {
-              value: 'dir',
-              label: '创建目录',
-            },
-            {
-              value: 'api',
-              label: '创建api',
-            },
-          ],
-        },
-      ],
+      isLeaving: false,
     }
   },
   watch: {
@@ -546,7 +647,25 @@ export default {
     },
   },
   methods: {
-    selectTreeNode(data, checked, indeterminate) {
+    beforeLeave(activeName, oldActiveName) {
+      console.log('xxxx leave', this.isLeaving)
+      if (oldActiveName == 'edit' && !this.isLeaving) {
+        this.$confirm('你存在数据变更，离开后数据可能丢失，确认离开?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        })
+          .then(() => {
+            this.isLeaving = true
+            this.activeName = activeName
+            console.log('ddd', this.activeName)
+          })
+          .catch(() => {})
+        return false
+      }
+      return true
+    },
+    selectTreeNode(data, checked) {
       if (checked) {
         this.selectNodes.push(data.apiId)
       } else {
@@ -555,7 +674,6 @@ export default {
           this.selectNodes.splice(index, 1)
         }
       }
-      console.log(data, checked, indeterminate)
     },
     validApi(rule, value, callback) {
       if (this.dataForm.method == '' || this.dataForm.method == null) {
@@ -590,6 +708,17 @@ export default {
         return
       }
       this.apiForm = data
+      this.paramData = JSON.parse(data.requestParams)
+      if (!this.paramData) {
+        this.paramData = []
+      }
+
+      this.responseData = JSON.parse(data.responseParams)
+      if (!this.responseData) {
+        this.responseData = []
+      }
+      this.currentApi = data.apiId
+      this.selectTab()
     },
     addFolder(node) {
       this.createDir = true
@@ -610,6 +739,7 @@ export default {
         }
 
         this.dataForm.serviceId = this.serviceId
+        console.log('点对点', this.dataForm)
         serviceApi.createApi(this.dataForm).then((res) => {
           if (res.data) {
             this.$message.success('添加成功')
@@ -635,19 +765,27 @@ export default {
       }
       this.createDir = command == 'dir'
       this.showCreateApi = true
+      this.dataForm.isApi = !this.createDir
     },
     cancelCreate() {
       this.showCreateApi = false
       this.dataForm = { type: 'http' }
     },
     saveApi() {
-      if (this.currentApi != '') {
-        return
-      }
       let data = this.apiForm
       data.serviceId = this.serviceId
       data.requestParams = this.paramData
       data.responseParams = this.responseData
+      if (this.currentApi != '') {
+        serviceApi.updateApi(data).then((res) => {
+          if (res.data) {
+            this.$message.success('修改接口成功')
+          } else {
+            this.$message.error('修改接口失败')
+          }
+        })
+        return
+      }
       serviceApi.createApi(data).then((res) => {
         if (res.data) {
           this.$message.success('添加接口成功')
@@ -657,12 +795,14 @@ export default {
       })
     },
     selectTab() {
+      this.isLeaving = false
       if (this.activeName == 'preview') {
         this.pathData = []
         this.headerData = []
         this.bodyData = []
+        this.traverseTree(this.paramData, 1)
+        console.log('bbbbbbbbb', this.paramData)
         this.paramData.forEach((e) => {
-          console.log('xxxx', e)
           if (e.position == 'Path' || e.position == 'Query') {
             this.pathData.push(e)
           }
@@ -673,12 +813,23 @@ export default {
             this.bodyData.push(e)
           }
         })
-        console.log('dssad', this.pathData, this.headerData, this.bodyData)
+        this.previewRes = JSON.parse(JSON.stringify(this.responseData))
+        this.traverseTree(this.previewRes, 1)
+        console.log('ccccccccccc', this.previewRes)
+      }
+    },
+    traverseTree(nodes, id) {
+      for (const node of nodes) {
+        node.id = id
+        id++
+        if (node.children && node.children.length > 0) {
+          this.traverseTree(node.children, id)
+        }
       }
     },
     filterNode(value, data) {
       if (!value) return true
-      return data.label.indexOf(value) !== -1
+      return data.apiName.indexOf(value) !== -1
     },
     removeParam(node, data) {
       const parent = node.parent
@@ -692,11 +843,25 @@ export default {
     },
     addSubParam(data) {
       if (data.children) {
-        data.children.push({ id: this.uuid, paramKey: '', children: [] })
+        data.children.push({
+          id: this.uuid,
+          paramKey: '',
+          children: [],
+          position: data.position,
+          freezed: true,
+        })
         this.uuid++
         return
       }
-      data.children = [{ id: this.uuid, paramKey: '', children: [] }]
+      data.children = [
+        {
+          id: this.uuid,
+          paramKey: '',
+          children: [],
+          position: data.position,
+          freezed: true,
+        },
+      ]
       this.uuid++
     },
     addResParam() {
@@ -760,7 +925,7 @@ export default {
 .save-btn {
   position: absolute;
   bottom: 50px;
-  right: 100px;
+  right: 50px;
   z-index: 1000;
 }
 .display-param {
@@ -782,9 +947,10 @@ export default {
   transition: 0.3s;
   border-radius: 4px;
   padding: 10px;
+  margin-bottom: 100px;
 }
 .custom-node {
-  width: 80%;
+  width: 100%;
 }
 .op-icon i {
   font-size: 20px;
