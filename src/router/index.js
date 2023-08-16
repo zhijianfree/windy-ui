@@ -6,18 +6,19 @@ import Template from '../views/feature/template.vue'
 import Task from '../views/feature/task-manage.vue'
 import RecordDetail from '../views/feature/record-detail.vue'
 import Service from '../views/service/service.vue'
+import ServiceApi from '../views/service/api.vue'
+import Environment from '../views/service/environment.vue'
 import System from '../views/service/system.vue'
 import Monitor from '../views/service/monitor.vue'
 import Pipeline from '../views/pipeline/pipeline.vue'
 import PipeAction from '../views/pipeline/action.vue'
 import CodeChange from '../views/pipeline/codechange.vue'
-import Test from '../views/pipeline/comp/pipeline-config.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
+    path: '/case',
     name: 'TestCase',
     component: TestCase,
   },
@@ -42,7 +43,7 @@ const routes = [
     component: RecordDetail,
   },
   {
-    path: '/service',
+    path: '/',
     name: 'Service',
     component: Service,
   },
@@ -62,9 +63,14 @@ const routes = [
     component: PipeAction,
   },
   {
-    path: '/test',
-    name: 'Test',
-    component: Test,
+    path: '/env',
+    name: 'Environment',
+    component: Environment,
+  },
+  {
+    path: '/service/resource',
+    name: 'ServiceApi',
+    component: ServiceApi,
   },
   {
     path: '/system',

@@ -622,8 +622,12 @@ export default {
       }
 
       this.tableData = []
-      featureApi.startFeature(this.infoForm.featureId).then(() => {
-        this.$message.success('开始执行，请查看运行日志')
+      featureApi.startFeature(this.infoForm.featureId).then((res) => {
+        if (res.data) {
+          this.$message.success('开始执行，请查看运行日志')
+        } else {
+          this.$message.error('执行失败')
+        }
       })
     },
     tabChange() {

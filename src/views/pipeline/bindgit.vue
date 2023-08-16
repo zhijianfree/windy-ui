@@ -92,7 +92,6 @@ export default {
   methods: {
     deleteBind(row) {
       gitBindApi.deleteCodeChange(this.pipelineId, row.bindId).then((res) => {
-        console.log(res)
         if (res.data == 1) {
           this.$message.success('删除成功')
           this.getBindBranches()
@@ -128,13 +127,11 @@ export default {
     },
     getBindBranches() {
       gitBindApi.gitbindList(this.pipelineId).then((res) => {
-        console.log('get list', res)
         this.tableData = res.data
       })
     },
     getService() {
       gitBindApi.getService(this.serviceId).then((res) => {
-        console.log('get service', res)
         this.gitUrl = res.data.gitUrl
       })
     },

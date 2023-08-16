@@ -220,7 +220,7 @@
               </el-descriptions-item>
               <el-descriptions-item label="执行方式">
                 <el-tag type="primary">{{
-                  currentPipeline.executeType == 1 ? '手动执行' : '代码提交'
+                  executeWay(currentPipeline.executeType)
                 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
@@ -324,7 +324,7 @@
     >
       <PipelineConfig
         :operate="piplienOperate"
-        :pipeline="currentPipeline.pipelineId"
+        :pipeline="pipelineId"
         :service="serviceId"
         @complete="completeNotify"
       />
@@ -373,6 +373,7 @@ export default {
       currentPipeline: {
         pipelineConfig: [],
       },
+      pipelineId: '',
       history: {},
       publishList: [],
       buildList: [],
@@ -393,6 +394,21 @@ export default {
     }
   },
   methods: {
+    executeWay(executeType) {
+      let label = '-'
+      switch (executeType) {
+        case 1:
+          label = '手动执行'
+          break
+        case 2:
+          label = '代码提交'
+          break
+        case 3:
+          label = '定时执行'
+          break
+      }
+      return label
+    },
     approvalClose() {
       this.approvalNode = {}
       this.showApproval = false
@@ -427,7 +443,6 @@ export default {
         serviceId: this.serviceId,
       }
       publishApi.createPublish(data).then((res) => {
-        console.log('=====', res)
         if (res.data) {
           this.$message.success('推送发布成功，请去发布流水线查看')
         } else {
@@ -617,6 +632,10 @@ export default {
         this.$message.success('开始运行流水线')
         this.getLatestHistory(this.currentPipeline.pipelineId)
         this.isRunning = true
+        this.currentPipeline.pipelineConfig.forEach((e) => {
+          e.status = 'success'
+        })
+        this.uuid++
       })
     },
     exchangeStatus(status) {
@@ -670,6 +689,7 @@ export default {
         this.currentPipeline.pipelineType = res.data.pipelineType
         this.currentPipeline.executeType = res.data.executeType
         this.currentPipeline.pipelineId = item.pipelineId
+        this.pipelineId = item.pipelineId
         this.uuid++
 
         if (this.currentPipeline.pipelineType == 1) {
@@ -767,6 +787,7 @@ export default {
 
         this.serviceId = this.pipelines[0].value
         this.getPipelineList()
+        console.log(this.serviceId)
       })
     },
     loopQueryStatus() {

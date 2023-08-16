@@ -21,7 +21,7 @@
     </div>
     <div class="change-content">
       <div class="change-title">
-        <div class="change-desc">服务变更列表</div>
+        <div class="change-desc">代码变更列表</div>
         <div class="add-btn">
           <el-button
             type="primary"
@@ -39,10 +39,12 @@
             <el-table-column prop="changeBranch" label="分支">
             </el-table-column>
             <el-table-column prop="changeDesc" label="描述"> </el-table-column>
-            <el-table-column prop="creator" label="创建者"> </el-table-column>
-            <el-table-column prop="relationId" label="关联Id">
+            <el-table-column prop="relationId" label="需求/缺陷Id">
             </el-table-column>
             <el-table-column prop="createTime" label="创建时间">
+              <template slot-scope="scope">
+                {{ scope.row.createTime | dateFormat }}
+              </template>
             </el-table-column>
             <el-table-column fixed="right" label="操作" width="100">
               <template slot-scope="scope">
@@ -120,104 +122,104 @@
   </div>
 </template>
 <script>
-import requestApi from "../../http/CodeChange";
-import serviceApi from "../../http/Service";
+import requestApi from '../../http/CodeChange'
+import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
-      service: "",
+      service: '',
       serviceList: [],
       changeList: [],
       changeForm: {
-        branchType: "custom",
+        branchType: 'custom',
       },
       dialogFormVisible: false,
       loading: false,
       editBranch: false,
       rule: {
         changeName: [
-          { required: true, message: "请输入变更描述", trigger: "blur" },
+          { required: true, message: '请输入变更描述', trigger: 'blur' },
         ],
         changeBranch: [
-          { required: true, message: "请输入分支名称", trigger: "blur" },
+          { required: true, message: '请输入分支名称', trigger: 'blur' },
         ],
       },
-    };
+    }
   },
   methods: {
     getServices() {
-      this.serviceList = [];
+      this.serviceList = []
       serviceApi.getServices().then((res) => {
-        this.serviceList = res.data;
-        this.service = this.serviceList[0].serviceId;
-        this.getCodeChangeList();
-      });
+        this.serviceList = res.data
+        this.service = this.serviceList[0].serviceId
+        this.getCodeChangeList()
+      })
     },
     addChangeCode() {
-      this.dialogFormVisible = true;
+      this.dialogFormVisible = true
     },
     selectService() {
-      this.getCodeChangeList();
+      this.getCodeChangeList()
     },
     selectBranchType(value) {
-      if (value == "default") {
-        let branchName = "develop_";
-        var today = new Date();
-        var DD = String(today.getDate()).padStart(2, "0");
-        var MM = String(today.getMonth() + 1).padStart(2, "0");
-        var yyyy = today.getFullYear();
-        branchName += yyyy + MM + DD + "_" + this.$utils.randomString(6);
-        this.editBranch = true;
-        this.changeForm.changeBranch = branchName;
+      if (value == 'default') {
+        let branchName = 'develop_'
+        var today = new Date()
+        var DD = String(today.getDate()).padStart(2, '0')
+        var MM = String(today.getMonth() + 1).padStart(2, '0')
+        var yyyy = today.getFullYear()
+        branchName += yyyy + MM + DD + '_' + this.$utils.randomString(6)
+        this.editBranch = true
+        this.changeForm.changeBranch = branchName
       } else {
-        this.changeForm.changeBranch = "";
-        this.editBranch = false;
+        this.changeForm.changeBranch = ''
+        this.editBranch = false
       }
     },
     removeChange(item) {
-      this.$confirm("确认删除？").then(() => {
+      this.$confirm('确认删除？').then(() => {
         requestApi.deleteCodeChange(this.service, item.changeId).then(() => {
           this.$message({
-            message: "删除变更成功",
-            type: "success",
-          });
-          this.getCodeChangeList();
-        });
-      });
+            message: '删除变更成功',
+            type: 'success',
+          })
+          this.getCodeChangeList()
+        })
+      })
     },
     closeDialog() {
-      this.dialogFormVisible = false;
-      this.changeForm = {};
+      this.dialogFormVisible = false
+      this.changeForm = {}
     },
     confirmChange(confirmChange) {
       this.$refs[confirmChange].validate((valid) => {
         if (!valid) {
-          return false;
+          return false
         }
-        this.changeForm.serviceId = this.service;
+        this.changeForm.serviceId = this.service
         requestApi.saveCodeChange(this.changeForm).then(() => {
           this.$message({
-            message: "创建变更成功",
-            type: "success",
-          });
+            message: '创建变更成功',
+            type: 'success',
+          })
           this.changeForm = {
-            branchType: "custom",
-          };
-          this.dialogFormVisible = false;
-          this.getCodeChangeList();
-        });
-      });
+            branchType: 'custom',
+          }
+          this.dialogFormVisible = false
+          this.getCodeChangeList()
+        })
+      })
     },
     getCodeChangeList() {
       requestApi.codeChangeList(this.service).then((res) => {
-        this.changeList = res.data;
-      });
+        this.changeList = res.data
+      })
     },
   },
   created() {
-    this.getServices();
+    this.getServices()
   },
-};
+}
 </script>
 <style scoped>
 .add-btn {

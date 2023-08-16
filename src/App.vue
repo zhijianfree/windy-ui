@@ -1,27 +1,29 @@
 <template>
   <el-container>
     <!-- 侧边栏 -->
-    <el-aside class="aside" :width="isStartCollapse ? '64px' : '200px'">
-      <div @click="togleCollapse" class="tigger-class">
-        <i class="el-icon-s-fold" />
-      </div>
+    <el-header class="header">
       <!-- 侧边导航 -->
       <el-menu
+        mode="horizontal"
+        class="title-menu"
         :default-active="$route.path"
-        :collapse="isStartCollapse"
         background-color="#545c64"
         text-color="#fff"
         :router="true"
         active-text-color="#ffd04b"
       >
-        <el-submenu index="/service">
+        <el-submenu index="/">
           <template slot="title">
             <i class="el-icon-s-help"></i>
             <span slot="title">服务管理</span>
           </template>
-          <el-menu-item index="/service">
-            <i class="el-icon-s-unfold"></i>
+          <el-menu-item index="/">
+            <i class="el-icon-s-opportunity"></i>
             服务列表</el-menu-item
+          >
+          <el-menu-item index="/service/resource">
+            <i class="el-icon-location"></i>
+            api管理</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/code/change">
@@ -34,22 +36,22 @@
             变更列表</el-menu-item
           >
           <el-menu-item index="/pipeline">
-            <i class="el-icon-s-unfold"></i>
-            Pipeline</el-menu-item
+            <i class="el-icon-share"></i>
+            流水线</el-menu-item
           >
           <el-menu-item index="/pipe/action">
-            <i class="el-icon-s-promotion"></i>
-            节点管理</el-menu-item
+            <i class="el-icon-coin"></i>
+            流水线节点</el-menu-item
           >
         </el-submenu>
-        <el-submenu index="/">
+        <el-submenu index="/case">
           <template slot="title">
             <i class="el-icon-s-promotion"></i>
             <span slot="title">用例管理</span>
           </template>
-          <el-menu-item index="/">
-            <i class="el-icon-s-unfold"></i>
-            测试集列表</el-menu-item
+          <el-menu-item index="/case">
+            <i class="el-icon-cpu"></i>
+            测试集</el-menu-item
           >
           <el-menu-item index="/template">
             <i class="el-icon-s-platform"></i>
@@ -69,14 +71,18 @@
             <i class="el-icon-s-tools"></i>
             系统配置</el-menu-item
           >
+          <el-menu-item index="/env">
+            <i class="el-icon-place"></i>
+            环境管理</el-menu-item
+          >
           <el-menu-item index="/monitor">
             <i class="el-icon-s-platform"></i>
             监控</el-menu-item
           >
         </el-submenu>
       </el-menu>
-    </el-aside>
-    <el-main>
+    </el-header>
+    <el-main class="main-bg">
       <router-view></router-view>
     </el-main>
   </el-container>
@@ -85,7 +91,7 @@
 export default {
   data() {
     return {
-      isStartCollapse: false,
+      // isStartCollapse: false,
       selectIndex: '/',
     }
   },
@@ -94,21 +100,14 @@ export default {
       this.isStartCollapse = !this.isStartCollapse
     },
   },
-  computed: {
-    toggleButton() {
-      if (this.isStartCollapse) {
-        return 'minMargin'
-      } else {
-        return 'maxMargin'
-      }
-    },
-  },
 }
 </script>
 <style>
 body {
   padding: 0px;
   margin: 0px;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 }
 html,
 body,
@@ -116,40 +115,26 @@ body,
 .el-container {
   height: 100%;
 }
+.header {
+  padding: 0 !important;
+  background-color: #545c64;
+  height: 50px !important;
+}
 
-.aside {
-  width: 178px;
-  background-color: rgb(84, 92, 100);
-  overflow: hidden;
-}
-.el-aside {
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-.minMargin {
-  width: 10px;
-  height: 100%;
-  position: absolute;
-  cursor: pointer;
-  margin-left: 64px;
-}
-.maxMargin {
-  width: 10px;
-  height: 100%;
-  position: absolute;
-  cursor: pointer;
-  margin-left: 170px;
-}
 .el-main {
   padding: 0px !important;
 }
-.tigger-class {
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 18px;
-  cursor: pointer;
+.title-menu {
+  width: 800px;
+  left: 50%;
+  transform: translate(-50%);
+}
+.el-submenu__title {
+  height: 50px !important;
+  line-height: 50px !important;
+}
+.el-menu-item {
+  height: 50px !important;
+  line-height: 50px !important;
 }
 </style>

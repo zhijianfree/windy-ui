@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-top: 10px">
     <div v-if="data.type == 1">
       <el-row v-for="(item, num) in paramList" :key="num">
         <el-col :span="10">
@@ -14,7 +14,7 @@
         <el-col :span="2">
           <div class="header-line">-</div>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="9">
           <el-input
             size="mini"
             :disabled="!isEdit"
@@ -23,13 +23,13 @@
             placeholder="请输入值"
           ></el-input>
         </el-col>
-        <el-col :span="2">
-          <div
-            v-if="isEdit"
-            @click="deleteValueItem(data.value, num)"
-            class="delete-icon"
-          >
-            <i class="el-icon-remove-outline" />
+        <el-col :span="3">
+          <div v-if="isEdit" class="op-icon">
+            <i
+              class="el-icon-remove-outline"
+              @click="deleteValueItem(data.value, num)"
+            />
+            <i class="el-icon-circle-plus-outline" @click="addValueItem" />
           </div>
         </el-col>
       </el-row>
@@ -70,7 +70,6 @@ export default {
   },
   watch: {
     feature(val) {
-      console.log('1111111')
       this.data = JSON.parse(JSON.stringify(val))
       if (this.data.type == 1) {
         this.paramList = this.matchMap(this.data.value)
@@ -83,7 +82,9 @@ export default {
   data() {
     return {
       pointId: '',
-      data: {},
+      data: {
+        value: [],
+      },
       paramList: [],
       uniqId: '',
     }
@@ -132,14 +133,20 @@ export default {
       return array
     },
     deleteValueItem(array, index) {
-      array.splice(index, 1)
-      if (array.length == 0) {
-        array.push({
+      this.paramList.splice(index, 1)
+      if (this.paramList.length == 0) {
+        this.paramList.push({
           keyName: '',
           keyValue: '',
         })
       }
       this.notifyData()
+    },
+    addValueItem() {
+      this.paramList.push({
+        keyName: '',
+        keyValue: '',
+      })
     },
   },
   created() {
@@ -158,5 +165,11 @@ export default {
 <style scoped>
 .header-line {
   text-align: center;
+}
+
+.op-icon i {
+  margin-left: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>

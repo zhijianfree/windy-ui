@@ -52,6 +52,45 @@ export default {
         })
     })
   },
+  batchCreateTemplate(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/templates`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  deletePlugin(pluginId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/plugin/${pluginId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  upload(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/template/upload`
+      http
+        .postFile(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   updateTemplate(template) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/template`

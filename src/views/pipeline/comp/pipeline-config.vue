@@ -18,10 +18,39 @@
           <el-radio :label="3">个人流水线</el-radio>
         </el-radio-group>
       </el-form-item>
+      <el-form-item
+        label="每日定时"
+        v-if="isSchdule"
+        :rules="[
+          {
+            required: true,
+            message: '定时执行时间点不能为空',
+            trigger: 'select',
+          },
+        ]"
+        prop="scheduleTime"
+      >
+        <el-time-picker
+          v-model="pipelineForm.scheduleTime"
+          :picker-options="{
+            start: '00:00',
+            step: '01:00',
+            end: '24:00',
+          }"
+          value-format="H"
+          placeholder="选择每日执行的时间点"
+        >
+        </el-time-picker>
+      </el-form-item>
       <el-form-item label="执行方式" prop="executeType">
         <el-radio-group v-model="pipelineForm.executeType">
-          <el-radio :label="1">手动执行</el-radio>
-          <el-radio :label="2">Push</el-radio>
+          <el-radio :disabled="isSchdule" :label="1">手动执行</el-radio>
+          <el-radio :disabled="isSchdule || isPublish" :label="2"
+            >Push</el-radio
+          >
+          <el-radio :disabled="!isSchdule || isPublish" :label="3"
+            >定时执行</el-radio
+          >
         </el-radio-group>
       </el-form-item>
 
@@ -195,7 +224,7 @@
                 <el-select
                   v-if="item.type == 'select'"
                   v-model="configForm[item.compareKey]"
-                  @change="selectChange"
+                  @change="selectChange($event, item)"
                   placeholder="请选择"
                 >
                   <el-option
@@ -250,6 +279,7 @@ import utils from '../../../lib/pipeline'
 import nodeApi from '../../../http/NodeBind'
 import pipelineApi from '../../../http/Pipeline'
 import taskApi from '../../../http/Task'
+import envApi from '../../../http/Environment'
 export default {
   components: {
     draggable,
@@ -324,6 +354,12 @@ export default {
       })
       return flag
     },
+    isSchdule() {
+      return this.pipelineForm.pipelineType == 2
+    },
+    isPublish() {
+      return this.pipelineForm.pipelineType == 1
+    },
   },
   data() {
     return {
@@ -375,7 +411,6 @@ export default {
       utils.moveLeft(this.editPipelines, this.nodeForm)
       this.uuid++
       this.nodeForm = {}
-      console.log(this.editPipelines)
     },
     rightMove() {
       if (!this.nodeForm.name) {
@@ -391,9 +426,9 @@ export default {
       this.editPipelines = array
       this.uuid++
     },
-    selectChange(value) {
+    selectChange(value, item) {
       this.chosedConfigItem.paramList.forEach((e) => {
-        if (e.name == 'taskId') {
+        if (e.name == item.compareKey) {
           e.value = value
         }
       })
@@ -401,18 +436,15 @@ export default {
       this.$forceUpdate()
     },
     datachange(value) {
-      console.log('数据变化', value, this.chosedConfigItem)
       this.chosedConfigItem.compareResults.forEach((e) => {
         if (e.compareKey == value) {
           e.value = this.configForm[value]
-          console.log('数据变化111 datachange', this.configForm[value])
         }
       })
 
       this.chosedConfigItem.paramList.forEach((e) => {
         if (e.name == value) {
           e.value = this.configForm[value]
-          console.log('数据变化111 datachange', this.configForm[value])
         }
       })
       this.$forceUpdate()
@@ -423,22 +455,18 @@ export default {
         let config = {}
         if (this.nodeForm.list) {
           this.nodeForm.list.forEach((e) => {
-            console.log('nodeform e =>', e)
             if (e.configDetail) {
               let detail = JSON.parse(e.configDetail)
               config[detail.actionId] = detail
             }
           })
         }
-        console.log('config=====', config)
-        console.log('return=====', res.data)
         res.data.forEach((e) => {
           let detail = config[e.actionId]
           if (detail != undefined && detail != null) {
             e.compareResults = detail.compareInfo
 
             e.paramList.forEach((e) => {
-              console.log('e=====', e, detail)
               let data = detail.paramList[e.name]
               if (data) {
                 e.value = data
@@ -454,7 +482,6 @@ export default {
           }
           this.itemList.push(e)
         })
-        console.log('执行完成====', this.itemList)
       })
       this.paramConfigs = []
       this.stepConfigs = []
@@ -481,7 +508,6 @@ export default {
 
         let pipeArray = JSON.parse(JSON.stringify(this.editPipelines))
         let subNodes = []
-        console.log('新增的节点', this.nodeForm, '列表', this.itemList)
         this.itemList.forEach((e) => {
           let data = {}
           e.paramList.forEach((ele) => {
@@ -521,17 +547,12 @@ export default {
 
           this.editPipelines = utils.addNode(pipeArray, newNode, subNodes)
           this.uuid++
-          console.log('last result1111', this.editPipelines)
         } else {
-          console.log('itemlist=', this.itemList)
-          console.log('subnodes=', subNodes)
           this.editPipelines = utils.updateNode(
             pipeArray,
             this.nodeForm,
             subNodes
           )
-          // 修改完成
-          console.log('修改结果', this.editPipelines)
         }
         this.resetNode()
       })
@@ -543,8 +564,12 @@ export default {
         }
 
         let param = utils.exchangeData(this.pipelineForm, this.editPipelines)
-        console.log('更新参数', param)
-        param.pipelineConfig = JSON.stringify(this.editPipelines)
+        if (param.pipelineType == 2) {
+          let corn = `0 0 ${this.pipelineForm.scheduleTime} * * ?`
+          param.pipelineConfig = JSON.stringify({
+            schedule: corn,
+          })
+        }
 
         //修改流水线
         if (this.isEditPipeline) {
@@ -562,8 +587,6 @@ export default {
         //创建流水线
         if (!this.isEditPipeline) {
           param.serviceId = this.serviceId
-          param.creator = '古月澜'
-          console.log('请求的参数', param)
           pipelineApi.savePipeline(param).then(() => {
             this.$message({
               message: '创建流水线成功',
@@ -575,7 +598,6 @@ export default {
       })
     },
     choosePipeItem(node) {
-      console.log('pipeline 点击node', node)
       let selectItem = node
       this.nodeForm = selectItem
       if (node.disable || this.startMove) {
@@ -588,7 +610,6 @@ export default {
           selectItem = e
         }
       })
-      console.log('=====-----', selectItem)
 
       this.dialogVisible = true
       this.operateType = 2
@@ -596,7 +617,6 @@ export default {
       this.selectStep(selectItem.configId)
     },
     chooseStep(item) {
-      console.log('选择的node', item)
       this.stepConfigs = JSON.parse(JSON.stringify(item.compareResults))
       this.stepConfigs.forEach((e) => {
         this.configForm[e.compareKey] = e.value
@@ -614,24 +634,48 @@ export default {
       })
       //用例测试为了选择节点所有特殊处理
       if (item.executeType == 'TEST') {
-        taskApi.getAllTaskList(this.serviceId).then((res) => {
-          let list = []
-          res.data.forEach((e) => {
-            list.push({
-              label: e.taskName,
-              value: e.taskId,
-            })
-          })
-          this.paramConfigs.forEach((e) => {
-            if (e.compareKey == 'taskId') {
-              e.list = list
-            }
-          })
-          this.$forceUpdate()
-        })
+        this.getFeatureTasks()
+      }
+      //用例测试为了选择节点所有特殊处理
+      if (item.executeType == 'DEPLOY') {
+        this.getAllEnvs()
       }
       this.chosedConfigItem = item
       this.$forceUpdate()
+    },
+    getFeatureTasks() {
+      taskApi.getAllTaskList(this.serviceId).then((res) => {
+        let list = []
+        res.data.forEach((e) => {
+          list.push({
+            label: e.taskName,
+            value: e.taskId,
+          })
+        })
+        this.paramConfigs.forEach((e) => {
+          if (e.compareKey == 'taskId') {
+            e.list = list
+          }
+        })
+        this.$forceUpdate()
+      })
+    },
+    getAllEnvs() {
+      envApi.getAllEnvs().then((res) => {
+        let list = []
+        res.data.forEach((e) => {
+          list.push({
+            label: e.envName,
+            value: e.envId,
+          })
+        })
+        this.paramConfigs.forEach((e) => {
+          if (e.compareKey == 'envId') {
+            e.list = list
+          }
+        })
+        this.$forceUpdate()
+      })
     },
     resetNode() {
       this.dialogVisible = false
@@ -657,9 +701,17 @@ export default {
     },
     getPipeline() {
       this.pipelineForm = {}
-      pipelineApi.queryPipeline(this.serviceId, this.pipelineId).then((res) => {
+      pipelineApi.queryPipeline(this.pipelineId).then((res) => {
         this.editPipelines = utils.displayData(res.data.stageList)
         this.pipelineForm = res.data
+        let config = JSON.parse(res.data.pipelineConfig)
+        console.log('configxxx', config)
+        if (config) {
+          let hour = config.schedule.split(' ')[2]
+          //解析表达式 0 0 2 * * ? 获取对应的执行时间点
+          let time = new Date(2023, 7, 20, hour)
+          this.$set(this.pipelineForm, 'scheduleTime', time)
+        }
         this.uuid++
       })
     },

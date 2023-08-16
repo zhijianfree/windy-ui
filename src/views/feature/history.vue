@@ -10,7 +10,6 @@
         <el-table-column prop="historyId" label="执行ID"> </el-table-column>
         <el-table-column fixed prop="featureName" label="用例">
         </el-table-column>
-        <el-table-column prop="executor" label="执行人"> </el-table-column>
         <el-table-column
           prop="createTime"
           label="执行时间"
