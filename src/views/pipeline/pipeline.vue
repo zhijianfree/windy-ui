@@ -787,6 +787,7 @@ export default {
 
         this.serviceId = this.pipelines[0].value
         this.getPipelineList()
+        console.log(this.serviceId)
       })
     },
     loopQueryStatus() {

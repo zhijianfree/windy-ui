@@ -41,7 +41,7 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="submit">提交</el-button>
+              <el-button type="primary" @click="submitGit">提交</el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -69,7 +69,35 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="submit">提交</el-button>
+              <el-button type="primary" @click="submitImage">提交</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="Maven仓库配置" name="maven">
+          <el-form :model="mavenForm" size="mini" label-width="120px">
+            <el-form-item label="maven仓库地址" prop="mavenUrl">
+              <el-input
+                type="text"
+                v-model="mavenForm.mavenUrl"
+                placeholder="请输入Maven仓库地址"
+              />
+            </el-form-item>
+            <el-form-item label="用户" prop="userName">
+              <el-input
+                type="text"
+                v-model="mavenForm.userName"
+                placeholder="访问镜像仓库的用户"
+              />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input
+                type="text"
+                v-model="mavenForm.password"
+                placeholder="访问镜像仓库的密码"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitMaven">提交</el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -84,6 +112,7 @@ export default {
     return {
       systemForm: {},
       repoForm: {},
+      mavenForm: {},
       configType: 'git',
     }
   },
@@ -98,26 +127,37 @@ export default {
         this.repoForm = res.data
       })
     },
-    submit() {
-      if (this.configType == 'git') {
-        systemApi.updateGitConfig(this.systemForm).then((res) => {
-          if (res.data) {
-            this.$message.success('修改Git配置成功')
-          } else {
-            this.$message.error('修改Git配置失败')
-          }
-        })
-      }
-
-      if (this.configType == 'repo') {
-        systemApi.updateRepository(this.repoForm).then((res) => {
-          if (res.data) {
-            this.$message.success('修改镜像仓库成功')
-          } else {
-            this.$message.error('修改镜像仓库失败')
-          }
-        })
-      }
+    getMavenConfig() {
+      systemApi.requestMavenConfig().then((res) => {
+        this.mavenForm = res.data
+      })
+    },
+    submitMaven() {
+      systemApi.updateMavenConfig(this.mavenForm).then((res) => {
+        if (res.data) {
+          this.$message.success('修改Maven配置成功')
+        } else {
+          this.$message.error('修改Maven配置失败')
+        }
+      })
+    },
+    submitGit() {
+      systemApi.updateGitConfig(this.systemForm).then((res) => {
+        if (res.data) {
+          this.$message.success('修改Git配置成功')
+        } else {
+          this.$message.error('修改Git配置失败')
+        }
+      })
+    },
+    submitImage() {
+      systemApi.updateRepository(this.repoForm).then((res) => {
+        if (res.data) {
+          this.$message.success('修改镜像仓库成功')
+        } else {
+          this.$message.error('修改镜像仓库失败')
+        }
+      })
     },
     clickTab(type) {
       if (this.configType == 'git') {
@@ -126,6 +166,10 @@ export default {
 
       if (this.configType == 'repo') {
         this.getRepoConfig()
+      }
+
+      if (this.configType == 'maven') {
+        this.getMavenConfig()
       }
     },
   },

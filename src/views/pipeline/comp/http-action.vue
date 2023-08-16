@@ -131,6 +131,7 @@ export default {
         if (val.compareResults && val.compareResults.length > 0) {
           this.compareList = val.compareResults
         }
+        this.notifyParam()
       },
       deep: true,
       immediate: true,

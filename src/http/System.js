@@ -13,6 +13,19 @@ export default {
         })
     })
   },
+  updateMavenConfig(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/pipeline/system/config/maven`
+      http
+        .put(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   updateRepository(data) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/pipeline/system/config/repository`
@@ -29,6 +42,19 @@ export default {
   requestGitConfig() {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/pipeline/system/config/git`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  requestMavenConfig() {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/pipeline/system/config/maven`
       http
         .get(url)
         .then((res) => {

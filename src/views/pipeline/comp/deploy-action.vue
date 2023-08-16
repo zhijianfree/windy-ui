@@ -31,6 +31,7 @@ export default {
         if (val.compareResults && val.compareResults.length > 0) {
           this.presetValue(val.compareResults, this.compareList, 'compareKey')
         }
+        this.notifyParam()
       },
       deep: true,
       immediate: true,

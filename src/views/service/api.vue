@@ -57,13 +57,15 @@
 
             <!-- api列表开始 -->
             <el-tree
-              :data="treeData"
+              :data="apiTreeData"
               show-checkbox
-              default-expand-all
+              draggable
               :filter-node-method="filterNode"
               :props="apiProps"
+              @node-drop="handleApiDragEnd"
               @check-change="selectTreeNode"
               @node-click="treeNodeSelect"
+              :allow-drop="allowApiDrop"
               ref="tree"
             >
               <div class="tree-node" slot-scope="{ node, data }">
@@ -605,7 +607,7 @@ export default {
       apiForm: {},
       paramData: [],
       responseData: [],
-      treeData: [],
+      apiTreeData: [],
       defaultProps: {
         children: 'children',
         label: 'paramKey',
@@ -639,26 +641,68 @@ export default {
       createDir: false,
       selectNodes: [],
       isLeaving: false,
+      updateApi: false,
     }
   },
   watch: {
     filterText(val) {
       this.$refs.tree.filter(val)
     },
+    apiForm: {
+      handler(val, old) {
+        if (old && old.apiName) {
+          this.updateApi = true
+          console.log('xxxxx apiForm', val, old)
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
+    paramData: {
+      handler(val, old) {
+        if (old && old.length > 0) {
+          this.updateApi = true
+          console.log('xxxxx paramData', val, old)
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   methods: {
+    allowApiDrop(draggingNode, targetNode, type) {
+      let api = targetNode.data
+      if (type == 'inner' && api.isApi) {
+        return false
+      }
+      return true
+    },
+    handleApiDragEnd(draggingNode, targetNode) {
+      let api = JSON.parse(JSON.stringify(draggingNode.data))
+      api.parentId = targetNode.data.apiId
+      if (targetNode.data.isApi) {
+        api.parentId = null
+      }
+      api.requestParams = JSON.parse(api.requestParams)
+      api.responseParams = JSON.parse(api.responseParams)
+      serviceApi.updateApi(api)
+    },
     beforeLeave(activeName, oldActiveName) {
-      console.log('xxxx leave', this.isLeaving)
-      if (oldActiveName == 'edit' && !this.isLeaving) {
-        this.$confirm('你存在数据变更，离开后数据可能丢失，确认离开?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-        })
+      if (oldActiveName == 'edit' && !this.isLeaving && this.updateApi) {
+        this.$confirm(
+          '当前页面存在数据变更，离开后数据可能丢失，确认离开?',
+          '提示',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }
+        )
           .then(() => {
             this.isLeaving = true
             this.activeName = activeName
-            console.log('ddd', this.activeName)
+            this.selectTab()
+            this.updateApi = false
           })
           .catch(() => {})
         return false
@@ -707,7 +751,7 @@ export default {
       if (!data.isApi) {
         return
       }
-      this.apiForm = data
+      this.apiForm = JSON.parse(JSON.stringify(data))
       this.paramData = JSON.parse(data.requestParams)
       if (!this.paramData) {
         this.paramData = []
@@ -718,6 +762,7 @@ export default {
         this.responseData = []
       }
       this.currentApi = data.apiId
+      this.updateApi = false
       this.selectTab()
     },
     addFolder(node) {
@@ -739,7 +784,6 @@ export default {
         }
 
         this.dataForm.serviceId = this.serviceId
-        console.log('点对点', this.dataForm)
         serviceApi.createApi(this.dataForm).then((res) => {
           if (res.data) {
             this.$message.success('添加成功')
@@ -780,6 +824,7 @@ export default {
         serviceApi.updateApi(data).then((res) => {
           if (res.data) {
             this.$message.success('修改接口成功')
+            this.updateApi = false
           } else {
             this.$message.error('修改接口失败')
           }
@@ -789,6 +834,7 @@ export default {
       serviceApi.createApi(data).then((res) => {
         if (res.data) {
           this.$message.success('添加接口成功')
+          this.updateApi = false
         } else {
           this.$message.error('添加接口失败')
         }
@@ -801,7 +847,6 @@ export default {
         this.headerData = []
         this.bodyData = []
         this.traverseTree(this.paramData, 1)
-        console.log('bbbbbbbbb', this.paramData)
         this.paramData.forEach((e) => {
           if (e.position == 'Path' || e.position == 'Query') {
             this.pathData.push(e)
@@ -815,7 +860,6 @@ export default {
         })
         this.previewRes = JSON.parse(JSON.stringify(this.responseData))
         this.traverseTree(this.previewRes, 1)
-        console.log('ccccccccccc', this.previewRes)
       }
     },
     traverseTree(nodes, id) {
@@ -870,7 +914,7 @@ export default {
     },
     selectService() {
       serviceApi.getApiList(this.serviceId).then((res) => {
-        this.treeData = this.buildTree(res.data)
+        this.apiTreeData = this.buildTree(res.data)
       })
     },
     buildTree(data, parentId = null) {
@@ -964,23 +1008,26 @@ export default {
 .el-input .el-input {
   width: 200px;
 }
-.input-with-select .el-input-group__prepend {
+.api-detail .input-with-select .el-input-group__prepend {
   background-color: #fff;
 }
-.tree-item .el-tree-node__content {
+.api-detail .tree-item .el-tree-node__content {
   padding: 5px 10px;
 }
 
-.input-with-select .el-input-group__prepend {
+.api-detail .input-with-select .el-input-group__prepend {
   background-color: #fff;
 }
-.el-tree-node:focus > .el-tree-node__content {
+.api-detail .el-tree-node:focus > .el-tree-node__content {
   background-color: #fff !important;
 }
-.el-tree-node__content:hover {
+.api-detail .el-tree-node__content:hover {
   background-color: #fff;
 }
-.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+.api-detail
+  .el-tree--highlight-current
+  .el-tree-node.is-current
+  > .el-tree-node__content {
   background-color: #fff;
 }
 </style>

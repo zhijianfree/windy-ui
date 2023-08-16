@@ -30,6 +30,12 @@
         <el-table-column prop="serviceName" label="服务名称"> </el-table-column>
         <el-table-column prop="description" label="服务描述"> </el-table-column>
         <el-table-column prop="gitUrl" label="git地址"> </el-table-column>
+        <el-table-column prop="priority" label="优先级">
+          <template slot-scope="scope">
+            <el-rate v-model="scope.row.priority" disabled></el-rate>
+          </template>
+        </el-table-column>
+
         <el-table-column prop="createTime" label="创建时间">
           <template slot-scope="scope">
             {{ scope.row.createTime | dateFormat }}
@@ -100,6 +106,10 @@
             placeholder="请输入服务git地址"
           ></el-input>
         </el-form-item>
+        <el-form-item label="优先级" prop="gitUrl">
+          <el-rate v-model="serviceForm.priority"></el-rate>
+        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="submit('serviceForm')"
             >确认</el-button

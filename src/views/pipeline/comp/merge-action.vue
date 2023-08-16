@@ -24,6 +24,7 @@ export default {
         if (val.paramList && val.paramList.length > 0) {
           this.presetValue(val.paramList, this.paramList, 'name')
         }
+        this.notifyParam()
       },
       deep: true,
       immediate: true,
