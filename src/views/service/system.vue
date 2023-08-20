@@ -106,77 +106,77 @@
   </div>
 </template>
 <script>
-import systemApi from '../../http/System'
+import systemApi from "../../http/System";
 export default {
   data() {
     return {
       systemForm: {},
       repoForm: {},
       mavenForm: {},
-      configType: 'git',
-    }
+      configType: "git",
+    };
   },
   methods: {
     getGitConfig() {
       systemApi.requestGitConfig().then((res) => {
-        this.systemForm = res.data
-      })
+        this.systemForm = res.data;
+      });
     },
     getRepoConfig() {
       systemApi.getImageRepository().then((res) => {
-        this.repoForm = res.data
-      })
+        this.repoForm = res.data;
+      });
     },
     getMavenConfig() {
       systemApi.requestMavenConfig().then((res) => {
-        this.mavenForm = res.data
-      })
+        this.mavenForm = res.data;
+      });
     },
     submitMaven() {
       systemApi.updateMavenConfig(this.mavenForm).then((res) => {
         if (res.data) {
-          this.$message.success('修改Maven配置成功')
+          this.$message.success("修改Maven配置成功");
         } else {
-          this.$message.error('修改Maven配置失败')
+          this.$message.error("修改Maven配置失败");
         }
-      })
+      });
     },
     submitGit() {
       systemApi.updateGitConfig(this.systemForm).then((res) => {
         if (res.data) {
-          this.$message.success('修改Git配置成功')
+          this.$message.success("修改Git配置成功");
         } else {
-          this.$message.error('修改Git配置失败')
+          this.$message.error("修改Git配置失败");
         }
-      })
+      });
     },
     submitImage() {
       systemApi.updateRepository(this.repoForm).then((res) => {
         if (res.data) {
-          this.$message.success('修改镜像仓库成功')
+          this.$message.success("修改镜像仓库成功");
         } else {
-          this.$message.error('修改镜像仓库失败')
+          this.$message.error("修改镜像仓库失败");
         }
-      })
+      });
     },
-    clickTab(type) {
-      if (this.configType == 'git') {
-        this.getGitConfig()
+    clickTab() {
+      if (this.configType == "git") {
+        this.getGitConfig();
       }
 
-      if (this.configType == 'repo') {
-        this.getRepoConfig()
+      if (this.configType == "repo") {
+        this.getRepoConfig();
       }
 
-      if (this.configType == 'maven') {
-        this.getMavenConfig()
+      if (this.configType == "maven") {
+        this.getMavenConfig();
       }
     },
   },
   created() {
-    this.getGitConfig()
+    this.getGitConfig();
   },
-}
+};
 </script>
 <style scoped>
 .content {
