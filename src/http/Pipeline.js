@@ -65,9 +65,9 @@ export default {
         })
     })
   },
-  detaultConfig() {
+  defaultConfig() {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/pipeline/system/config/1`
+      let url = `/v1/devops/pipeline/system/config/pipe`
       http
         .get(url)
         .then((res) => {
