@@ -10,4 +10,10 @@ export default {
     }
     return pwd
   },
+  isEmpty(data) {
+    if (data == null || data == undefined || data == '') {
+      return true
+    }
+    return false
+  },
 }

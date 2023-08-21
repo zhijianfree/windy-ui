@@ -250,6 +250,7 @@
 
           <!-- 发布流水线关联分支开始 -->
           <div v-if="currentPipeline.pipelineType == 1">
+            <h4 class="republis-info">待发布分支</h4>
             <el-table :data="publishData" style="width: 100%">
               <el-table-column prop="branch" label="分支"> </el-table-column>
               <el-table-column prop="status" label="状态">
@@ -624,6 +625,14 @@ export default {
         return
       }
 
+      if (
+        this.currentPipeline.pipelineType == 1 &&
+        this.publishData.length < 1
+      ) {
+        this.$message.warning('待发布列表为空，请先推送分支到发布流水线')
+        return
+      }
+
       pipelineApi.startPipeline(this.currentPipeline.pipelineId).then((res) => {
         if (res.data == '' || res.data == null) {
           this.$message.error('运行流水线失败')
@@ -930,5 +939,8 @@ export default {
 ul {
   list-style: none;
   padding: 0px;
+}
+.republis-info {
+  margin: 10px;
 }
 </style>
