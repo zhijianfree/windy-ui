@@ -287,6 +287,7 @@
       title="Git配置"
       :visible.sync="showGitConfig"
       :destroy-on-close="true"
+      :before-close="closeGitDialog"
       width="70%"
     >
       <bind :pipeline="currentPipeline.pipelineId" :service="serviceId" />
@@ -302,8 +303,8 @@
     >
       <span
         >节点运行状态:
-        <el-tag :type="logForm.status == 1 ? 'success' : 'danger'">{{
-          logForm.status == 1 ? '成功' : '失败'
+        <el-tag :type="logForm.status | statusFormat">{{
+          logForm.status | statusName
         }}</el-tag></span
       >
       <el-divider><i class="el-icon-receiving"></i></el-divider>
@@ -361,6 +362,7 @@ import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
 import utils from '../../lib/pipeline'
 import nodeApi from '../../http/NodeBind'
+import gitBindApi from '../../http/GitBind'
 export default {
   components: { bind, PipelineConfig },
   data() {
@@ -392,6 +394,7 @@ export default {
       publishData: [],
       approvalNode: {},
       showApproval: false,
+      bindGit: false,
     }
   },
   methods: {
@@ -538,33 +541,35 @@ export default {
     },
 
     showNodeLog(node) {
-      if (this.isRunning && node.originData && node.originData.actionId) {
-        actionApi.getAction(node.originData.actionId).then((res) => {
-          if (res.data.executeType == 'APPROVAL') {
-            if (!this.history.historyId) {
-              return
+      console.log('node', node)
+      if (!node.originData || !node.originData.actionId) {
+        return
+      }
+      actionApi.getAction(node.originData.actionId).then((res) => {
+        if (res.data.executeType == 'APPROVAL' && this.isRunning) {
+          if (!this.history.historyId) {
+            return
+          }
+          this.approvalNode = node
+          this.showApproval = true
+          return
+        }
+
+        if (!this.history || !this.history.historyId) {
+          this.logForm.status = 1
+          this.logForm.messageList = ['未执行']
+          this.isShowNodeLog = true
+          return
+        }
+
+        historyApi.getPipelienStatus(this.history.historyId).then((res) => {
+          res.data.nodeStatusList.forEach((e) => {
+            if (e.nodeId == node.nodeId) {
+              this.logForm.status = e.status
+              this.logForm.messageList = e.message
+              this.isShowNodeLog = true
             }
-            this.approvalNode = node
-            this.showApproval = true
-          }
-        })
-        return
-      }
-
-      if (!this.history || !this.history.historyId) {
-        this.logForm.status = 1
-        this.logForm.messageList = ['未执行']
-        this.isShowNodeLog = true
-        return
-      }
-
-      historyApi.getPipelienStatus(this.history.historyId).then((res) => {
-        res.data.nodeStatusList.forEach((e) => {
-          if (e.nodeId == node.nodeId) {
-            this.logForm.status = e.status
-            this.logForm.messageList = e.message
-            this.isShowNodeLog = true
-          }
+          })
         })
       })
     },
@@ -625,11 +630,26 @@ export default {
         return
       }
 
-      if (
-        this.currentPipeline.pipelineType == 1 &&
-        this.publishData.length < 1
-      ) {
+      let isPublish =
+        this.currentPipeline.pipelineType == 1 && this.publishData.length < 1
+      if (isPublish) {
         this.$message.warning('待发布列表为空，请先推送分支到发布流水线')
+        return
+      }
+
+      if (!isPublish && !this.bindGit) {
+        let notify = this.$message.warning({
+          dangerouslyUseHTMLString: true,
+          message:
+            '当前流水线未绑定分支，请先绑定 <span style="cursor: pointer;color:#409EFF" @click="showGitConfig = !showGitConfig">去绑定>></span>',
+        })
+
+        let that = this
+        notify.$el.querySelector('span').onclick = () => {
+          console.log('dddddddd')
+          that.showGitConfig = !that.showGitConfig
+        }
+
         return
       }
 
@@ -700,6 +720,8 @@ export default {
         this.currentPipeline.pipelineId = item.pipelineId
         this.pipelineId = item.pipelineId
         this.uuid++
+
+        this.checkBindBranch()
 
         if (this.currentPipeline.pipelineType == 1) {
           this.getServicePublishes()
@@ -827,6 +849,20 @@ export default {
     },
     cancelCreatePipeline() {
       this.pipelineDialog = false
+    },
+    closeGitDialog() {
+      this.checkBindBranch()
+      this.showGitConfig = false
+    },
+    checkBindBranch() {
+      this.bindGit = false
+      gitBindApi.gitbindList(this.currentPipeline.pipelineId).then((res) => {
+        res.data.forEach((e) => {
+          if (e.isChoose) {
+            this.bindGit = true
+          }
+        })
+      })
     },
   },
   created() {
