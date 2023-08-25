@@ -48,6 +48,9 @@
                         >新增目录</el-dropdown-item
                       >
                       <el-dropdown-item command="delete">删除</el-dropdown-item>
+                      <el-dropdown-item command="generate"
+                        >生成Maven</el-dropdown-item
+                      >
                     </el-dropdown-menu>
                   </el-dropdown>
                 </el-col>
@@ -117,7 +120,7 @@
                     ><el-tag type="success" size="small">{{
                       apiForm.method
                     }}</el-tag>
-                    {{ apiForm.api }}</el-descriptions-item
+                    {{ apiForm.resource }}</el-descriptions-item
                   >
                   <el-descriptions-item label="修改时间">{{
                     apiForm.updateTime | dateFormat
@@ -313,7 +316,7 @@
                               ? '请输入uri'
                               : '请输入dubbo的类名'
                           "
-                          v-model="apiForm.api"
+                          v-model="apiForm.resource"
                           class="input-with-select"
                         >
                         </el-input>
@@ -331,6 +334,33 @@
                       v-model="apiForm.description"
                       type="textarea"
                       placeholder="请输入接口描述"
+                    ></el-input>
+                  </el-form-item>
+                  <h4>代码生成配置</h4>
+                  <el-form-item label="文件类名" label-width="120px">
+                    <div>
+                      <el-input
+                        placeholder="请输入类名"
+                        v-model="apiForm.className"
+                      >
+                        <el-input
+                          slot="append"
+                          placeholder="请输入接口函数方法"
+                          v-model="apiForm.classMethod"
+                        ></el-input>
+                      </el-input>
+                    </div>
+                  </el-form-item>
+                  <el-form-item label="body请求体类名" label-width="120px">
+                    <el-input
+                      placeholder="请输入body请求体类名"
+                      v-model="apiForm.bodyClass"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item label="响应体类名" label-width="120px">
+                    <el-input
+                      placeholder="请输入接口响应类名"
+                      v-model="apiForm.resultClass"
                     ></el-input>
                   </el-form-item>
                   <h4>参数设置</h4>
@@ -354,7 +384,7 @@
                             placeholder="请输入参数名称"
                           ></el-input>
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="3">
                           <el-select
                             v-model="data.position"
                             style="with: 100%"
@@ -369,7 +399,7 @@
                             <el-option label="Body" value="Body"> </el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="3">
                           <el-select
                             class="select-type"
                             v-model="data.type"
@@ -400,7 +430,7 @@
                           </el-select>
                         </el-col>
 
-                        <el-col :span="4">
+                        <el-col :span="3">
                           <el-select
                             size="mini"
                             v-model="data.required"
@@ -413,14 +443,14 @@
                             ></el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="5">
+                        <el-col :span="4">
                           <el-input
                             size="mini"
                             v-model="data.description"
                             placeholder="请输入参数描述"
                           ></el-input>
                         </el-col>
-                        <el-col :span="3">
+                        <el-col :span="2">
                           <div class="op-icon">
                             <i
                               class="el-icon-remove-outline"
@@ -434,6 +464,13 @@
                               "
                             />
                           </div>
+                        </el-col>
+                        <el-col :span="4" v-if="data.type == 'Object'">
+                          <el-input
+                            size="mini"
+                            v-model="data.objectName"
+                            placeholder="请输入Object类名,代码生成使用"
+                          />
                         </el-col>
                       </el-row>
                     </div>
@@ -452,14 +489,14 @@
                   >
                     <div class="custom-node" slot-scope="{ node, data }">
                       <el-row :gutter="10">
-                        <el-col :span="5">
+                        <el-col :span="4">
                           <el-input
                             size="mini"
                             v-model="data.paramKey"
                             placeholder="请输入参数名称"
                           ></el-input>
                         </el-col>
-                        <el-col :span="5">
+                        <el-col :span="3">
                           <el-select
                             class="select-type"
                             v-model="data.type"
@@ -480,7 +517,7 @@
                             </el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="3">
                           <el-select
                             size="mini"
                             v-model="data.required"
@@ -493,14 +530,14 @@
                             ></el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="5">
+                        <el-col :span="4">
                           <el-input
                             size="mini"
                             v-model="data.description"
                             placeholder="请输入参数描述"
                           ></el-input>
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="2">
                           <div class="op-icon">
                             <i
                               class="el-icon-remove-outline"
@@ -514,6 +551,13 @@
                               "
                             />
                           </div>
+                        </el-col>
+                        <el-col :span="4" v-if="data.type == 'Object'">
+                          <el-input
+                            size="mini"
+                            v-model="data.objectName"
+                            placeholder="请输入Object类名,代码生成使用"
+                          />
                         </el-col>
                       </el-row>
                     </div>
@@ -557,7 +601,7 @@
             <el-option label="Dubbo" value="dubbo"> </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="接口定义" prop="api" v-if="!createDir">
+        <el-form-item label="接口定义" prop="resource" v-if="!createDir">
           <el-row :gutter="10">
             <el-col v-if="dataForm.type == 'http'" :span="4"
               ><el-select v-model="dataForm.method" placeholder="选择请求方法">
@@ -574,7 +618,7 @@
                 :placeholder="
                   dataForm.type == 'http' ? '请输入uri' : '请输入dubbo的类名'
                 "
-                v-model="dataForm.api"
+                v-model="dataForm.resource"
                 class="input-with-select"
               >
               </el-input>
@@ -595,6 +639,44 @@
         >
       </span>
     </el-dialog>
+    <el-dialog
+      title="构建Maven版本"
+      :visible.sync="showGenerateApi"
+      width="60%"
+    >
+      <el-form
+        :model="generateForm"
+        label-width="80px"
+        size="mini"
+        :rules="generateRule"
+        ref="generateForm"
+      >
+        <el-form-item label="包路径" prop="packageName">
+          <el-input
+            v-model="generateForm.packageName"
+            placeholder="例如:com.zj.windy"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="GroupId" prop="groupId">
+          <el-input v-model="generateForm.groupId"></el-input>
+        </el-form-item>
+        <el-form-item label="ArtifactId" prop="artifactId">
+          <el-input v-model="generateForm.artifactId"></el-input>
+        </el-form-item>
+        <el-form-item label="Version" prop="version">
+          <el-input v-model="generateForm.version"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelGenerate" size="mini">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="submitGenerate('generateForm')"
+          size="mini"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -602,6 +684,8 @@ import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
+      generateForm: {},
+      showGenerateApi: true,
       activeName: 'preview',
       filterText: '',
       apiForm: {},
@@ -629,7 +713,7 @@ export default {
       apiRule: {
         apiName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
         type: [{ required: true, message: '请选择接口类型', trigger: 'blur' }],
-        api: [
+        resource: [
           { required: true, message: '请输入api', trigger: 'blur' },
           {
             validator: this.validApi,
@@ -637,6 +721,18 @@ export default {
             trigger: 'blur',
           },
         ],
+      },
+      generateRule: {
+        packageName: [
+          { required: true, message: '请输入包路径', trigger: 'blur' },
+        ],
+        groupId: [
+          { required: true, message: '请输入groupId', trigger: 'blur' },
+        ],
+        artifactId: [
+          { required: true, message: '请输入artifactId', trigger: 'blur' },
+        ],
+        version: [{ required: true, message: '请输入版本号', trigger: 'blur' }],
       },
       createDir: false,
       selectNodes: [],
@@ -671,21 +767,21 @@ export default {
   },
   methods: {
     allowApiDrop(draggingNode, targetNode, type) {
-      let api = targetNode.data
-      if (type == 'inner' && api.isApi) {
+      let resource = targetNode.data
+      if (type == 'inner' && resource.isApi) {
         return false
       }
       return true
     },
     handleApiDragEnd(draggingNode, targetNode) {
-      let api = JSON.parse(JSON.stringify(draggingNode.data))
-      api.parentId = targetNode.data.apiId
+      let resource = JSON.parse(JSON.stringify(draggingNode.data))
+      resource.parentId = targetNode.data.apiId
       if (targetNode.data.isApi) {
-        api.parentId = null
+        resource.parentId = null
       }
-      api.requestParams = JSON.parse(api.requestParams)
-      api.responseParams = JSON.parse(api.responseParams)
-      serviceApi.updateApi(api)
+      resource.requestParams = JSON.parse(resource.requestParams)
+      resource.responseParams = JSON.parse(resource.responseParams)
+      serviceApi.updateApi(resource)
     },
     beforeLeave(activeName, oldActiveName) {
       if (oldActiveName == 'edit' && !this.isLeaving && this.updateApi) {
@@ -761,6 +857,7 @@ export default {
       if (!this.responseData) {
         this.responseData = []
       }
+      console.log('gggggg', this.responseData)
       this.currentApi = data.apiId
       this.updateApi = false
       this.selectTab()
@@ -776,6 +873,14 @@ export default {
       this.showCreateApi = true
       this.dataForm.parentId = node.apiId
       this.dataForm.isApi = true
+    },
+    cancelGenerate() {},
+    submitGenerate(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+      })
     },
     submitApi(formName) {
       this.$refs[formName].validate((valid) => {
@@ -818,6 +923,16 @@ export default {
     saveApi() {
       let data = this.apiForm
       data.serviceId = this.serviceId
+      this.paramData.forEach((e) => {
+        if (this.$utils.isEmpty(e.objectName)) {
+          e.objectName = e.type
+        }
+      })
+      this.responseData.forEach((e) => {
+        if (this.$utils.isEmpty(e.objectName)) {
+          e.objectName = e.type
+        }
+      })
       data.requestParams = this.paramData
       data.responseParams = this.responseData
       if (this.currentApi != '') {

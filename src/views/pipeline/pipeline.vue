@@ -565,6 +565,7 @@ export default {
         historyApi.getPipelienStatus(this.history.historyId).then((res) => {
           res.data.nodeStatusList.forEach((e) => {
             if (e.nodeId == node.nodeId) {
+              this.logForm.nodeId = node.nodeId
               this.logForm.status = e.status
               this.logForm.messageList = e.message
               this.isShowNodeLog = true
@@ -830,6 +831,13 @@ export default {
           let item = {}
           res.data.nodeStatusList.forEach((e) => {
             item[e.nodeId] = this.exchangeStatus(e.status)
+            if (e.nodeId == this.logForm.nodeId) {
+              this.logForm = {
+                nodeId: this.logForm.nodeId,
+                status: e.status,
+                messageList: e.message,
+              }
+            }
           })
 
           this.currentPipeline.pipelineConfig.forEach((e) => {
