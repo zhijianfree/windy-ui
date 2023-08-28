@@ -79,8 +79,21 @@
       @close="closeDialog"
       width="70%"
     >
+      <el-alert
+        type="warning"
+        center
+        show-icon
+        :closable="false"
+        v-if="notConfigGit"
+      >
+        <template slot="title">
+          创建服务需先配置环境信息
+          <el-link type="primary" @click="goEnv">前往配置>></el-link></template
+        >
+      </el-alert>
       <el-form
         :model="serviceForm"
+        :disabled="!isEdit && notConfigGit"
         :rules="rules"
         ref="serviceForm"
         size="small"
@@ -124,6 +137,7 @@
 </template>
 <script>
 import serviceApi from '../../http/Service'
+import systemApi from '../../http/System'
 export default {
   data() {
     return {
@@ -146,6 +160,7 @@ export default {
           { required: true, message: '请输入服务的git地址', trigger: 'blur' },
         ],
       },
+      notConfigGit: false,
     }
   },
   methods: {
@@ -222,8 +237,17 @@ export default {
         })
       })
     },
+    getGitEnv() {
+      systemApi.requestGitConfig().then((res) => {
+        this.notConfigGit = this.$utils.isEmpty(res.data.accessToken)
+      })
+    },
+    goEnv() {
+      this.$router.push({ path: '/system' })
+    },
   },
   created() {
+    this.getGitEnv()
     this.getServices(1)
   },
 }
