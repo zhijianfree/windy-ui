@@ -143,4 +143,43 @@ export default {
         })
     })
   },
+  buildGenerate(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/resources/generate`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getGenerate(serviceId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/${serviceId}/generate`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getGenerateLog(serviceId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/${serviceId}/generate/log`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }

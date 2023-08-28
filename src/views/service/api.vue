@@ -26,35 +26,46 @@
 
             <!-- api操作开始 -->
             <div class="filter-text">
-              <el-row :gutter="10">
-                <el-col :span="16">
-                  <el-input
-                    v-model="filterText"
-                    size="mini"
-                    clearable
-                    placeholder="输入api名称过滤"
-                  ></el-input>
-                </el-col>
-                <el-col :span="5">
-                  <el-dropdown @command="selectCommand">
-                    <el-button type="primary" size="mini">
-                      操作<i class="el-icon-arrow-down el-icon--right"></i>
-                    </el-button>
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item command="api"
-                        >新增接口</el-dropdown-item
-                      >
-                      <el-dropdown-item command="dir"
-                        >新增目录</el-dropdown-item
-                      >
-                      <el-dropdown-item command="delete">删除</el-dropdown-item>
-                      <el-dropdown-item command="generate"
-                        >生成Maven</el-dropdown-item
-                      >
-                    </el-dropdown-menu>
-                  </el-dropdown>
-                </el-col>
-              </el-row>
+              <div class="filter-op">
+                <el-row :gutter="10">
+                  <el-col :span="16">
+                    <el-button
+                      type="primary"
+                      size="mini"
+                      icon="el-icon-tickets"
+                      @click="queryHistory"
+                      >查看构建记录</el-button
+                    >
+                  </el-col>
+                  <el-col :span="5">
+                    <el-dropdown @command="selectCommand" szie="mini">
+                      <el-button type="primary" size="mini">
+                        操作<i class="el-icon-arrow-down el-icon--right"></i>
+                      </el-button>
+                      <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item command="api"
+                          >新增接口</el-dropdown-item
+                        >
+                        <el-dropdown-item command="dir"
+                          >新增目录</el-dropdown-item
+                        >
+                        <el-dropdown-item command="delete"
+                          >删除</el-dropdown-item
+                        >
+                        <el-dropdown-item command="generate"
+                          >生成Maven</el-dropdown-item
+                        >
+                      </el-dropdown-menu>
+                    </el-dropdown>
+                  </el-col>
+                </el-row>
+              </div>
+              <el-input
+                v-model="filterText"
+                size="mini"
+                clearable
+                placeholder="输入api名称过滤"
+              ></el-input>
             </div>
             <!-- api操作结束 -->
 
@@ -351,13 +362,21 @@
                       </el-input>
                     </div>
                   </el-form-item>
-                  <el-form-item label="body请求体类名" label-width="120px">
+                  <el-form-item
+                    label="body请求体类名"
+                    label-width="120px"
+                    v-if="isHaveBody"
+                  >
                     <el-input
                       placeholder="请输入body请求体类名"
                       v-model="apiForm.bodyClass"
                     ></el-input>
                   </el-form-item>
-                  <el-form-item label="响应体类名" label-width="120px">
+                  <el-form-item
+                    label="响应体类名"
+                    label-width="120px"
+                    v-if="responseData.length > 0"
+                  >
                     <el-input
                       placeholder="请输入接口响应类名"
                       v-model="apiForm.resultClass"
@@ -642,6 +661,7 @@
     <el-dialog
       title="构建Maven版本"
       :visible.sync="showGenerateApi"
+      @open="getBuildParam"
       width="60%"
     >
       <el-form
@@ -677,6 +697,50 @@
         >
       </span>
     </el-dialog>
+    <!-- 构建二方包日志开始 -->
+    <el-dialog
+      title="节点日志"
+      :visible.sync="isShowLog"
+      width="70%"
+      :before-close="closeLog"
+      @open="openLog"
+    >
+      <el-form v-model="logForm" size="mini">
+        <el-form-item label="版本">
+          <el-select
+            v-model="logRecordId"
+            placeholder="请选择历史构建版本"
+            @change="selectVersion"
+          >
+            <el-option
+              v-for="item in logVersions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="节点状态"
+          ><el-tag :type="logForm.status | statusFormat">{{
+            logForm.status | statusName
+          }}</el-tag></el-form-item
+        >
+        <el-form-item label="执行时间">{{
+          logForm.time | dateFormat
+        }}</el-form-item>
+      </el-form>
+      <el-divider><i class="el-icon-receiving"></i></el-divider>
+      <h4>运行日志</h4>
+      <div class="log-list">
+        <ul>
+          <li v-for="(item, index) in logForm.messageList" :key="index">
+            <span>{{ item }}</span>
+          </li>
+        </ul>
+      </div>
+    </el-dialog>
+    <!-- 构建二方包结束 -->
   </div>
 </template>
 <script>
@@ -684,8 +748,13 @@ import serviceApi from '../../http/Service'
 export default {
   data() {
     return {
+      logInterval: null,
+      logRecordId: '',
+      logVersions: [],
+      isShowLog: false,
+      logForm: {},
       generateForm: {},
-      showGenerateApi: true,
+      showGenerateApi: false,
       activeName: 'preview',
       filterText: '',
       apiForm: {},
@@ -857,7 +926,6 @@ export default {
       if (!this.responseData) {
         this.responseData = []
       }
-      console.log('gggggg', this.responseData)
       this.currentApi = data.apiId
       this.updateApi = false
       this.selectTab()
@@ -874,12 +942,32 @@ export default {
       this.dataForm.parentId = node.apiId
       this.dataForm.isApi = true
     },
-    cancelGenerate() {},
+    cancelGenerate() {
+      this.generateForm = {}
+      this.showGenerateApi = false
+    },
+    getBuildParam() {
+      serviceApi.getGenerate(this.serviceId).then((res) => {
+        console.log('111', res)
+        this.generateForm = res.data
+      })
+    },
     submitGenerate(formName) {
       this.$refs[formName].validate((valid) => {
         if (!valid) {
           return false
         }
+        this.generateForm.serviceId = this.serviceId
+        serviceApi.buildGenerate(this.generateForm).then((res) => {
+          if (res.data) {
+            this.$message.success('开始构建')
+            this.showGenerateApi = false
+            this.isShowLog = true
+            this.queryHistory()
+          } else {
+            this.$message.error('触发构建任务失败')
+          }
+        })
       })
     },
     submitApi(formName) {
@@ -901,6 +989,10 @@ export default {
       })
     },
     selectCommand(command) {
+      if (command == 'generate') {
+        this.showGenerateApi = true
+        return
+      }
       if (command == 'delete') {
         serviceApi.batchDeleteApi(this.selectNodes).then((res) => {
           if (res.data) {
@@ -923,16 +1015,8 @@ export default {
     saveApi() {
       let data = this.apiForm
       data.serviceId = this.serviceId
-      this.paramData.forEach((e) => {
-        if (this.$utils.isEmpty(e.objectName)) {
-          e.objectName = e.type
-        }
-      })
-      this.responseData.forEach((e) => {
-        if (this.$utils.isEmpty(e.objectName)) {
-          e.objectName = e.type
-        }
-      })
+      this.recursionName(this.paramData)
+      this.recursionName(this.responseData)
       data.requestParams = this.paramData
       data.responseParams = this.responseData
       if (this.currentApi != '') {
@@ -952,6 +1036,16 @@ export default {
           this.updateApi = false
         } else {
           this.$message.error('添加接口失败')
+        }
+      })
+    },
+    recursionName(array) {
+      array.forEach((e) => {
+        if (this.$utils.isEmpty(e.objectName)) {
+          e.objectName = e.type
+        }
+        if (e.children && e.children.length > 0) {
+          this.recursionName(e.children)
         }
       })
     },
@@ -1048,7 +1142,46 @@ export default {
       }
       return tree
     },
-
+    openLog() {
+      this.logInterval = setInterval(() => {
+        this.queryHistory()
+      }, 2000)
+    },
+    queryHistory() {
+      this.logVersions = []
+      serviceApi.getGenerateLog(this.serviceId).then((res) => {
+        res.data.forEach((e) => {
+          let params = JSON.parse(e.executeParams)
+          params.time = e.updateTime
+          params.status = e.status
+          params.label = params.version
+          params.value = e.recordId
+          params.messageList = JSON.parse(e.result)
+          this.logVersions.push(params)
+        })
+        this.isShowLog = true
+        if (this.logVersions.length > 0) {
+          this.logRecordId = this.logVersions[0].value
+          this.selectVersion(this.logRecordId)
+        }
+      })
+    },
+    selectVersion(recordId) {
+      this.logForm = {}
+      this.logVersions.forEach((e) => {
+        if (e.value == recordId) {
+          this.logForm = e
+        }
+      })
+    },
+    closeLog() {
+      this.isShowLog = false
+      this.logVersions = []
+      this.logForm = {}
+      if (this.logInterval) {
+        clearInterval(this.logInterval)
+      }
+    },
     getServices() {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
@@ -1056,6 +1189,17 @@ export default {
         this.serviceId = this.serviceList[0].serviceId
         this.selectService()
       })
+    },
+  },
+  computed: {
+    isHaveBody: function () {
+      let flag = false
+      this.paramData.forEach((e) => {
+        if (e.position == 'Body') {
+          flag = true
+        }
+      })
+      return flag
     },
   },
   created() {
@@ -1091,7 +1235,7 @@ export default {
   margin-left: 50px;
 }
 .filter-text {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 .api-list {
   min-height: 90vh;
@@ -1144,5 +1288,17 @@ export default {
   .el-tree-node.is-current
   > .el-tree-node__content {
   background-color: #fff;
+}
+.filter-op {
+  margin-bottom: 10px;
+}
+
+.log-list ul {
+  list-style: none;
+  padding: 3px;
+  border: 1px solid #dcdfe6;
+  border-radius: 3px;
+  margin: 0px;
+  min-height: 300px;
 }
 </style>
