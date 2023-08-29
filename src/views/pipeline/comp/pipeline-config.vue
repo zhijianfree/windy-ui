@@ -705,7 +705,6 @@ export default {
         this.editPipelines = utils.displayData(res.data.stageList);
         this.pipelineForm = res.data;
         let config = JSON.parse(res.data.pipelineConfig);
-        console.log("configxxx", config);
         if (config) {
           let hour = config.schedule.split(" ")[2];
           //解析表达式 0 0 2 * * ? 获取对应的执行时间点

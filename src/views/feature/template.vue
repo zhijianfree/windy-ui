@@ -36,14 +36,16 @@
       <el-table-column prop="templateId" label="模版ID"> </el-table-column>
       <el-table-column prop="name" label="模版名称"> </el-table-column>
       <el-table-column prop="description" label="模版描述"> </el-table-column>
-      <!-- <el-table-column prop="author" label="提交人"> </el-table-column> -->
       <el-table-column prop="updateTime" label="最近修改时间">
         <template slot-scope="scope">
           {{ scope.row.updateTime | dateFormat }}
         </template>
       </el-table-column>
-      <el-table-column align="right">
-        <template slot-scope="scope" v-if="scope.row.templateType == 1">
+      <el-table-column align="left" label="操作">
+        <template
+          slot-scope="scope"
+          v-if="scope.row.templateType == 1 || scope.row.templateType == 3"
+        >
           <el-button
             type="primary"
             size="mini"
@@ -57,6 +59,7 @@
           <el-button
             size="mini"
             type="danger"
+            v-if="scope.row.templateType == 3"
             plain
             @click="handleDelete(scope.row)"
             >删除</el-button
@@ -260,34 +263,6 @@ export default {
       this.showDialog = true
       this.dialogTitle = '编辑模版'
       this.infoForm = row
-
-      // let rowData = JSON.parse(JSON.stringify(row))
-      // if (rowData.headers && rowData.headers.length > 0) {
-      //   let array = []
-      //   Object.keys(rowData.headers).forEach((key) => {
-      //     array.push({ key: key, value: rowData.headers[key] })
-      //   })
-      //   rowData.headers = array
-      // } else {
-      //   rowData.headers = [{ key: '', value: '' }]
-      // }
-
-      // if (!rowData.params) {
-      //   this.infoForm = rowData
-      //   return
-      // }
-
-      // rowData.params.forEach((e) => {
-      //   if (e.defaultValue === null) {
-      //     return
-      //   }
-      //   if (e.type == 2) {
-      //     e.range = e.defaultValue.range
-      //   }
-
-      //   e.defaultValue = e.defaultValue.defaultValue
-      // })
-      // this.infoForm = rowData
     },
     handleDelete(row) {
       this.$confirm(`确认删除模版【${row.name}】?`, '提示', {
