@@ -817,7 +817,6 @@ export default {
       handler(val, old) {
         if (old && old.apiName) {
           this.updateApi = true
-          console.log('xxxxx apiForm', val, old)
         }
       },
       deep: true,
@@ -827,7 +826,6 @@ export default {
       handler(val, old) {
         if (old && old.length > 0) {
           this.updateApi = true
-          console.log('xxxxx paramData', val, old)
         }
       },
       deep: true,
@@ -892,7 +890,6 @@ export default {
       }
     },
     selectItemCommand(command, data) {
-      console.log('sssss', command, data)
       if (command == 'dir') {
         this.addFolder(data)
         return
@@ -948,7 +945,6 @@ export default {
     },
     getBuildParam() {
       serviceApi.getGenerate(this.serviceId).then((res) => {
-        console.log('111', res)
         this.generateForm = res.data
       })
     },
@@ -1160,7 +1156,7 @@ export default {
           this.logVersions.push(params)
         })
         this.isShowLog = true
-        if (this.logVersions.length > 0) {
+        if (!this.logRecordId && this.logVersions.length > 0) {
           this.logRecordId = this.logVersions[0].value
           this.selectVersion(this.logRecordId)
         }
@@ -1178,6 +1174,7 @@ export default {
       this.isShowLog = false
       this.logVersions = []
       this.logForm = {}
+      this.logRecordId = null
       if (this.logInterval) {
         clearInterval(this.logInterval)
       }

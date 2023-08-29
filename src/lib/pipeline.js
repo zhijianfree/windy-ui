@@ -5,7 +5,6 @@ export default {
    * 修改节点
    */
   updateNode(pipeline, node, subNodes) {
-    console.log('before update', pipeline, node, subNodes)
     let pipelineArray = JSON.parse(JSON.stringify(pipeline))
 
     //找到当前修改跟节点以及所有子节点
@@ -26,7 +25,6 @@ export default {
       }
     }
     
-    console.log('pipe======', JSON.parse(JSON.stringify(pipelineArray)))
     let num = 1
     subNodes.forEach((e) => {
       let index = nodeIndex + num
@@ -49,26 +47,21 @@ export default {
       num++
     })
     let reduceCount = currentline.length - subNodes.length
-    console.log('reduceCount  ==== ', reduceCount)
     let arr = []
     node.next.forEach((e) => {
       e.index = e.index - reduceCount
       arr.push(e)
     })
-    console.log('pipe done======', JSON.parse(JSON.stringify(pipelineArray)))
 
     let changeMap = {}
     subNodes.forEach((e) => {
       changeMap[e.actionId] = e.compareResults
     })
 
-    console.log('changeMap', changeMap)
     pipelineArray.forEach((e) => {
       if (e.originData) {
-        console.log('e.originData')
         let config = changeMap[e.originData.actionId]
         if (config) {
-          console.log('e.originData config', config)
           e.originData.compareInfo = config
         }
       }
@@ -146,11 +139,8 @@ export default {
 
       //前置节点指向新节点的子节点
       preNodeArray.forEach((element) => {
-        console.log('前置节点', JSON.parse(JSON.stringify(element)))
-        console.log('前置节点index', pipeline.length - 1)
         element.next.push({ index: pipeline.length - 1, weight: 0 })
       })
-      console.log('node节点index', index)
     })
 
     //最后节点横坐标加一个单位，并且重新加入数组
@@ -165,7 +155,6 @@ export default {
    * 删除节点
    */
   removeNode(pipeline, node) {
-    console.log('1qewqewq', node)
     if (!node.root) {
       return this.removeSingleNode(pipeline, node)
     }
@@ -177,7 +166,6 @@ export default {
 
     //删除节点的后面节点指向坐标只需要减去删除节点长度
     for (let i = pos + 1; i < array.length; i++) {
-      console.log('循环遍历' + i, array[i])
       array[i].next.forEach((e) => {
         e.index = e.index - current.nodes.length - 1
       })
@@ -186,13 +174,10 @@ export default {
     //新数组添加没有改变的节点
     let newArray = []
     for (let i = 0; i < array[pos - 1].id; i++) {
-      console.log('addadada')
       newArray.push(pipeline[i])
     }
-    console.log('new Array', JSON.parse(JSON.stringify(newArray)))
 
     //新数组添加改变的节点
-    console.log('array array', JSON.parse(JSON.stringify(array)))
     let group = null
     for (let i = pos - 1; i < array.length; i++) {
       if (i == pos) {
@@ -240,12 +225,8 @@ export default {
    *
    */
   removeSingleNode(pipeline, node) {
-    console.log('pipe item', pipeline)
-    console.log('start handle single item', node)
-
     let array = this.transformTreeNode(pipeline)
     let pos = node.group
-    console.log('pre item', array[pos - 1])
 
     //删除节点的前一个根结点设置指向下标
     let newArray = []
@@ -256,12 +237,7 @@ export default {
         newArray.push({ index: array[pos].id + num, width: 0 })
       }
     })
-
-    console.log('pre root Node index', pipeline[array[pos - 1].id])
-    console.log('current index', array[pos])
-    console.log('start index', array[pos - 1].id)
     pipeline[array[pos - 1].id].next = newArray
-    console.log('怕热nod index', pipeline[array[pos - 1].id])
 
     //给删除节点的当前根节点和后续根节点的指向下标-1
     pipeline.forEach((e) => {
@@ -288,10 +264,8 @@ export default {
       return
     }
 
-    console.log('before', JSON.parse(JSON.stringify(pipeline)))
     this.changeGroup(pipeline, node, true)
     let array = this.transformTreeNode(pipeline)
-    console.log('流水线', JSON.parse(JSON.stringify(array)))
     let index = array.findIndex((item) => item.id == node.id)
     let preRootNode = array[index - 1]
     let beforTwoNode = array[index - 2]
@@ -310,12 +284,10 @@ export default {
     for (let ind = 0; ind <= preRoot.nodes.length; ind++) {
       preArray.push({ index: num + ind, width: 0 })
     }
-    console.log('计算preArray', preArray)
 
     //node(preRootNode) 下标处理
     preRoot.id = current.id + current.nodes.length + 1
     let curArray = current.next
-    console.log('计算curArray', curArray)
 
     //beforTwoNode nex下标处理
     let startNum = beforTwo.id + beforTwo.nodes.length + 1
@@ -323,11 +295,9 @@ export default {
     for (let index = 0; index <= current.nodes.length; index++) {
       beforTwoArray.push({ index: startNum + index, width: 0 })
     }
-    console.log('beforTwoArray', beforTwoArray)
 
     //挪移pre节点位置
     current.next = preArray
-    console.log('preRoot.id', current.id)
     pipeline[current.id] = current
     for (let i = 0; i < current.nodes.length; i++) {
       pipeline[current.id + i + 1] = current.nodes[i]
@@ -341,7 +311,6 @@ export default {
     }
 
     pipeline[beforTwo.id].next = beforTwoArray
-    console.log('beforTwo.id', beforTwo.id)
 
     this.resetId(pipeline)
     console.log('exchange after', JSON.parse(JSON.stringify(pipeline)))
@@ -361,7 +330,6 @@ export default {
       console.log('已到根结点无法后移')
       return
     }
-    console.log('node', node)
 
     let middleNode = array[pos]
     let leftNode = array[pos - 1]
@@ -421,8 +389,6 @@ export default {
       }
       rootMap[e.group].push(e)
     })
-    console.log('list...', nodes)
-    console.log('map', rootMap)
 
     let pipeline = {
       pipelineId: pipelineForm.pipelineId,
@@ -497,7 +463,6 @@ export default {
       }
       data.push(rootNode)
 
-      // console.log("preNode", preNode, "rootNode", rootNode);
       preNode.next.push({ index: index, weight: 0 })
       index++
       if (e.nodes) {

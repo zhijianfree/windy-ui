@@ -541,7 +541,6 @@ export default {
     },
 
     showNodeLog(node) {
-      console.log('node', node)
       if (!node.originData || !node.originData.actionId) {
         return
       }
@@ -647,7 +646,6 @@ export default {
 
         let that = this
         notify.$el.querySelector('span').onclick = () => {
-          console.log('dddddddd')
           that.showGitConfig = !that.showGitConfig
         }
 
@@ -819,7 +817,6 @@ export default {
 
         this.serviceId = this.pipelines[0].value
         this.getPipelineList()
-        console.log(this.serviceId)
       })
     },
     loopQueryStatus() {

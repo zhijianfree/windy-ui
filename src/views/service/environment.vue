@@ -86,7 +86,6 @@
           <el-radio-group v-model="envForm.envType" @change="selectType">
             <el-radio :label="1">SSH部署</el-radio>
             <el-radio :label="2">K8S部署</el-radio>
-            <el-radio :label="3">Docker部署</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item>
@@ -139,7 +138,6 @@
 
 <script>
 import k8sIcon from '../../assets/k8s.png'
-import dockerIcon from '../../assets/k8s.png'
 import sshIcon from '../../assets/ssh.png'
 import envApi from '../../http/Environment'
 export default {
@@ -208,38 +206,6 @@ export default {
           desc: '请输入部署的Namespace',
         },
       ],
-      dockerParams: [
-        {
-          key: 'dcokerUrl',
-          value: '',
-          name: 'docker镜像仓库',
-          desc: '请输入docker镜像仓库地址',
-        },
-        {
-          key: 'host',
-          value: '',
-          name: '部署服务IP',
-          desc: '请输入访问ssh的IP',
-        },
-        {
-          key: 'port',
-          value: '22',
-          name: '访问端口',
-          desc: '请输入访问ssh的端口',
-        },
-        {
-          key: 'user',
-          value: '',
-          name: 'ssh用户',
-          desc: '请输入访问ssh所使用的用户',
-        },
-        {
-          key: 'password',
-          value: '',
-          name: 'ssh密码',
-          desc: '请输入访问ssh所使用的密码',
-        },
-      ],
       paramsList: [],
     }
   },
@@ -283,10 +249,6 @@ export default {
       if (data.envType == 2) {
         this.setValue(this.k8sParams, params)
         result = this.k8sParams
-      }
-      if (data.envType == 3) {
-        this.setValue(this.dockerParams, params)
-        result = this.sshParams
       }
       return result
     },
@@ -345,10 +307,6 @@ export default {
       if (type == 2) {
         this.paramsList = JSON.parse(JSON.stringify(this.k8sParams))
       }
-
-      if (type == 3) {
-        this.paramsList = JSON.parse(JSON.stringify(this.dockerParams))
-      }
     },
     getEnvs() {
       this.envData = []
@@ -363,9 +321,6 @@ export default {
           }
           if (element.envType == 2) {
             element.img = k8sIcon
-          }
-          if (element.envType == 3) {
-            element.img = dockerIcon
           }
           this.envData.push(element)
         })

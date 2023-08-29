@@ -35,7 +35,6 @@
             <el-table-column prop="nodeName" label="节点名称">
             </el-table-column>
             <el-table-column prop="description" label="描述"> </el-table-column>
-            <el-table-column prop="userId" label="创建人"> </el-table-column>
             <el-table-column prop="createTime" label="创建时间">
               <template slot-scope="scope">
                 {{ scope.row.createTime | dateFormat }}
@@ -104,10 +103,9 @@
             <el-table-column prop="actionName" label="执行点名称">
             </el-table-column>
             <el-table-column prop="description" label="描述"> </el-table-column>
-            <el-table-column prop="userId" label="创建人"> </el-table-column>
-            <el-table-column prop="createTime" label="创建时间">
+            <el-table-column prop="updateTime" label="创建时间">
               <template slot-scope="scope">
-                {{ scope.row.createTime | dateFormat }}
+                {{ scope.row.updateTime | dateFormat }}
               </template>
             </el-table-column>
             <el-table-column fixed="right" label="操作">
@@ -120,6 +118,7 @@
                   >编辑</el-button
                 >
                 <el-button
+                  v-if="scope.row.executeType == 'HTTP'"
                   @click="removeAction(scope.row)"
                   slot="reference"
                   type="danger"
@@ -222,13 +221,13 @@
         </el-form-item>
         <el-form-item label="执行类型" prop="executeType">
           <el-radio-group v-model="executeType" @change="chooseExecuteType">
-            <el-radio label="HTTP">默认</el-radio>
-            <el-radio label="BUILD">构建</el-radio>
-            <el-radio label="WAIT">等待</el-radio>
-            <el-radio label="DEPLOY">部署</el-radio>
-            <el-radio label="TEST">用例测试</el-radio>
-            <el-radio label="APPROVAL">人工卡点</el-radio>
-            <el-radio label="MERGE">合并master</el-radio>
+            <el-radio label="HTTP" :disabled="isEditAction">默认</el-radio>
+            <el-radio label="BUILD" disabled>构建</el-radio>
+            <el-radio label="WAIT" disabled>等待</el-radio>
+            <el-radio label="DEPLOY" disabled>部署</el-radio>
+            <el-radio label="TEST" disabled>用例测试</el-radio>
+            <el-radio label="APPROVAL" disabled>人工卡点</el-radio>
+            <el-radio label="MERGE" disabled>合并master</el-radio>
           </el-radio-group>
         </el-form-item>
         <HttpAct

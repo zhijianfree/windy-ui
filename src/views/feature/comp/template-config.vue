@@ -197,7 +197,6 @@ export default {
     config: {
       handler(val) {
         let rowData = JSON.parse(JSON.stringify(val))
-        console.log('oooo', rowData)
         if (rowData.headers) {
           let array = []
           Object.keys(rowData.headers).forEach((key) => {
@@ -220,10 +219,8 @@ export default {
           if (e.type == 2) {
             e.range = e.defaultValue.range
           }
-          console.log('进来了')
           e.initValue = e.defaultValue.defaultValue
         })
-        console.log('ddddd', JSON.parse(JSON.stringify(rowData)))
         this.infoForm = rowData
       },
       deep: true,
@@ -315,7 +312,6 @@ export default {
         })
 
         let headers = {}
-        console.log('ddddd', JSON.parse(JSON.stringify(requestParam.headers)))
         if (this.headerList.length > 0) {
           this.headerList.forEach((e) => {
             if (this.isEmpty(e.key) || this.isEmpty(e.value)) {
