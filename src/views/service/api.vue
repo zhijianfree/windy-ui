@@ -659,7 +659,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      title="构建Maven版本"
+      title="构建Maven二方包"
       :visible.sync="showGenerateApi"
       @open="getBuildParam"
       width="60%"
@@ -674,17 +674,26 @@
         <el-form-item label="包路径" prop="packageName">
           <el-input
             v-model="generateForm.packageName"
-            placeholder="例如:com.zj.windy"
+            placeholder="请输入二方包路径，例如:com.zj.windy"
           ></el-input>
         </el-form-item>
         <el-form-item label="GroupId" prop="groupId">
-          <el-input v-model="generateForm.groupId"></el-input>
+          <el-input
+            v-model="generateForm.groupId"
+            placeholder="请输入GroupId"
+          ></el-input>
         </el-form-item>
         <el-form-item label="ArtifactId" prop="artifactId">
-          <el-input v-model="generateForm.artifactId"></el-input>
+          <el-input
+            v-model="generateForm.artifactId"
+            placeholder="请输入ArtifactId"
+          ></el-input>
         </el-form-item>
         <el-form-item label="Version" prop="version">
-          <el-input v-model="generateForm.version"></el-input>
+          <el-input
+            v-model="generateForm.version"
+            placeholder="请输入二方包版本号"
+          ></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -699,7 +708,7 @@
     </el-dialog>
     <!-- 构建二方包日志开始 -->
     <el-dialog
-      title="节点日志"
+      title="二方包构建记录"
       :visible.sync="isShowLog"
       width="70%"
       :before-close="closeLog"
@@ -945,6 +954,9 @@ export default {
     },
     getBuildParam() {
       serviceApi.getGenerate(this.serviceId).then((res) => {
+        if (!res.data) {
+          return
+        }
         this.generateForm = res.data
       })
     },
