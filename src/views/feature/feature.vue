@@ -66,7 +66,6 @@
             node-key="featureId"
             @node-click="treeNodeClick"
             :data="userCase"
-            default-expand-all
             :filter-node-method="filterNode"
             ref="tree"
           >
