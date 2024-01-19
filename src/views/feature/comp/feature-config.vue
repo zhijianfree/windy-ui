@@ -188,17 +188,22 @@
                   </draggable>
                 </el-collapse-item>
                 <el-collapse-item title="业务模版" name="2">
+                  <div>
+                    <el-input
+                      size="mini"
+                      clearable
+                      v-model="filterName"
+                      placeholder="输入模版名称过滤"
+                    />
+                  </div>
                   <draggable
                     @start="startDrag"
-                    style="height: 500px"
+                    class="template-list"
                     :list="featureItemList"
                     :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
                   >
-                    <div
-                      v-for="(element, index) in featureItemList"
-                      :key="index"
-                    >
+                    <div v-for="(element, index) in templateList" :key="index">
                       <div
                         class="feature-item"
                         v-if="element.templateType == 1"
@@ -261,6 +266,13 @@ export default {
       }
       return flag
     },
+    templateList() {
+      return this.featureItemList.filter(
+        (data) =>
+          !this.filterName ||
+          data.name.toLowerCase().includes(this.filterName.toLowerCase())
+      )
+    },
   },
   data() {
     return {
@@ -274,6 +286,7 @@ export default {
       uuid: '',
       isActive: false,
       featureId: '',
+      filterName: '',
     }
   },
   methods: {
@@ -390,13 +403,13 @@ export default {
       let array = []
       this.resetOrder()
       this.allPoints.forEach((e) => {
-        console.log('invokeType', e.invokeType)
         let item = {
           method: e.method,
           name: e.name,
           invokeType: e.invokeType,
           description: e.description,
           service: e.service,
+          headers: e.headers,
         }
 
         if (e.executeType != 1) {
@@ -427,6 +440,7 @@ export default {
       featureApi.updateFeature(data).then(() => {
         this.$message.success('保存成功')
         this.isEdit = false
+        this.getExecutePoint()
       })
     },
     exchangeEditStatus(item, isUpdateText) {
@@ -444,8 +458,8 @@ export default {
       this.isEdit = !this.isEdit
     },
     addItem(e) {
-      this.displayList = JSON.parse(JSON.stringify(this.displayList))
-      let item = this.displayList[e.newIndex]
+      let array = JSON.parse(JSON.stringify(this.templateList))
+      let item = array[e.oldIndex]
       item.isActive = true
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
@@ -635,5 +649,9 @@ export default {
     linear-gradient(hsla(0, 0%, 100%, 0.3) 1px, transparent 0),
     linear-gradient(90deg, hsla(0, 0%, 100%, 0.3) 1px, transparent 0);
   background-size: 75px 75px, 75px 75px, 15px 15px, 15px 15px;
+}
+.template-list {
+  height: 400px;
+  overflow-y: scroll;
 }
 </style>

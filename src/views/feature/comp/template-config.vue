@@ -196,8 +196,9 @@ export default {
   watch: {
     config: {
       handler(val) {
+        console.log('wwwww', val)
         let rowData = JSON.parse(JSON.stringify(val))
-        if (rowData.headers) {
+        if (rowData.headers && Object.keys(rowData.headers).length > 0) {
           let array = []
           Object.keys(rowData.headers).forEach((key) => {
             array.push({ key: key, value: rowData.headers[key] })
@@ -207,8 +208,9 @@ export default {
           this.headerList = [{ key: '', value: '' }]
         }
 
-        if (!rowData.params) {
+        if (!rowData.params || rowData.params.length == 0) {
           this.infoForm = rowData
+          this.infoForm.params = [{}]
           return
         }
 
@@ -298,6 +300,8 @@ export default {
         }
 
         let requestParam = JSON.parse(JSON.stringify(this.infoForm))
+
+        let array = []
         requestParam.params.forEach((e) => {
           e.defaultValue = {
             defaultValue: e.initValue ? e.initValue : '',
@@ -309,7 +313,12 @@ export default {
           if (e.type == 1 && this.isEmpty(e.value)) {
             e.defaultValue.defaultValue = '{}'
           }
+
+          if (e.paramKey) {
+            array.push(e)
+          }
         })
+        requestParam.params = array
 
         let headers = {}
         if (this.headerList.length > 0) {
