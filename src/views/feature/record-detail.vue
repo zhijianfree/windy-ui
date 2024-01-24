@@ -21,8 +21,8 @@
         <el-tree
           node-key="featureId"
           @node-click="treeNodeClick"
+          :default-expanded-keys="errorList"
           :data="recordData"
-          default-expand-all
           :filter-node-method="filterNode"
           :props="{
             children: 'children',
@@ -30,22 +30,56 @@
           }"
           ref="tree"
         >
+          <span slot-scope="{ node, data }">
+            <span class="custom-tree-node" :style="{ color: data.status }">{{
+              node.label
+            }}</span>
+          </span>
         </el-tree>
       </el-col>
       <el-col :span="18">
-        <div class="drawer-content">
-          <div class="record-title">执行历史记录</div>
-          <el-tabs v-model="activeName">
-            <el-tab-pane label="预置" name="preset">
-              <PanelList :list="presetList" />
-            </el-tab-pane>
-            <el-tab-pane label="执行" name="execute">
-              <PanelList :list="executeList" />
-            </el-tab-pane>
-            <el-tab-pane label="清理" name="clean">
-              <PanelList :list="cleanList" />
-            </el-tab-pane>
-          </el-tabs>
+        <el-empty
+          v-if="isShowEmpty"
+          description="请在左侧点击详细用例查看详情"
+        ></el-empty>
+        <div v-else class="drawer-content">
+          <div class="record-title">
+            【{{ chooseFeature.featureName }}】执行历史记录
+          </div>
+          <div class="execute-detail">
+            <el-tabs v-model="activeName">
+              <el-tab-pane name="preset">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!presetError"
+                  >预置</el-badge
+                >
+                <PanelList :list="presetList" />
+              </el-tab-pane>
+              <el-tab-pane name="execute">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!executeError"
+                  >执行</el-badge
+                >
+                <PanelList :list="executeList" />
+              </el-tab-pane>
+              <el-tab-pane name="clean">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!cleanError"
+                  >清理</el-badge
+                >
+                <PanelList :list="cleanList" />
+              </el-tab-pane>
+            </el-tabs>
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -84,6 +118,12 @@ export default {
       cleanList: [],
       jsonData: [],
       dialogVisible: false,
+      chooseFeature: {},
+      isShowEmpty: true,
+      errorList: [],
+      presetError: false,
+      executeError: false,
+      cleanError: false,
     }
   },
   watch: {
@@ -97,8 +137,9 @@ export default {
     },
     treeNodeClick(data) {
       this.resultList = []
-
       this.activeName = 'preset'
+      this.chooseFeature = data
+      this.isShowEmpty = false
       featureApi.getExecuteRecords(data.historyId).then((res) => {
         this.resultList = res.data
         this.filterRecord()
@@ -111,12 +152,21 @@ export default {
       this.resultList.forEach((e) => {
         if (1 == e.testStage) {
           this.presetList.push(e)
+          if (e.status != 1) {
+            this.presetError = true
+          }
         }
         if (2 == e.testStage) {
           this.executeList.push(e)
+          if (e.status != 1) {
+            this.executeError = true
+          }
         }
         if (3 == e.testStage) {
           this.cleanList.push(e)
+          if (e.status != 1) {
+            this.cleanError = true
+          }
         }
       })
     },
@@ -125,8 +175,28 @@ export default {
       return data.label.indexOf(value) !== -1
     },
     getTaskHistories() {
-      taskApi.getTaskHistories(this.recordId).then((res) => {
-        this.recordData = res.data
+      this.recordData = []
+      taskApi.getTaskHistoryTree(this.recordId).then((res) => {
+        let list = res.data
+        this.displayTreeNode(list)
+        console.log(this.errorList)
+        this.recordData = list
+      })
+    },
+    displayTreeNode(list) {
+      list.forEach((e) => {
+        if (e.executeStatus) {
+          e.status = '#67C23A'
+          if (e.executeStatus != 1) {
+            e.status = '#F56C6C'
+            this.errorList = [e.featureId]
+            this.treeNodeClick(e)
+          }
+        }
+
+        if (e.children && e.children.length > 0) {
+          this.displayTreeNode(e.children)
+        }
       })
     },
     showRecordConfig() {
@@ -164,5 +234,16 @@ export default {
 }
 .record-title {
   font-weight: 800;
+}
+.execute-detail {
+  margin-top: 20px;
+}
+.custom-tree-node {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: 14px;
+}
+.tab-label {
+  margin-top: 10px;
 }
 </style>

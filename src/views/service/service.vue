@@ -2,7 +2,7 @@
   <div class="all">
     <!-- 查询条件开始 -->
     <div>
-      <el-form :inline="true" size="mini">
+      <el-form :inline="true" size="mini" @submit.native.prevent>
         <el-form-item label="服务名称">
           <el-input
             @input="startQuery"

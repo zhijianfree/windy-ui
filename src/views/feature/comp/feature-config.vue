@@ -519,6 +519,7 @@ export default {
             service: executePoint.service,
             description: e.description,
             invokeType: executePoint.invokeType,
+            headers: executePoint.headers,
             params: data,
             executePoints: executePoint.executePoints,
             compareDefine: e.compareDefine,
@@ -652,6 +653,7 @@ export default {
 }
 .template-list {
   height: 400px;
+  padding-bottom: 30px;
   overflow-y: scroll;
 }
 </style>

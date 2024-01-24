@@ -8,6 +8,7 @@
             :model="queryForm"
             size="mini"
             class="demo-form-inline"
+            @submit.native.prevent
           >
             <el-form-item label="服务列表">
               <el-select

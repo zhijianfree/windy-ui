@@ -313,6 +313,24 @@
           <span>{{ item }}</span>
         </li>
       </ul>
+      <div v-if="recordList && recordList.length > 0">
+        <el-table :data="recordList" size="mini" height="400px">
+          <el-table-column prop="featureName" label="用例名称">
+          </el-table-column>
+          <el-table-column prop="executeStatus" label="用例状态">
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.executeStatus | statusFormat">{{
+                scope.row.executeStatus | statusName
+              }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="执行时间">
+            <template slot-scope="scope">
+              {{ scope.row.createTime | dateFormat }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-dialog>
     <!-- 节点日志结束 -->
 
@@ -358,6 +376,7 @@ import PipelineConfig from './comp/pipeline-config.vue'
 import pipelineApi from '../../http/Pipeline'
 import publishApi from '../../http/Publish'
 import serviceApi from '../../http/Service'
+import taskApi from '../../http/Task'
 import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
 import utils from '../../lib/pipeline'
@@ -395,6 +414,7 @@ export default {
       approvalNode: {},
       showApproval: false,
       bindGit: false,
+      recordList: [],
     }
   },
   methods: {
@@ -561,6 +581,8 @@ export default {
           return
         }
 
+        console.log('ddd', res)
+        let nodeType = res.data.executeType
         historyApi.getPipelienStatus(this.history.historyId).then((res) => {
           res.data.nodeStatusList.forEach((e) => {
             if (e.nodeId == node.nodeId) {
@@ -568,8 +590,21 @@ export default {
               this.logForm.status = e.status
               this.logForm.messageList = e.message
               this.isShowNodeLog = true
+
+              if (nodeType == 'TEST') {
+                this.getTaskHistories(e.recordId)
+              }
             }
           })
+        })
+      })
+    },
+    getTaskHistories(triggerId) {
+      taskApi.getTaskRecordByTriggerId(triggerId).then((res) => {
+        let recordId = res.data.recordId
+        taskApi.getTaskHistories(recordId).then((res) => {
+          console.log('records', res)
+          this.recordList = res.data
         })
       })
     },

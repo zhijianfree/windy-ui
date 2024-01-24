@@ -1,7 +1,12 @@
 <template>
   <div class="content">
     <!-- 表单查询开始 -->
-    <el-form :inline="true" :model="queryForm" size="mini">
+    <el-form
+      :inline="true"
+      :model="queryForm"
+      size="mini"
+      @submit.native.prevent
+    >
       <el-form-item label="任务名称">
         <el-input
           @input="startQuery"
@@ -444,7 +449,7 @@ export default {
     deleteTaskRecord(row) {
       taskApi.deleteTaskRecord(row.recordId).then(() => {
         this.$message.success('删除成功')
-        this.getTaskRecords(1)
+        this.getTaskRecords(this.recordCurrentPage)
       })
     },
     dateFormat(time) {

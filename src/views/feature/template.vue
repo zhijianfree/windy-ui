@@ -5,6 +5,7 @@
       :model="queryForm"
       size="small"
       class="demo-form-inline"
+      @submit.native.prevent
     >
       <el-form-item label="模版名称">
         <el-input

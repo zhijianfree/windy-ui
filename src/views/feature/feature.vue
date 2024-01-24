@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div class="title">
-      <el-page-header @back="goBack" :content="caseName"> </el-page-header>
-    </div>
     <el-row>
       <el-col :span="5">
+        <div class="title">
+          <el-page-header @back="goBack" :content="caseName"> </el-page-header>
+        </div>
         <!-- 用例列表开始 -->
         <div class="api-list">
           <div class="service-panel">
@@ -65,6 +65,7 @@
             show-checkbox
             node-key="featureId"
             @node-click="treeNodeClick"
+            :default-expanded-keys="[selectFeatureId]"
             :data="userCase"
             :filter-node-method="filterNode"
             ref="tree"
