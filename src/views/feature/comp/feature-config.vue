@@ -37,10 +37,23 @@
                       :name="executePoint.randomId"
                       class="content-item"
                     >
-                      <div class="content-item-title" :key="uuid">
+                      <div
+                        class="content-item-title"
+                        :key="uuid"
+                        @dblclick="closeDiv(executePoint)"
+                      >
                         <el-row :gutter="10">
                           <el-col :span="executePoint.editDesc ? 6 : 13">
-                            {{ executePoint.description }}
+                            <span
+                              @dblclick="
+                                () => {
+                                  if (isEdit && !executePoint.editDesc) {
+                                    exchangeEditStatus(executePoint)
+                                  }
+                                }
+                              "
+                              >{{ executePoint.description }}
+                            </span>
                             <i
                               class="el-icon-document-copy"
                               @click="copyExecutePoint(executePoint)"
@@ -532,7 +545,7 @@ export default {
           }
           this.allPoints.push(item)
         })
-        this.menuType = '1'
+        this.menuType = '2'
         this.displayExepoints()
       })
 

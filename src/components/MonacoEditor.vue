@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div>
+      <el-button @click="dd">2222</el-button>
+    </div>
     <div ref="container" class="monaco-editor"></div>
   </div>
 </template>
@@ -34,6 +37,9 @@ export default {
     },
   },
   methods: {
+    dd() {
+      this.monacoEditor.trigger('anyString', 'editor.action.formatDocument')
+    },
     initEditer() {
       let self = this
       self.$refs.container.innerHTML = ''

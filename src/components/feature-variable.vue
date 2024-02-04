@@ -21,7 +21,8 @@
             @input="notifyData"
             v-model="item.variableValue"
             placeholder="请输入值"
-          ></el-input>
+          >
+          </el-input>
         </el-col>
         <el-col :span="2">
           <div

@@ -299,6 +299,7 @@
       title="节点日志"
       :visible.sync="isShowNodeLog"
       :destroy-on-close="true"
+      @close="closeNodeLog"
       width="70%"
     >
       <span
@@ -314,10 +315,23 @@
         </li>
       </ul>
       <div v-if="recordList && recordList.length > 0">
+        <el-button type="primary" size="mini" @click="openTaskDetail"
+          >查看任务详情</el-button
+        >
         <el-table :data="recordList" size="mini" height="400px">
           <el-table-column prop="featureName" label="用例名称">
           </el-table-column>
-          <el-table-column prop="executeStatus" label="用例状态">
+          <el-table-column
+            prop="executeStatus"
+            label="用例状态"
+            :filters="[
+              { text: '成功', value: 1 },
+              { text: '失败', value: 2 },
+              { text: '超时', value: 3 },
+              { text: '运行中', value: 4 },
+            ]"
+            :filter-method="filterStatus"
+          >
             <template slot-scope="scope">
               <el-tag :type="scope.row.executeStatus | statusFormat">{{
                 scope.row.executeStatus | statusName
@@ -415,9 +429,17 @@ export default {
       showApproval: false,
       bindGit: false,
       recordList: [],
+      taskRecordId: '',
     }
   },
   methods: {
+    closeNodeLog() {
+      this.recordList = []
+      this.taskRecordId = ''
+    },
+    filterStatus(value, row) {
+      return row.executeStatus === value
+    },
     executeWay(executeType) {
       let label = '-'
       switch (executeType) {
@@ -601,12 +623,22 @@ export default {
     },
     getTaskHistories(triggerId) {
       taskApi.getTaskRecordByTriggerId(triggerId).then((res) => {
-        let recordId = res.data.recordId
-        taskApi.getTaskHistories(recordId).then((res) => {
-          console.log('records', res)
+        this.taskRecordId = res.data.recordId
+        taskApi.getTaskHistories(this.taskRecordId).then((res) => {
           this.recordList = res.data
         })
       })
+    },
+    openTaskDetail() {
+      let array = window.location.href.split('//')
+      let domain = array[1].split('/')[0]
+      console.log(
+        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`
+      )
+      window.open(
+        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`,
+        '_blank'
+      )
     },
     getPrenode(arr, index) {
       let tmp = {}

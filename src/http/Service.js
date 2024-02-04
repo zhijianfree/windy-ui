@@ -80,7 +80,7 @@ export default {
   },
   getApi(apiId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops//service/resources/${apiId}`
+      let url = `/v1/devops/service/resources/${apiId}`
       http
         .get(url)
         .then((res) => {
@@ -133,6 +133,19 @@ export default {
   createApi(api) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/service/resources`
+      http
+        .post(url, api)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  importApi(api) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/api/import`
       http
         .post(url, api)
         .then((res) => {

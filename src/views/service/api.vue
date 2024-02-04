@@ -750,6 +750,33 @@
       </div>
     </el-dialog>
     <!-- 构建二方包结束 -->
+    <el-dialog title="三方API导入" :visible.sync="showImportDialog">
+      <el-form v-model="importForm" size="mini" :rules="importRule">
+        <el-form-item label="导入类型" prop="type">
+          <el-select v-model="importForm.type" placeholder="请选择">
+            <el-option label="Yapi-JSON文件" value="Yapi"> </el-option>
+            <el-option label="Postman文件" value="Postman"> </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="文件上传">
+          <el-upload
+            drag
+            action="#"
+            :auto-upload="true"
+            :http-request="httpRequest"
+          >
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">
+              将文件拖到此处，或<em>点击上传</em>
+            </div>
+            <div class="el-upload__tip" slot="tip">
+              目前只支持Yapi、Postman文件导入
+            </div>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -816,6 +843,13 @@ export default {
       selectNodes: [],
       isLeaving: false,
       updateApi: false,
+      showImportDialog: true,
+      importForm: {},
+      importRule: {
+        type: [
+          { required: true, message: '请选择导入文件类型', trigger: 'blur' },
+        ],
+      },
     }
   },
   watch: {
@@ -842,6 +876,19 @@ export default {
     },
   },
   methods: {
+    httpRequest(param) {
+      const formData = new FormData()
+      formData.append(`file`, param.file)
+      formData.append(`type`, this.importForm.type)
+      formData.append(`serviceId`, this.serviceId)
+      serviceApi.importApi(formData).then((res) => {
+        if (res.data) {
+          this.$message.success('导入api成功')
+        } else {
+          this.$message.error('导入api失败')
+        }
+      })
+    },
     allowApiDrop(draggingNode, targetNode, type) {
       let resource = targetNode.data
       if (type == 'inner' && resource.isApi) {

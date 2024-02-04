@@ -21,7 +21,8 @@
             @input="notifyData"
             v-model="item.keyValue"
             placeholder="请输入值"
-          ></el-input>
+          >
+          </el-input>
         </el-col>
         <el-col :span="3">
           <div v-if="isEdit" class="op-icon">
@@ -58,7 +59,17 @@
       v-model="data.value"
       @input="notifyData"
       :placeholder="data.description"
+    >
+      <el-button
+        slot="append"
+        @click="diaplayString(data.value)"
+        icon="el-icon-full-screen"
+      ></el-button
     ></el-input>
+
+    <el-dialog title="数据编辑" :visible.sync="showDetail">
+      <!-- <JsonEditorVue v-model="jsonStr" /> -->
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -87,9 +98,16 @@ export default {
       },
       paramList: [],
       uniqId: '',
+      jsonStr: '',
+      showDetail: false,
     }
   },
   methods: {
+    diaplayString(str) {
+      this.showDetail = true
+      this.jsonStr = str
+      console.log(this.$refs['editor'])
+    },
     notifyData() {
       let data = this.data
       if (this.data.type == 1) {
