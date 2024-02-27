@@ -169,6 +169,19 @@ export default {
         })
     })
   },
+  generateTemplate(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/service/resource/templates`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getGenerate(serviceId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/service/${serviceId}/generate`

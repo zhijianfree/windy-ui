@@ -170,7 +170,7 @@
               name="config"
               v-if="infoForm.featureType == 1"
             >
-              <FeatureConfig :feature="selectFeatureId" />
+              <FeatureConfig :feature="selectFeatureId" :service="serviceId" />
             </el-tab-pane>
             <!-- 用例编写结束 -->
             <el-tab-pane
@@ -399,7 +399,7 @@ export default {
       userCase: [],
       showDebugDialog: false,
       isConnect: false,
-      service: '',
+      serviceId: '',
       showFeatureDialog: false,
       featureForm: {},
       isEditFeature: false,
@@ -665,13 +665,14 @@ export default {
     getCaseDetail() {
       testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
         this.caseName = res.data.testCaseName
+        this.serviceId = res.data.serviceId
       })
     },
   },
   created() {
     this.caseId = this.$route.query.caseId
-    this.requestCaseFeatures(this.caseId)
     this.getCaseDetail()
+    this.requestCaseFeatures(this.caseId)
   },
 }
 </script>

@@ -247,6 +247,7 @@ import featureApi from '../../../http/Feature'
 import collapse from '../../../lib/collapse'
 export default {
   props: {
+    service: String,
     feature: String,
   },
   components: {
@@ -259,6 +260,13 @@ export default {
     feature: {
       handler(val) {
         this.featureId = val
+      },
+      deep: true,
+      immediate: true,
+    },
+    service: {
+      handler(val) {
+        this.serviceId = val
         this.getExecutePoint()
       },
       deep: true,
@@ -300,6 +308,7 @@ export default {
       isActive: false,
       featureId: '',
       filterName: '',
+      serviceId: '',
     }
   },
   methods: {
@@ -549,7 +558,7 @@ export default {
         this.displayExepoints()
       })
 
-      featureApi.getFeatureTemplates().then((res) => {
+      featureApi.getServiceTemplates(this.serviceId).then((res) => {
         let array = res.data
         array.forEach((e) => {
           e.executeType = e.templateType

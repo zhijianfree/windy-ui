@@ -3,10 +3,25 @@
     <el-form
       :inline="true"
       :model="queryForm"
-      size="small"
+      size="mini"
       class="demo-form-inline"
       @submit.native.prevent
     >
+      <el-form-item label="服务列表">
+        <el-select
+          v-model="serviceId"
+          size="mini"
+          @change="selectService"
+          placeholder="选择服务"
+        >
+          <el-option
+            v-for="(item, index) in serviceList"
+            :key="index"
+            :label="item.serviceName"
+            :value="item.serviceId"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="模版名称">
         <el-input
           clearable
@@ -23,13 +38,19 @@
           type="primary"
           icon="el-icon-circle-plus-outline"
           @click="startCreate"
-          >新增模版</el-button
+          >手动创建模版</el-button
         >
         <el-button
           type="primary"
           icon="el-icon-upload"
           @click="showUploadDialog = !showUploadDialog"
           >上传模版文件</el-button
+        >
+        <el-button
+          type="primary"
+          icon="el-icon-upload"
+          @click="triggerApiDialog"
+          >Api生成模版</el-button
         >
       </el-form-item>
     </el-form>
@@ -43,10 +64,7 @@
         </template>
       </el-table-column>
       <el-table-column align="left" label="操作">
-        <template
-          slot-scope="scope"
-          v-if="scope.row.templateType == 1 || scope.row.templateType == 3"
-        >
+        <template slot-scope="scope">
           <el-button
             type="primary"
             size="mini"
@@ -60,7 +78,6 @@
           <el-button
             size="mini"
             type="danger"
-            v-if="scope.row.templateType == 3"
             plain
             @click="handleDelete(scope.row)"
             >删除</el-button
@@ -133,6 +150,7 @@
               {{ item.name }} - {{ item.description }}
             </template>
             <TemplateConfig
+              :isEdit="isEdit"
               :config="item"
               @dataChange="uploadChange($event, index)"
             />
@@ -148,10 +166,128 @@
       </span>
     </el-dialog>
     <!-- 文件上传结束 -->
+    <el-dialog :visible.sync="showAPIDialog" title="API生成模版" width="60%">
+      <div v-if="!previewData || previewData.length < 1">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <!-- api列表开始 -->
+            <el-scrollbar style="height: 100%">
+              <div class="api-list">
+                <div class="api-title">「{{ chooseService }}」 接口列表</div>
+                <div class="filter">
+                  <el-input
+                    v-model="filterText"
+                    size="mini"
+                    clearable
+                    placeholder="输入api名称过滤"
+                  ></el-input>
+                </div>
+                <el-tree
+                  :data="apiTreeData"
+                  show-checkbox
+                  :filter-node-method="filterNode"
+                  :props="apiProps"
+                  @check-change="selectTreeNode"
+                  ref="apiTree"
+                >
+                  <div class="tree-node" slot-scope="{ node, data }">
+                    <i
+                      v-if="data.apiType == 0"
+                      class="el-icon-folder-opened folder-icon"
+                    />
+                    <span class="api-name">{{ node.label }}</span>
+                  </div>
+                </el-tree>
+              </div>
+            </el-scrollbar>
+            <!-- api列表结束 -->
+          </el-col>
+          <el-col :span="16">
+            <div class="api-title">生成配置</div>
+            <el-form v-model="generateForm" label-width="80px" size="mini">
+              <el-form-item label="是否覆盖"
+                ><el-switch v-model="generateForm.cover" active-color="#13ce66">
+                </el-switch>
+              </el-form-item>
+              <el-form-item label="调用方式">
+                <el-radio-group v-model="generateForm.invoke">
+                  <el-radio :label="2">HTTP调用</el-radio>
+                  <el-radio :label="1">本地方法调用</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="类名" v-if="generateForm.invoke == 1">
+                <el-input
+                  v-model="generateForm.className"
+                  placeholder="请输入调用的类名"
+                />
+              </el-form-item>
+              <el-form-item label="方法名" v-if="generateForm.invoke == 1">
+                <el-input
+                  v-model="generateForm.methodName"
+                  placeholder="请输入调用的类的方法名"
+                />
+              </el-form-item>
+              <el-alert
+                v-if="generateForm.invoke == 1"
+                title="请注意方法参数顺序"
+                type="error"
+                :closable="false"
+                description="API生成模版参数是根据URL、Method、Header、Body顺序作为方法入参，模版执行也是按照这个顺序传入参数.请在编写模版代码时按照这个顺序接收参数！"
+                show-icon
+              >
+              </el-alert>
+            </el-form>
+          </el-col>
+        </el-row>
+      </div>
+      <div v-else>
+        <h3>模版预览</h3>
+        <el-table :data="previewData" size="mini" style="width: 100%">
+          <el-table-column prop="name" label="模版名称"> </el-table-column>
+          <el-table-column prop="description" label="模版描述">
+          </el-table-column>
+          <el-table-column align="left" label="操作">
+            <template slot-scope="scope">
+              <el-button size="mini" @click="showTemplate(scope.row)" plain
+                >查看</el-button
+              >
+              <el-button
+                size="mini"
+                type="danger"
+                @click="deletePreviewTemp(scope.$index)"
+                plain
+                >删除</el-button
+              >
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          @click="nextStep"
+          v-if="previewData.length < 1"
+          size="mini"
+          >下一步</el-button
+        >
+        <el-button type="primary" @click="upStep" v-else size="mini"
+          >上一步</el-button
+        >
+        <el-button @click="closeApiGenerate" size="mini">取 消</el-button>
+        <el-button
+          type="primary"
+          v-if="previewData.length > 0"
+          size="mini"
+          @click="saveTemplates"
+          >生成模版</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 import templateApi from '../../http/Template'
+import serviceApi from '../../http/Service'
 import TemplateConfig from './comp/template-config.vue'
 export default {
   components: {
@@ -170,9 +306,137 @@ export default {
       showUploadDialog: false,
       parseData: [],
       pluginId: '',
+      serviceId: '',
+      showAPIDialog: false,
+      apiTreeData: [],
+      apiProps: {
+        children: 'children',
+        label: 'apiName',
+      },
+      selectNodes: [],
+      generateForm: {},
+      filterText: '',
+      chooseService: '',
+      previewData: [],
     }
   },
+  watch: {
+    filterText(val) {
+      this.$refs.apiTree.filter(val)
+    },
+  },
   methods: {
+    saveTemplates() {
+      let data = {
+        templates: this.previewData,
+      }
+      templateApi.batchCreateTemplate(data).then((res) => {
+        if (res.data) {
+          this.$message.success('添加模版成功')
+          this.closeApiGenerate()
+        } else {
+          this.$message.error('添加模版失败')
+        }
+      })
+    },
+    nextStep() {
+      if (this.selectNodes.length < 1) {
+        this.$message.warning('请先选择生成的api')
+        return
+      }
+      this.genarateApi()
+    },
+    upStep() {
+      this.previewData = []
+    },
+    deletePreviewTemp(index) {
+      this.previewData.splice(index, 1)
+    },
+    showTemplate(row) {
+      this.isEdit = false
+      this.infoForm = row
+      this.showDialog = true
+    },
+    genarateApi() {
+      serviceApi
+        .generateTemplate({
+          serviceId: this.serviceId,
+          apiIds: this.selectNodes,
+        })
+        .then((res) => {
+          if (res.data.length > 0) {
+            this.previewData = res.data
+          }
+        })
+    },
+    closeApiGenerate() {
+      this.getTemplatePage(1)
+      this.showAPIDialog = false
+      this.generateForm = {}
+    },
+    expendAllNode() {
+      let allNodes = this.$refs['apiTree'].store._getAllNodes()
+      console.log('aaaaaa', allNodes)
+      for (let i = 0; i < allNodes.length; i++) {
+        this.$refs['apiTree'].store._getAllNodes()[i].expanded = true
+      }
+    },
+    triggerApiDialog() {
+      this.showAPIDialog = !this.showAPIDialog
+      this.serviceList.forEach((e) => {
+        if (e.serviceId == this.serviceId) {
+          this.chooseService = e.serviceName
+        }
+      })
+      this.getServiceApi()
+    },
+    selectTreeNode(data, checked) {
+      if (checked) {
+        this.selectNodes.push(data.apiId)
+      } else {
+        let index = this.selectNodes.indexOf(data.apiId)
+        if (index != -1) {
+          this.selectNodes.splice(index, 1)
+        }
+      }
+    },
+    getServiceApi() {
+      serviceApi.getApiList(this.serviceId).then((res) => {
+        this.apiTreeData = this.buildTree(res.data)
+        this.expendAllNode()
+      })
+    },
+    buildTree(data, parentId = null) {
+      let tree = []
+      for (let item of data) {
+        if (item.parentId === parentId) {
+          let children = this.buildTree(data, item.apiId)
+          if (children.length > 0) {
+            item.children = children
+          }
+          if (!item.children) {
+            item.children = []
+          }
+          tree.push(item)
+        }
+      }
+      return tree
+    },
+    filterNode(value, data) {
+      if (!value) return true
+      return data.apiName.indexOf(value) !== -1
+    },
+    selectService() {
+      this.getTemplatePage(1)
+    },
+    getServices() {
+      this.serviceList = []
+      serviceApi.getServices().then((res) => {
+        this.serviceList = res.data
+        this.serviceId = this.serviceList[0].serviceId
+        this.selectService()
+      })
+    },
     deletePlugin() {
       templateApi.deletePlugin(this.pluginId).then((res) => {
         if (res.data) {
@@ -208,6 +472,7 @@ export default {
     httpRequest(param) {
       const formData = new FormData()
       formData.append(`file`, param.file)
+      formData.append('serviceId', this.serviceId)
       templateApi.upload(formData).then((res) => {
         if (res.data) {
           this.$message.success('上传文件成功')
@@ -236,18 +501,20 @@ export default {
         name = ''
       }
 
-      templateApi.getTemplatePage(page, 10, name).then((res) => {
-        this.templateData = res.data.data
-        this.totalSize = res.data.total
-      })
+      templateApi
+        .getTemplatePage(this.serviceId, page, 10, name)
+        .then((res) => {
+          this.templateData = res.data.data
+          this.totalSize = res.data.total
+        })
     },
     startQuery() {
       this.getTemplatePage(1)
     },
     startCreate() {
-      this.isEdit = false
+      this.isEdit = true
       this.showDialog = !this.showDialog
-      this.dialogTitle = '创建模版'
+      this.dialogTitle = '手动创建模版'
       this.infoForm = { params: [{}], invokeType: 1, method: '' }
     },
     refreshTemplate(row) {
@@ -288,12 +555,23 @@ export default {
     },
   },
   created() {
-    this.getTemplatePage(1)
+    this.getServices()
   },
 }
 </script>
 <style scoped>
 .content {
   margin: 5px;
+}
+.api-list {
+  height: 60vh;
+}
+.api-title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.filter {
+  margin: 10px 20px 10px 0px;
 }
 </style>

@@ -5,6 +5,7 @@
       ref="infoForm"
       :rules="infoRule"
       size="small"
+      :disabled="!isEdit"
       label-width="120px"
     >
       <el-form-item label="模版名称" prop="name">
@@ -16,8 +17,8 @@
       </el-form-item>
       <el-form-item label="模版类型" prop="invokeType">
         <el-radio-group v-model="infoForm.invokeType" @change="dataChange">
-          <el-radio :label="1">默认模版</el-radio>
-          <el-radio :label="2">Http</el-radio>
+          <el-radio :label="1">本地方法调用</el-radio>
+          <el-radio :label="2">HTTP调用</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item
@@ -49,12 +50,13 @@
           </el-col>
           <el-col :span="2">
             <i
+              v-if="isEdit"
               class="el-icon-remove-outline op-icon"
               @click="removeHeader(index)"
             />
             <i
               class="el-icon-circle-plus-outline op-icon"
-              v-if="index == headerList.length - 1"
+              v-if="index == headerList.length - 1 && isEdit"
               @click="addHeader"
             />
           </el-col>
@@ -156,12 +158,13 @@
           <el-col :span="2">
             <div class="delete-icon">
               <i
+                v-if="isEdit"
                 class="el-icon-remove-outline op-icon"
                 @click="deleteItem(num)"
               />
               <i
                 class="el-icon-circle-plus-outline op-icon"
-                v-if="num == infoForm.params.length - 1"
+                v-if="num == infoForm.params.length - 1 && isEdit"
                 @click="addItem"
               />
             </div>
@@ -191,12 +194,19 @@ import templateApi from '../../../http/Template'
 export default {
   props: {
     config: Object,
+    service: String,
     isEdit: Boolean,
   },
   watch: {
+    service: {
+      handler(val) {
+        this.serviceId = val
+      },
+      deep: true,
+      immediate: true,
+    },
     config: {
       handler(val) {
-        console.log('wwwww', val)
         let rowData = JSON.parse(JSON.stringify(val))
         if (rowData.headers && Object.keys(rowData.headers).length > 0) {
           let array = []
@@ -231,6 +241,7 @@ export default {
   },
   data() {
     return {
+      serviceId: '',
       infoForm: {},
       headerList: [],
       infoRule: {
@@ -246,12 +257,12 @@ export default {
       },
       options: [],
       paramTypeList: [
-        { label: 'String', value: 0 },
-        { label: 'Map', value: 1 },
-        { label: 'List', value: 2 },
-        { label: 'Integer', value: 3 },
-        { label: 'Float', value: 4 },
-        { label: 'Double', value: 5 },
+        { label: 'String', value: 'String' },
+        { label: 'Map', value: 'Map' },
+        { label: 'Array', value: 'Array' },
+        { label: 'Integer', value: 'Integer' },
+        { label: 'Float', value: 'Float' },
+        { label: 'Double', value: 'Double' },
       ],
       httpMethods: [
         { label: 'Post', value: 'Post' },
@@ -329,6 +340,7 @@ export default {
             headers[e.key] = e.value
           })
         }
+        requestParam.owner = this.serviceId
         requestParam.headers = headers
 
         if (this.isEdit) {

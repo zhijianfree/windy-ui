@@ -104,7 +104,7 @@
                 <el-collapse-item name="3">
                   <template slot="title">
                     <i class="el-icon-s-custom title-icon" />
-                    个人流水线
+                    自定义流水线
                   </template>
                   <div
                     v-for="(item, index) in customList"

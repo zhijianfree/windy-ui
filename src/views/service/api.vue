@@ -55,6 +55,9 @@
                         <el-dropdown-item command="generate"
                           >生成Maven</el-dropdown-item
                         >
+                        <el-dropdown-item command="import"
+                          >API导入</el-dropdown-item
+                        >
                       </el-dropdown-menu>
                     </el-dropdown>
                   </el-col>
@@ -84,18 +87,18 @@
             >
               <div class="tree-node" slot-scope="{ node, data }">
                 <i
-                  v-if="!data.isApi"
+                  v-if="data.apiType == 0"
                   class="el-icon-folder-opened folder-icon"
                 />
-                {{ node.label }}
+                <span class="api-name">{{ node.label }}</span>
                 <div class="tree-op-list">
                   <el-dropdown @command="selectItemCommand($event, data)">
                     <span> ... </span>
                     <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item command="api" v-if="!data.isApi"
+                      <el-dropdown-item command="api" v-if="data.apiType == 0"
                         >新增接口</el-dropdown-item
                       >
-                      <el-dropdown-item command="dir" v-if="!data.isApi"
+                      <el-dropdown-item command="dir" v-if="data.apiType == 0"
                         >新增目录</el-dropdown-item
                       >
                       <el-dropdown-item command="delete">删除</el-dropdown-item>
@@ -120,7 +123,8 @@
             >
               <!-- 接口预览开始 -->
               <el-tab-pane label="接口预览" name="preview">
-                <el-descriptions title="接口属性" :column="2">
+                <h4 class="title-bar">接口属性</h4>
+                <el-descriptions :column="2">
                   <el-descriptions-item label="接口名称">{{
                     apiForm.apiName
                   }}</el-descriptions-item>
@@ -140,7 +144,7 @@
                     {{ apiForm.description }}
                   </el-descriptions-item>
                 </el-descriptions>
-                <h4>请求参数</h4>
+                <h4 class="title-bar">请求参数</h4>
                 <div class="display-param" v-if="pathData.length > 0">
                   <h5>Path路径参数</h5>
                   <el-table :data="pathData" border size="mini">
@@ -160,7 +164,7 @@
                     </el-table-column>
                     <el-table-column
                       prop="required"
-                      label="是否必选"
+                      label="是否必填"
                       width="150px"
                     >
                       <template slot-scope="scope">
@@ -191,7 +195,7 @@
                     </el-table-column>
                     <el-table-column
                       prop="required"
-                      label="是否必选"
+                      label="是否必填"
                       width="150px"
                     >
                       <template slot-scope="scope">
@@ -230,7 +234,7 @@
                     </el-table-column>
                     <el-table-column
                       prop="required"
-                      label="是否必选"
+                      label="是否必填"
                       width="150px"
                     >
                       <template slot-scope="scope">
@@ -248,7 +252,7 @@
                   ></el-table>
                 </div>
 
-                <h4>响应参数</h4>
+                <h4 class="title-bar">响应参数</h4>
                 <div class="display-param">
                   <el-table
                     :data="previewRes"
@@ -265,7 +269,7 @@
                     </el-table-column>
                     <el-table-column
                       prop="required"
-                      label="是否必选"
+                      label="是否必填"
                       width="150px"
                     >
                       <template slot-scope="scope">
@@ -287,8 +291,8 @@
 
               <!-- 接口配置开始 -->
               <el-tab-pane label="接口配置" name="edit">
-                <el-form v-model="apiForm" size="small" label-width="80px">
-                  <h4>接口属性</h4>
+                <el-form v-model="apiForm" size="mini" label-width="80px">
+                  <h4 class="title-bar">接口属性</h4>
                   <el-form-item label="接口名称">
                     <el-input
                       v-model="apiForm.apiName"
@@ -301,8 +305,8 @@
                       placeholder="请选择"
                       @change="apiForm.method = ''"
                     >
-                      <el-option label="Rest Http" value="http"> </el-option>
-                      <el-option label="Dubbo" value="dubbo"> </el-option>
+                      <el-option label="HTTP" value="http"> </el-option>
+                      <el-option label="DUBBO" value="dubbo"> </el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="接口定义">
@@ -347,42 +351,7 @@
                       placeholder="请输入接口描述"
                     ></el-input>
                   </el-form-item>
-                  <h4>代码生成配置</h4>
-                  <el-form-item label="文件类名" label-width="120px">
-                    <div>
-                      <el-input
-                        placeholder="请输入类名"
-                        v-model="apiForm.className"
-                      >
-                        <el-input
-                          slot="append"
-                          placeholder="请输入接口函数方法"
-                          v-model="apiForm.classMethod"
-                        ></el-input>
-                      </el-input>
-                    </div>
-                  </el-form-item>
-                  <el-form-item
-                    label="body请求体类名"
-                    label-width="120px"
-                    v-if="isHaveBody"
-                  >
-                    <el-input
-                      placeholder="请输入body请求体类名"
-                      v-model="apiForm.bodyClass"
-                    ></el-input>
-                  </el-form-item>
-                  <el-form-item
-                    label="响应体类名"
-                    label-width="120px"
-                    v-if="responseData.length > 0"
-                  >
-                    <el-input
-                      placeholder="请输入接口响应类名"
-                      v-model="apiForm.resultClass"
-                    ></el-input>
-                  </el-form-item>
-                  <h4>参数设置</h4>
+                  <h4 class="title-bar">参数设置</h4>
                   <el-button type="primary" size="mini" @click="addParam"
                     >新增请求参数</el-button
                   >
@@ -446,6 +415,8 @@
                             </el-option>
                             <el-option label="Integer" value="Integer">
                             </el-option>
+                            <el-option label="Float" value="Float"> </el-option>
+                            <el-option label="Array" value="Array"> </el-option>
                           </el-select>
                         </el-col>
 
@@ -453,14 +424,21 @@
                           <el-select
                             size="mini"
                             v-model="data.required"
-                            placeholder="选择参数是否必选"
+                            placeholder="选择参数是否必填"
                           >
-                            <el-option label="必需" :value="true"></el-option>
+                            <el-option label="必填" :value="true"></el-option>
                             <el-option
-                              label="非必需"
+                              label="非必填"
                               :value="false"
                             ></el-option>
                           </el-select>
+                        </el-col>
+                        <el-col :span="3">
+                          <el-input
+                            size="mini"
+                            v-model="data.defaultValue"
+                            placeholder="请输入参数默认值"
+                          />
                         </el-col>
                         <el-col :span="4">
                           <el-input
@@ -494,7 +472,7 @@
                       </el-row>
                     </div>
                   </el-tree>
-                  <h4>响应设置</h4>
+                  <h4 class="title-bar">响应设置</h4>
                   <el-button type="primary" size="mini" @click="addResParam"
                     >新增响应参数</el-button
                   >
@@ -540,11 +518,11 @@
                           <el-select
                             size="mini"
                             v-model="data.required"
-                            placeholder="选择参数是否必选"
+                            placeholder="选择参数是否必填"
                           >
-                            <el-option label="必需" :value="true"></el-option>
+                            <el-option label="必填" :value="true"></el-option>
                             <el-option
-                              label="非必需"
+                              label="非必填"
                               :value="false"
                             ></el-option>
                           </el-select>
@@ -581,6 +559,42 @@
                       </el-row>
                     </div>
                   </el-tree>
+
+                  <h4 class="title-bar">代码生成配置</h4>
+                  <el-form-item label="文件类名" label-width="120px">
+                    <div>
+                      <el-input
+                        placeholder="请输入类名"
+                        v-model="apiForm.className"
+                      >
+                        <el-input
+                          slot="append"
+                          placeholder="请输入接口方法名称"
+                          v-model="apiForm.classMethod"
+                        ></el-input>
+                      </el-input>
+                    </div>
+                  </el-form-item>
+                  <el-form-item
+                    label="body请求体类名"
+                    label-width="120px"
+                    v-if="isHaveBody"
+                  >
+                    <el-input
+                      placeholder="请输入body请求体类名"
+                      v-model="apiForm.bodyClass"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item
+                    label="响应体类名"
+                    label-width="120px"
+                    v-if="responseData.length > 0"
+                  >
+                    <el-input
+                      placeholder="请输入接口响应类名"
+                      v-model="apiForm.resultClass"
+                    ></el-input>
+                  </el-form-item>
                 </el-form>
               </el-tab-pane>
               <!-- 接口配置结束 -->
@@ -771,7 +785,7 @@
               将文件拖到此处，或<em>点击上传</em>
             </div>
             <div class="el-upload__tip" slot="tip">
-              目前只支持Yapi、Postman文件导入
+              目前只支持Yapi导出的json文件、Postman文件导入
             </div>
           </el-upload>
         </el-form-item>
@@ -843,13 +857,14 @@ export default {
       selectNodes: [],
       isLeaving: false,
       updateApi: false,
-      showImportDialog: true,
+      showImportDialog: false,
       importForm: {},
       importRule: {
         type: [
           { required: true, message: '请选择导入文件类型', trigger: 'blur' },
         ],
       },
+      loading: null,
     }
   },
   watch: {
@@ -881,17 +896,32 @@ export default {
       formData.append(`file`, param.file)
       formData.append(`type`, this.importForm.type)
       formData.append(`serviceId`, this.serviceId)
+      this.showLoading()
       serviceApi.importApi(formData).then((res) => {
-        if (res.data) {
+        this.closeLoading()
+        if (res.data.apiList) {
           this.$message.success('导入api成功')
+          this.showImportDialog = false
+          this.selectService()
         } else {
           this.$message.error('导入api失败')
         }
       })
     },
+    showLoading() {
+      this.loading = this.$loading({
+        lock: true,
+        text: '文件导入中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)',
+      })
+    },
+    closeLoading() {
+      this.loading.close()
+    },
     allowApiDrop(draggingNode, targetNode, type) {
       let resource = targetNode.data
-      if (type == 'inner' && resource.isApi) {
+      if (type == 'inner' && resource.apiType != 0) {
         return false
       }
       return true
@@ -899,7 +929,7 @@ export default {
     handleApiDragEnd(draggingNode, targetNode) {
       let resource = JSON.parse(JSON.stringify(draggingNode.data))
       resource.parentId = targetNode.data.apiId
-      if (targetNode.data.isApi) {
+      if (targetNode.data.apiType != 0) {
         resource.parentId = null
       }
       resource.requestParams = JSON.parse(resource.requestParams)
@@ -966,7 +996,7 @@ export default {
       }
     },
     treeNodeSelect(data) {
-      if (!data.isApi) {
+      if (data.apiType == 0) {
         return
       }
       this.apiForm = JSON.parse(JSON.stringify(data))
@@ -987,13 +1017,13 @@ export default {
       this.createDir = true
       this.showCreateApi = true
       this.dataForm.parentId = node.apiId
-      this.dataForm.isApi = false
+      this.dataForm.apiType = 0
     },
     addApi(node) {
       this.createDir = false
       this.showCreateApi = true
       this.dataForm.parentId = node.apiId
-      this.dataForm.isApi = true
+      this.dataForm.apiType = 1
     },
     cancelGenerate() {
       this.generateForm = {}
@@ -1048,6 +1078,12 @@ export default {
         this.showGenerateApi = true
         return
       }
+
+      if (command == 'import') {
+        this.showImportDialog = true
+        return
+      }
+
       if (command == 'delete') {
         serviceApi.batchDeleteApi(this.selectNodes).then((res) => {
           if (res.data) {
@@ -1061,7 +1097,7 @@ export default {
       }
       this.createDir = command == 'dir'
       this.showCreateApi = true
-      this.dataForm.isApi = !this.createDir
+      this.dataForm.apiType = this.createDir ? 0 : 1
     },
     cancelCreate() {
       this.showCreateApi = false
@@ -1123,15 +1159,21 @@ export default {
           }
         })
         this.previewRes = JSON.parse(JSON.stringify(this.responseData))
+        console.log('this.responseData', this.responseData)
         this.traverseTree(this.previewRes, 1)
       }
     },
     traverseTree(nodes, id) {
+      let num = id
       for (const node of nodes) {
-        node.id = id
-        id++
+        node.id = num
+        num = num + 1
+      }
+
+      for (const node of nodes) {
+        num = num + 1
         if (node.children && node.children.length > 0) {
-          this.traverseTree(node.children, id)
+          this.traverseTree(node.children, num)
         }
       }
     },
@@ -1203,8 +1245,8 @@ export default {
       }, 2000)
     },
     queryHistory() {
-      this.logVersions = []
       serviceApi.getGenerateLog(this.serviceId).then((res) => {
+        let array = []
         res.data.forEach((e) => {
           let params = JSON.parse(e.executeParams)
           params.time = e.updateTime
@@ -1212,13 +1254,15 @@ export default {
           params.label = params.version
           params.value = e.recordId
           params.messageList = JSON.parse(e.result)
-          this.logVersions.push(params)
+          array.push(params)
         })
+        this.logVersions = array
         this.isShowLog = true
         if (!this.logRecordId && this.logVersions.length > 0) {
           this.logRecordId = this.logVersions[0].value
-          this.selectVersion(this.logRecordId)
         }
+
+        this.selectVersion(this.logRecordId)
       })
     },
     selectVersion(recordId) {
@@ -1266,10 +1310,20 @@ export default {
 <style scoped>
 .folder-icon {
   color: #e6a23c;
+  margin-right: 10px;
+}
+.api-name {
+  font-size: 13px;
+  color: #606266;
 }
 .tree-node {
   position: relative;
   width: 100%;
+}
+.title-bar {
+  border-left: 3px solid #2395f1;
+  padding-left: 8px;
+  color: rgba(13, 27, 62, 0.65);
 }
 .tree-op-list i {
   margin-right: 10px;
@@ -1322,6 +1376,9 @@ export default {
 <style>
 .el-input .el-input {
   width: 200px;
+}
+.tree-item {
+  margin-top: 10px;
 }
 .api-detail .input-with-select .el-input-group__prepend {
   background-color: #fff;

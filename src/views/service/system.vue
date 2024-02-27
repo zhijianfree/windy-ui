@@ -77,13 +77,14 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
-        <el-tab-pane label="Maven仓库配置" name="maven">
+        <el-tab-pane label="Maven配置" name="maven">
           <el-form :model="mavenForm" size="mini" label-width="120px">
-            <el-form-item label="maven仓库地址" prop="mavenUrl">
+            <h5>Maven仓库</h5>
+            <el-form-item label="推送远程仓库" prop="mavenUrl">
               <el-input
                 type="text"
                 v-model="mavenForm.mavenUrl"
-                placeholder="请输入Maven仓库地址"
+                placeholder="仓库地址"
               />
             </el-form-item>
             <el-form-item label="用户" prop="userName">

@@ -5,7 +5,7 @@
         :data="historyData"
         size="mini"
         style="width: 100%"
-        height="300"
+        height="500"
       >
         <el-table-column prop="historyId" label="执行ID"> </el-table-column>
         <el-table-column fixed prop="featureName" label="用例">
@@ -33,6 +33,15 @@
           </template>
         </el-table-column>
         <el-table-column label="操作">
+          <template slot="header">
+            <el-button
+              type="primary"
+              size="mini"
+              @click="refreshRecords"
+              icon="el-icon-refresh"
+              >刷新</el-button
+            >
+          </template>
           <template slot-scope="scope">
             <el-button type="text" @click="showRecord(scope.row)" size="small"
               >查看</el-button
@@ -133,6 +142,9 @@ export default {
     }
   },
   methods: {
+    refreshRecords() {
+      this.getFeatureHistory(this.featureId)
+    },
     filterRecord() {
       this.resultList.forEach((e) => {
         if (1 == e.testStage) {

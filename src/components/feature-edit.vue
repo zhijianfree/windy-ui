@@ -85,7 +85,7 @@ export default {
       if (this.data.type == 1) {
         this.paramList = this.matchMap(this.data.value)
       }
-      if (!val.value) {
+      if (!val.value && val.defaultValue) {
         this.data.value = val.defaultValue.defaultValue
       }
     },
@@ -170,7 +170,7 @@ export default {
   created() {
     this.pointId = this.point
     this.data = this.feature
-    if (!this.data.value) {
+    if (!this.data.value && this.data.defaultValue) {
       this.data.value = this.data.defaultValue.defaultValue
     }
 

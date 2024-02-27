@@ -104,9 +104,9 @@ export default {
         })
     })
   },
-  getFeatureTemplates() {
+  getServiceTemplates(serviceId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/templates`
+      let url = `/v1/devops/feature/${serviceId}/templates`
       http
         .get(url)
         .then((res) => {

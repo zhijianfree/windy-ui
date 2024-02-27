@@ -129,20 +129,10 @@
                   </div>
                 </template>
                 <template slot="content">
-                  <div
-                    class="request-list"
-                    v-for="(line, index) in result.executeDetailVo
-                      .requestDetailVo.request"
-                    :key="index"
-                  >
-                    {{ line }}
-                  </div>
-                  <div>
+                  <div class="request-list">
                     <json-viewer
-                      v-if="result.executeDetailVo.requestDetailVo.requestBody"
-                      :value="
-                        result.executeDetailVo.requestDetailVo.requestBody
-                      "
+                      v-if="result.executeDetailVo.requestTips"
+                      :value="result.executeDetailVo.requestTips"
                       :expand-depth="5"
                       copyable
                     ></json-viewer>
@@ -160,7 +150,8 @@
                     class="request-list"
                     v-if="
                       result.compareResult &&
-                      !result.compareResult.compareStatus
+                      !result.compareResult.compareStatus &&
+                      result.compareResult.description
                     "
                   >
                     比较错误：
