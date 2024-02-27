@@ -188,7 +188,7 @@
                     >
                       <div
                         class="feature-item"
-                        v-if="element.templateType != 1"
+                        v-if="element.templateType == 2"
                       >
                         <div class="template-name">
                           {{ element.name }}
@@ -219,7 +219,7 @@
                     <div v-for="(element, index) in templateList" :key="index">
                       <div
                         class="feature-item"
-                        v-if="element.templateType == 1"
+                        v-if="element.templateType != 2"
                       >
                         <div class="template-name">
                           {{ element.name }}
