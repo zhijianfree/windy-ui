@@ -196,6 +196,10 @@ export default {
     config: Object,
     service: String,
     isEdit: Boolean,
+    isCreate: {
+      type: Boolean,
+      default: false,
+    },
   },
   watch: {
     service: {
@@ -343,7 +347,7 @@ export default {
         requestParam.owner = this.serviceId
         requestParam.headers = headers
 
-        if (this.isEdit) {
+        if (!this.isCreate) {
           templateApi.updateTemplate(requestParam).then(() => {
             this.$message.success(`修改成功`)
             this.$emit('complete')

@@ -114,6 +114,8 @@
       <TemplateConfig
         :isEdit="isEdit"
         :config="infoForm"
+        :isCreate="true"
+        :service="serviceId"
         @dataChange="templateChange"
         @complete="closeDialog"
       />
@@ -152,6 +154,7 @@
             <TemplateConfig
               :isEdit="isEdit"
               :config="item"
+              :service="serviceId"
               @dataChange="uploadChange($event, index)"
             />
           </el-collapse-item>
@@ -515,7 +518,12 @@ export default {
       this.isEdit = true
       this.showDialog = !this.showDialog
       this.dialogTitle = '手动创建模版'
-      this.infoForm = { params: [{}], invokeType: 1, method: '' }
+      this.infoForm = {
+        params: [{}],
+        invokeType: 1,
+        method: '',
+        owner: this.serviceId,
+      }
     },
     refreshTemplate(row) {
       templateApi.refresh(row.templateId).then((res) => {
