@@ -169,7 +169,12 @@
       </span>
     </el-dialog>
     <!-- 文件上传结束 -->
-    <el-dialog :visible.sync="showAPIDialog" title="API生成模版" width="60%">
+    <el-dialog
+      :visible.sync="showAPIDialog"
+      title="API生成模版"
+      width="60%"
+      @close="closeApiGenerate"
+    >
       <div v-if="!previewData || previewData.length < 1">
         <el-row :gutter="20">
           <el-col :span="8">
@@ -208,34 +213,48 @@
           <el-col :span="16">
             <div class="api-title">生成配置</div>
             <el-form v-model="generateForm" label-width="80px" size="mini">
-              <el-form-item label="是否覆盖"
+              <!-- <el-form-item label="是否覆盖"
                 ><el-switch v-model="generateForm.cover" active-color="#13ce66">
                 </el-switch>
-              </el-form-item>
+              </el-form-item> -->
               <el-form-item label="调用方式">
-                <el-radio-group v-model="generateForm.invoke">
+                <el-radio-group v-model="generateForm.invokeType">
                   <el-radio :label="2">HTTP调用</el-radio>
-                  <el-radio :label="1">本地方法调用</el-radio>
+                  <el-radio :label="3">本地方法调用</el-radio>
                 </el-radio-group>
               </el-form-item>
-              <el-form-item label="类名" v-if="generateForm.invoke == 1">
-                <el-input
-                  v-model="generateForm.className"
-                  placeholder="请输入调用的类名"
-                />
+              <el-form-item
+                label="关联模版"
+                v-if="generateForm.invokeType == 3"
+              >
+                <el-select
+                  v-model="generateForm.relatedId"
+                  placeholder="请选择关联的模版"
+                  @change="selectTemplate"
+                  clearable
+                >
+                  <el-option
+                    v-for="item in uploadTemplates"
+                    :key="item.templateId"
+                    :label="item.name"
+                    :value="item.templateId"
+                  >
+                  </el-option>
+                </el-select>
               </el-form-item>
-              <el-form-item label="方法名" v-if="generateForm.invoke == 1">
-                <el-input
-                  v-model="generateForm.methodName"
-                  placeholder="请输入调用的类的方法名"
-                />
+              <el-form-item label="类名" v-if="generateForm.invokeType == 3">
+                <span>{{ generateForm.className }}</span>
+              </el-form-item>
+              <el-form-item label="方法名" v-if="generateForm.invokeType == 3">
+                <span>{{ generateForm.methodName }}</span>
               </el-form-item>
               <el-alert
-                v-if="generateForm.invoke == 1"
-                title="请注意方法参数顺序"
-                type="error"
+                v-if="generateForm.invokeType == 3"
+                title="请注意"
+                type="warning"
                 :closable="false"
-                description="API生成模版参数是根据URL、Method、Header、Body顺序作为方法入参，模版执行也是按照这个顺序传入参数.请在编写模版代码时按照这个顺序接收参数！"
+                description="API生成模版参数是最终会组装成4个参数url、method、deader、body，自定义的模版请一定要提供对应的参数名称的入参，在实际执行阶段会根据参数名替换成对应的值。
+                如果在模版还需其他参数请使用默认参数配置到环境变量中去。"
                 show-icon
               >
               </el-alert>
@@ -317,10 +336,13 @@ export default {
         label: 'apiName',
       },
       selectNodes: [],
-      generateForm: {},
+      generateForm: {
+        invokeType: 2,
+      },
       filterText: '',
       chooseService: '',
       previewData: [],
+      uploadTemplates: [],
     }
   },
   watch: {
@@ -329,6 +351,16 @@ export default {
     },
   },
   methods: {
+    selectTemplate() {
+      this.generateForm.className = ''
+      this.generateForm.methodName = ''
+      this.uploadTemplates.forEach((e) => {
+        if (e.templateId == this.generateForm.relatedId) {
+          this.generateForm.className = e.service
+          this.generateForm.methodName = e.method
+        }
+      })
+    },
     saveTemplates() {
       let data = {
         templates: this.previewData,
@@ -356,6 +388,7 @@ export default {
       this.previewData.splice(index, 1)
     },
     showTemplate(row) {
+      console.log('show log', row)
       this.isEdit = false
       this.infoForm = row
       this.showDialog = true
@@ -365,6 +398,8 @@ export default {
         .generateTemplate({
           serviceId: this.serviceId,
           apiIds: this.selectNodes,
+          invokeType: this.generateForm.invokeType,
+          relatedId: this.generateForm.relatedId,
         })
         .then((res) => {
           if (res.data.length > 0) {
@@ -375,11 +410,13 @@ export default {
     closeApiGenerate() {
       this.getTemplatePage(1)
       this.showAPIDialog = false
-      this.generateForm = {}
+      this.generateForm = {
+        invokeType: 2,
+      }
+      this.previewData = []
     },
     expendAllNode() {
       let allNodes = this.$refs['apiTree'].store._getAllNodes()
-      console.log('aaaaaa', allNodes)
       for (let i = 0; i < allNodes.length; i++) {
         this.$refs['apiTree'].store._getAllNodes()[i].expanded = true
       }
@@ -392,6 +429,9 @@ export default {
         }
       })
       this.getServiceApi()
+      templateApi.getTemplateByType(3).then((res) => {
+        this.uploadTemplates = res.data
+      })
     },
     selectTreeNode(data, checked) {
       if (checked) {

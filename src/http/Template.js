@@ -39,6 +39,19 @@ export default {
         })
     })
   },
+  getTemplateByType(invokeType) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/types/${invokeType}/templates`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   createTemplate(template) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/template`

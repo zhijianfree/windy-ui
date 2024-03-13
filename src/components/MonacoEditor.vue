@@ -1,8 +1,5 @@
 <template>
   <div>
-    <div>
-      <el-button @click="dd">2222</el-button>
-    </div>
     <div ref="container" class="monaco-editor"></div>
   </div>
 </template>

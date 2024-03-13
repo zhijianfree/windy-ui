@@ -418,6 +418,7 @@ export default {
       })
     },
     saveConfig() {
+      console.log('this.allPoints', this.allPoints)
       this.displayList.forEach((e) => {
         e.editDesc = false
       })
@@ -432,6 +433,7 @@ export default {
           description: e.description,
           service: e.service,
           headers: e.headers,
+          relatedId: e.relatedId,
         }
 
         if (e.executeType != 1) {

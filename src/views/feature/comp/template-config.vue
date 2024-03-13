@@ -19,6 +19,7 @@
         <el-radio-group v-model="infoForm.invokeType" @change="dataChange">
           <el-radio :label="1">本地方法调用</el-radio>
           <el-radio :label="2">HTTP调用</el-radio>
+          <el-radio :label="3">关联模版</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item
@@ -180,7 +181,7 @@
           :autosize="{ minRows: 2, maxRows: 4 }"
         ></el-input>
       </el-form-item>
-      <el-form-item>
+      <el-form-item v-if="isEdit">
         <el-button size="mini" type="primary" @click="submit('infoForm')"
           >确定</el-button
         >
