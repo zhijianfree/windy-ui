@@ -130,4 +130,17 @@ export default {
         })
     })
   },
+  getCaseFeatures(caseId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/${caseId}/features`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }

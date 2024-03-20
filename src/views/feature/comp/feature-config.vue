@@ -117,6 +117,7 @@
                             v-if="executePoint.executeType == 1"
                             :data="executePoint"
                             :isEdit="isEdit"
+                            :key="uuid"
                             :type="executePoint.writeType"
                             @refreshData="refreshValue"
                           />
@@ -124,6 +125,7 @@
                             v-else
                             :data="executePoint"
                             :isEdit="isEdit"
+                            :key="uuid"
                             @refreshData="refreshValue"
                           />
                         </div>
@@ -493,7 +495,7 @@ export default {
       this.allPoints.push(item)
       this.isEdit = true
       this.displayExepoints()
-      this.uuid++
+      this.uuid = this.$utils.randomString(20)
     },
     refreshValue(update) {
       this.allPoints.forEach((e) => {
@@ -510,6 +512,7 @@ export default {
       this.bindStepPoints()
       this.displayExepoints()
       this.$forceUpdate()
+      this.uuid = this.$utils.randomString(20)
     },
     bindStepPoints() {
       if (this.displayList.length == 0) {

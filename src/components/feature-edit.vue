@@ -1,6 +1,6 @@
 <template>
   <div style="margin-top: 10px">
-    <div v-if="data.type == 1">
+    <div v-if="data.type == 'Map'">
       <el-row v-for="(item, num) in paramList" :key="num">
         <el-col :span="10">
           <el-input
@@ -35,7 +35,7 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="data.type == 2">
+    <div v-else-if="data.type == 'Array'">
       <el-select
         v-model="data.value"
         @change="notifyData"
@@ -51,6 +51,40 @@
         >
         </el-option>
       </el-select>
+    </div>
+    <div v-else-if="data.type == 'Integer'">
+      <el-input-number
+        size="small"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        controls-position="right"
+        :placeholder="data.description"
+      ></el-input-number>
+    </div>
+    <div v-else-if="data.type == 'Float'">
+      <el-input-number
+        size="small"
+        :precision="2"
+        :step="0.1"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        controls-position="right"
+        :placeholder="data.description"
+      ></el-input-number>
+    </div>
+    <div v-else-if="data.type == 'Double'">
+      <el-input-number
+        size="small"
+        :precision="2"
+        :step="0.1"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        controls-position="right"
+        :placeholder="data.description"
+      ></el-input-number>
     </div>
     <el-input
       v-else

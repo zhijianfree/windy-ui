@@ -63,7 +63,7 @@
       :append-to-body="true"
       :destroy-on-close="true"
       @close="closeDetail"
-      size="600px"
+      size="40%"
       :modal-append-to-body="false"
     >
       <div class="drawer-content">

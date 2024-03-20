@@ -1113,10 +1113,8 @@ export default {
       if (this.currentApi != '') {
         serviceApi.updateApi(data).then((res) => {
           if (res.data) {
-            this.$message.success('修改接口成功')
+            this.$message.success({ showClose: true, message: '修改接口成功' })
             this.updateApi = false
-          } else {
-            this.$message.error('修改接口失败')
           }
         })
         return

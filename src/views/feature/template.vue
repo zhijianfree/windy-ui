@@ -114,7 +114,7 @@
       <TemplateConfig
         :isEdit="isEdit"
         :config="infoForm"
-        :isCreate="true"
+        :isCreate="isCreate"
         :service="serviceId"
         @dataChange="templateChange"
         @complete="closeDialog"
@@ -213,10 +213,10 @@
           <el-col :span="16">
             <div class="api-title">生成配置</div>
             <el-form v-model="generateForm" label-width="80px" size="mini">
-              <!-- <el-form-item label="是否覆盖"
+              <el-form-item label="是否覆盖"
                 ><el-switch v-model="generateForm.cover" active-color="#13ce66">
                 </el-switch>
-              </el-form-item> -->
+              </el-form-item>
               <el-form-item label="调用方式">
                 <el-radio-group v-model="generateForm.invokeType">
                   <el-radio :label="2">HTTP调用</el-radio>
@@ -320,7 +320,7 @@ export default {
       templateData: [],
       queryForm: {},
       showDialog: false,
-      infoForm: { params: [{}] },
+      infoForm: { params: [{ position: 'Body' }] },
       dialogTitle: '添加执行点模版',
       isEdit: false,
       currentPage: 1,
@@ -343,6 +343,7 @@ export default {
       chooseService: '',
       previewData: [],
       uploadTemplates: [],
+      isCreate: false,
     }
   },
   watch: {
@@ -400,10 +401,13 @@ export default {
           apiIds: this.selectNodes,
           invokeType: this.generateForm.invokeType,
           relatedId: this.generateForm.relatedId,
+          cover: this.generateForm.cover,
         })
         .then((res) => {
           if (res.data.length > 0) {
             this.previewData = res.data
+          } else {
+            this.$message.warning('接口已存在用例，请选择可覆盖选项')
           }
         })
     },
@@ -556,10 +560,11 @@ export default {
     },
     startCreate() {
       this.isEdit = true
+      this.isCreate = true
       this.showDialog = !this.showDialog
       this.dialogTitle = '手动创建模版'
       this.infoForm = {
-        params: [{}],
+        params: [{ position: 'Body' }],
         invokeType: 1,
         method: '',
         owner: this.serviceId,
@@ -576,6 +581,7 @@ export default {
     },
     handleEdit(row) {
       this.isEdit = true
+      this.isCreate = false
       this.showDialog = true
       this.dialogTitle = '编辑模版'
       this.infoForm = row
@@ -598,7 +604,8 @@ export default {
     },
     closeDialog() {
       this.showDialog = false
-      this.infoForm = { params: [{}] }
+      this.isCreate = false
+      this.infoForm = { params: [{ position: 'Body' }] }
       this.getTemplatePage(1)
     },
   },

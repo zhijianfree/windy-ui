@@ -170,7 +170,11 @@
               name="config"
               v-if="infoForm.featureType == 1"
             >
-              <FeatureConfig :feature="selectFeatureId" :service="serviceId" />
+              <FeatureConfig
+                :feature="selectFeatureId"
+                :service="serviceId"
+                :key="uuid"
+              />
             </el-tab-pane>
             <!-- 用例编写结束 -->
             <el-tab-pane
@@ -643,6 +647,7 @@ export default {
       this.selectFeatureId = data.featureId
       featureApi.getFeatureDetail(data.featureId).then((res) => {
         this.dynamicTags = res.data.tags
+        this.uuid = this.$utils.randomString(20)
       })
     },
     filterNode(value, data) {

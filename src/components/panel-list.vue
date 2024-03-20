@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-for="(item, index) in resultList" :key="index">
-      <Panel :isAuto="item.show">
+      <Panel>
         <template slot="title">
           <div class="list-title" @click="showItem(item)">
             <div
@@ -24,7 +24,7 @@
           <!-- if for执行结果展示开始 -->
           <div v-if="item.executeType != 1" class="cycle-div">
             <div v-for="(result, index) in item.resultList" :key="index">
-              <Panel :isAuto="result.show">
+              <Panel>
                 <template slot="title">
                   <div class="list-title" @click="showItem(result)">
                     <div
@@ -242,7 +242,7 @@ export default {
 }
 </script>
 <style scoped>
-list-title {
+.list-title {
   position: relative;
   font-size: 12px;
   font-weight: 800;

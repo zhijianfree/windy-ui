@@ -127,6 +127,24 @@
           <el-col :span="1">
             <div class="header-line">-</div>
           </el-col>
+          <el-col :span="2">
+            <el-select
+              v-model="item.position"
+              @change="dataChange"
+              placeholder="参数位置"
+            >
+              <el-option
+                v-for="item in positionList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="1">
+            <div class="header-line">-</div>
+          </el-col>
           <el-col :span="3">
             <el-input
               size="mini"
@@ -135,10 +153,10 @@
               placeholder="请输入默认值"
             ></el-input>
           </el-col>
-          <el-col :span="1" v-if="item.type == 2">
+          <el-col :span="1" v-if="item.type == 'Array'">
             <div class="header-line">-</div>
           </el-col>
-          <el-col :span="4" v-if="item.type == 2">
+          <el-col :span="4" v-if="item.type == 'Array'">
             <el-select
               v-model="item.range"
               multiple
@@ -225,7 +243,7 @@ export default {
 
         if (!rowData.params || rowData.params.length == 0) {
           this.infoForm = rowData
-          this.infoForm.params = [{}]
+          this.infoForm.params = [{ position: 'Body' }]
           return
         }
 
@@ -275,6 +293,12 @@ export default {
         { label: 'Put', value: 'Put' },
         { label: 'Delete', value: 'Delete' },
       ],
+      positionList: [
+        { label: 'Body', value: 'Body' },
+        { label: 'Path', value: 'Path' },
+        { label: 'Query', value: 'Query' },
+        { label: 'Header', value: 'Header' },
+      ],
     }
   },
   methods: {
@@ -291,7 +315,7 @@ export default {
       this.infoForm.params.splice(index, 1)
     },
     addItem() {
-      this.infoForm.params.push({})
+      this.infoForm.params.push({ position: 'Body' })
     },
     dataChange() {
       let data = JSON.parse(JSON.stringify(this.infoForm))
@@ -350,20 +374,20 @@ export default {
 
         if (!this.isCreate) {
           templateApi.updateTemplate(requestParam).then(() => {
-            this.$message.success(`修改成功`)
+            this.$message.success({ message: `修改成功`, showClose: true })
             this.$emit('complete')
           })
           return
         }
 
         templateApi.createTemplate(requestParam).then(() => {
-          this.$message.success(`添加成功`)
+          this.$message.success({ message: `添加成功`, showClose: true })
           this.$emit('complete')
         })
       })
     },
     closeDialog() {
-      this.infoForm = { params: [{}] }
+      this.infoForm = { params: [{ position: 'Body' }] }
       this.$emit('complete')
     },
   },
