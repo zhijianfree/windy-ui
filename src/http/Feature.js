@@ -208,6 +208,19 @@ export default {
         })
     })
   },
+  copyCaseFeature(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/case/copy`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   copyFeature(data) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/copy`

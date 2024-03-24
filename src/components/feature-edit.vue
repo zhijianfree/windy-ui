@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-top: 10px">
+  <div>
     <div v-if="data.type == 'Map'">
       <el-row v-for="(item, num) in paramList" :key="num">
         <el-col :span="10">

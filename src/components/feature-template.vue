@@ -133,5 +133,7 @@ export default {
   float: right;
   margin-right: 10px;
   color: #606266;
+  vertical-align: middle;
+  text-align: center;
 }
 </style>

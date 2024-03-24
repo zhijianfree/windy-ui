@@ -295,7 +295,7 @@ export default {
         featureIds: array,
       }
 
-      featureApi.copyFeature(data).then((res) => {
+      featureApi.copyCaseFeature(data).then((res) => {
         if (res.data) {
           this.$message.success('复制成功！')
           this.selectService()

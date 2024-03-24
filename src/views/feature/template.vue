@@ -412,7 +412,7 @@ export default {
         })
     },
     closeApiGenerate() {
-      this.getTemplatePage(1)
+      this.getTemplatePage()
       this.showAPIDialog = false
       this.generateForm = {
         invokeType: 2,
@@ -474,7 +474,8 @@ export default {
       return data.apiName.indexOf(value) !== -1
     },
     selectService() {
-      this.getTemplatePage(1)
+      this.currentPage = 1
+      this.getTemplatePage()
     },
     getServices() {
       this.serviceList = []
@@ -507,7 +508,7 @@ export default {
           this.showUploadDialog = false
           this.parseData = []
           this.pluginId = ''
-          this.getTemplatePage(1)
+          this.getTemplatePage()
         } else {
           this.$message.error('添加模版失败')
         }
@@ -537,26 +538,28 @@ export default {
       this.infoForm.headers.push({})
     },
     inputChange() {
-      this.getTemplatePage(1)
+      this.currentPage = 1
+      this.getTemplatePage()
     },
     pageChange(page) {
-      this.getTemplatePage(page)
+      this.currentPage = page
+      this.getTemplatePage()
     },
-    getTemplatePage(page) {
+    getTemplatePage() {
       let name = this.queryForm.name
       if (!name) {
         name = ''
       }
-
       templateApi
-        .getTemplatePage(this.serviceId, page, 10, name)
+        .getTemplatePage(this.serviceId, this.currentPage, 10, name)
         .then((res) => {
           this.templateData = res.data.data
           this.totalSize = res.data.total
         })
     },
     startQuery() {
-      this.getTemplatePage(1)
+      this.currentPage = 1
+      this.getTemplatePage()
     },
     startCreate() {
       this.isEdit = true
@@ -595,7 +598,7 @@ export default {
         templateApi.deleteTemplate(row.templateId).then((res) => {
           if (res.data) {
             this.$message.success('删除模版成功')
-            this.getTemplatePage(1)
+            this.getTemplatePage()
           } else {
             this.$message.error('删除模版失败')
           }
@@ -606,7 +609,7 @@ export default {
       this.showDialog = false
       this.isCreate = false
       this.infoForm = { params: [{ position: 'Body' }] }
-      this.getTemplatePage(1)
+      this.getTemplatePage()
     },
   },
   created() {
