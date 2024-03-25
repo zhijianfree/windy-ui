@@ -438,6 +438,7 @@ export default {
       })
     },
     selectTreeNode(data, checked) {
+      console.log('xxxx', data, checked)
       if (checked) {
         this.selectNodes.push(data.apiId)
       } else {

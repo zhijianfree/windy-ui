@@ -2,7 +2,7 @@
   <div class="content">
     <div class="input-line" v-for="(item, num) in paramList" :key="num">
       <el-row>
-        <el-col :span="10">
+        <el-col :span="9">
           <el-input
             size="mini"
             :disabled="!isEdit"
@@ -14,7 +14,7 @@
         <el-col :span="2">
           <div class="header-line">-</div>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="9">
           <el-input
             size="mini"
             :disabled="!isEdit"
@@ -32,6 +32,9 @@
           >
             <i class="el-icon-remove-outline" />
           </div>
+        </el-col>
+        <el-col :span="2">
+          <el-checkbox v-model="item.global">全局变量</el-checkbox>
         </el-col>
       </el-row>
     </div>
