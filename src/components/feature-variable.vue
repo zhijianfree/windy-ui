@@ -2,7 +2,7 @@
   <div class="content">
     <div class="input-line" v-for="(item, num) in paramList" :key="num">
       <el-row>
-        <el-col :span="9">
+        <el-col :span="8">
           <el-input
             size="mini"
             :disabled="!isEdit"
@@ -14,7 +14,7 @@
         <el-col :span="2">
           <div class="header-line">-</div>
         </el-col>
-        <el-col :span="9">
+        <el-col :span="8">
           <el-input
             size="mini"
             :disabled="!isEdit"
@@ -24,17 +24,18 @@
           >
           </el-input>
         </el-col>
-        <el-col :span="2">
-          <div
-            v-if="isEdit"
-            @click="deleteValueItem(paramList, num)"
-            class="delete-icon"
+        <el-col :span="4">
+          <el-checkbox
+            class="global-box"
+            :disabled="!isEdit"
+            v-model="item.global"
+            >全局变量</el-checkbox
           >
+        </el-col>
+        <el-col :span="2" v-if="isEdit">
+          <div @click="deleteValueItem(paramList, num)" class="delete-icon">
             <i class="el-icon-remove-outline" />
           </div>
-        </el-col>
-        <el-col :span="2">
-          <el-checkbox v-model="item.global">全局变量</el-checkbox>
         </el-col>
       </el-row>
     </div>
@@ -131,5 +132,8 @@ export default {
 }
 .input-line {
   margin: 10px;
+}
+.global-box {
+  margin: 3px 5px 3px 10px;
 }
 </style>

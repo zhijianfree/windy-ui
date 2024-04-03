@@ -34,28 +34,30 @@ export default {
     },
   },
   methods: {
-    dd() {
-      this.monacoEditor.trigger('anyString', 'editor.action.formatDocument')
+    getValue() {
+      return this.monacoEditor.getValue()
     },
     initEditer() {
-      let self = this
-      self.$refs.container.innerHTML = ''
-      self.monacoEditor = monaco.editor.create(self.$refs.container, {
-        value: this.codes, // 见props
-        language: 'json',
-        theme: 'vs-dark', // 编辑器主题：vs, hc-black, or vs-dark，更多选择详见官网
-        editorOptions: {
-          selectOnLineNumbers: true,
-          roundedSelection: false,
-          readOnly: false,
-          cursorStyle: 'line', // 光标样式
-          automaticLayout: true, // 自动布局
-          glyphMargin: true, // 字形边缘
-        },
+      this.$nextTick(() => {
+        let self = this
+        this.$refs.container.innerHTML = ''
+        self.monacoEditor = monaco.editor.create(self.$refs.container, {
+          value: this.codes, // 见props
+          language: 'json',
+          theme: 'vs-dark', // 编辑器主题：vs, hc-black, or vs-dark，更多选择详见官网
+          editorOptions: {
+            selectOnLineNumbers: true,
+            roundedSelection: false,
+            readOnly: false,
+            cursorStyle: 'line', // 光标样式
+            automaticLayout: true, // 自动布局
+            glyphMargin: true, // 字形边缘
+          },
+        })
+        window.onresize = function () {
+          self.monacoEditor.layout()
+        }
       })
-      window.onresize = function () {
-        self.monacoEditor.layout()
-      }
     },
     setDataValue(data) {
       this.monacoEditor.setValue(data)

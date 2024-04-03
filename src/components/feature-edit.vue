@@ -36,21 +36,59 @@
       </el-row>
     </div>
     <div v-else-if="data.type == 'Array'">
-      <el-select
-        v-model="data.value"
-        @change="notifyData"
-        :disabled="!isEdit"
-        size="small"
-        :placeholder="'请选择' + data.description"
-      >
-        <el-option
-          v-for="item in data.defaultValue.range"
-          :key="item"
-          :label="item"
-          :value="item"
+      <div class="array-plus">
+        <span @click="addParam"
+          ><i class="el-icon-circle-plus-outline" /> 新增</span
         >
-        </el-option>
-      </el-select>
+      </div>
+      <div v-if="data.initData.rangeType == 'Object'">
+        <div
+          class="array-show-box"
+          v-for="(valueItem, order) in data.value"
+          :key="order"
+        >
+          <el-row>
+            <el-col :span="20">
+              <el-row
+                v-for="(obj, index) in data.initData.range"
+                :key="index"
+                class="item-line"
+              >
+                <el-col :span="4">
+                  <div class="param_name">{{ obj.paramKey }}:</div>
+                </el-col>
+                <el-col :span="15">
+                  <FeatureEdit
+                    :point="pointId"
+                    :feature="obj"
+                    :isEdit="true"
+                    @refreshData="refreshArrayValue($event, order)"
+                  />
+                </el-col>
+              </el-row>
+            </el-col>
+            <el-col :span="4">
+              <div class="array-delete">
+                <span @click="deleteArray(order)"
+                  ><i class="el-icon-remove-outline" /> 删除</span
+                >
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+      </div>
+      <div v-else>
+        <div class="array-show-box">
+          <el-input
+            v-for="(valueItem, order) in data.value"
+            :key="order"
+            size="small"
+            :disabled="!isEdit"
+            v-model="valueItem.text"
+            @input="notifyData"
+          ></el-input>
+        </div>
+      </div>
     </div>
     <div v-else-if="data.type == 'Integer'">
       <el-input-number
@@ -62,6 +100,15 @@
         :placeholder="data.description"
       ></el-input-number>
     </div>
+    <!-- <div v-else-if="data.type == 'Boolean'">
+      <el-switch
+        size="small"
+        v-model="data.value"
+        active-color="#13ce66"
+        inactive-color="#909399"
+      >
+      </el-switch>
+    </div> -->
     <div v-else-if="data.type == 'Float'">
       <el-input-number
         size="small"
@@ -101,17 +148,24 @@
       ></el-button
     ></el-input>
 
-    <el-dialog title="数据编辑" :visible.sync="showDetail">
-      <!-- <JsonEditorVue v-model="jsonStr" /> -->
+    <el-dialog title="数据编辑" :visible.sync="showDetail" @close="closeEditor">
+      <monaco ref="editer" :codes="jsonStr" :readonly="false"></monaco>
     </el-dialog>
   </div>
 </template>
 <script>
+import FeatureEdit from '@/components/feature-edit'
+import monaco from '@/components/MonacoEditor.vue'
 export default {
+  name: 'FeatureEdit',
   props: {
     feature: Object,
     isEdit: Boolean,
     point: String,
+  },
+  components: {
+    FeatureEdit,
+    monaco,
   },
   watch: {
     feature(val) {
@@ -119,8 +173,11 @@ export default {
       if (this.data.type == 1) {
         this.paramList = this.matchMap(this.data.value)
       }
-      if (!val.value && val.defaultValue) {
-        this.data.value = val.defaultValue.defaultValue
+      if (!val.value && val.initData) {
+        this.data.value = val.initData.data
+      }
+      if (!this.data.value && this.data.initData.rangeType == 'Object') {
+        this.data.value = []
       }
     },
   },
@@ -137,10 +194,23 @@ export default {
     }
   },
   methods: {
+    closeEditor() {
+      this.data.value = this.$refs.editer.getValue()
+    },
+    deleteArray(index) {
+      this.data.value.splice(index, 1)
+    },
+    addParam() {
+      this.data.value.push({})
+    },
+    refreshArrayValue(event, index) {
+      console.log('refreshArrayValue', event, index)
+      this.data.value[index][event.item.paramKey] = event.item.value
+      console.log(this.data.value)
+    },
     diaplayString(str) {
       this.showDetail = true
       this.jsonStr = str
-      console.log(this.$refs['editor'])
     },
     notifyData() {
       let data = this.data
@@ -204,9 +274,17 @@ export default {
   created() {
     this.pointId = this.point
     this.data = this.feature
-    if (!this.data.value && this.data.defaultValue) {
-      this.data.value = this.data.defaultValue.defaultValue
+    if (!this.data.value && this.data.initData) {
+      this.data.value = this.data.initData.data
     }
+
+    if (!this.data.value && this.data.initData.rangeType == 'Object') {
+      this.data.value = []
+    }
+
+    // if (!this.data.value && this.data.type == 'Boolean') {
+    //   this.data.value = false
+    // }
 
     if (this.data.type == 1) {
       this.paramList = this.matchMap(this.data.value)
@@ -223,5 +301,38 @@ export default {
   margin-left: 10px;
   font-size: 16px;
   cursor: pointer;
+}
+.item-line {
+  margin: 10px 0px;
+}
+
+.array-show-box {
+  padding: 4px 8px;
+  background-color: #ecf8ff;
+  border-radius: 4px;
+  border-left: 10px solid #50bfff;
+  margin: 0px 10px 10px 10px;
+}
+.array-plus {
+  margin: 10px;
+}
+.array-plus span {
+  cursor: pointer;
+}
+.array-delete {
+  cursor: pointer;
+  display: flex;
+  color: #f56c6c;
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
+}
+.param_name {
+  height: 30px;
+  line-height: 30px;
+  float: right;
+  margin-right: 10px;
+  color: #606266;
+  vertical-align: middle;
+  text-align: center;
 }
 </style>

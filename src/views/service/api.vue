@@ -368,6 +368,7 @@
                         <el-col :span="4">
                           <el-input
                             size="mini"
+                            :disabled="data.hide"
                             v-model="data.paramKey"
                             placeholder="请输入参数名称"
                           ></el-input>
@@ -392,6 +393,7 @@
                             class="select-type"
                             v-model="data.type"
                             placeholder="请选择参数类型"
+                            @change="paramTypeChange($event, data)"
                             size="mini"
                           >
                             <el-option
@@ -420,10 +422,11 @@
                           </el-select>
                         </el-col>
 
-                        <el-col :span="3">
+                        <el-col :span="3" v-if="!data.hide">
                           <el-select
                             size="mini"
                             v-model="data.required"
+                            :disabled="data.hide"
                             placeholder="选择参数是否必填"
                           >
                             <el-option label="必填" :value="true"></el-option>
@@ -433,16 +436,18 @@
                             ></el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="3">
+                        <el-col :span="3" v-if="!data.hide">
                           <el-input
                             size="mini"
+                            :disabled="data.hide"
                             v-model="data.defaultValue"
                             placeholder="请输入参数默认值"
                           />
                         </el-col>
-                        <el-col :span="4">
+                        <el-col :span="4" v-if="!data.hide">
                           <el-input
                             size="mini"
+                            :disabled="data.hide"
                             v-model="data.description"
                             placeholder="请输入参数描述"
                           ></el-input>
@@ -450,15 +455,14 @@
                         <el-col :span="2">
                           <div class="op-icon">
                             <i
+                              v-if="!data.hide"
                               class="el-icon-remove-outline"
                               @click="removeParam(node, data)"
                             />
                             <i
                               class="el-icon-circle-plus-outline"
                               @click="addSubParam(data)"
-                              v-if="
-                                data.type == 'Object' || data.type == 'Array'
-                              "
+                              v-if="data.type == 'Object'"
                             />
                           </div>
                         </el-col>
@@ -535,7 +539,7 @@
                           ></el-input>
                         </el-col>
                         <el-col :span="2">
-                          <div class="op-icon">
+                          <div class="op-icon" @click="addSubParam(data)">
                             <i
                               class="el-icon-remove-outline"
                               @click="removeParam(node, data)"
@@ -543,9 +547,7 @@
                             <i
                               class="el-icon-circle-plus-outline"
                               @click="addSubParam(data)"
-                              v-if="
-                                data.type == 'Object' || data.type == 'Array'
-                              "
+                              v-if="data.type == 'Object'"
                             />
                           </div>
                         </el-col>
@@ -1144,7 +1146,8 @@ export default {
         this.pathData = []
         this.headerData = []
         this.bodyData = []
-        this.traverseTree(this.paramData, 1)
+        this.traverseTree(this.paramData)
+        console.log('this.paramData', this.paramData)
         this.paramData.forEach((e) => {
           if (e.position == 'Path' || e.position == 'Query') {
             this.pathData.push(e)
@@ -1157,21 +1160,18 @@ export default {
           }
         })
         this.previewRes = JSON.parse(JSON.stringify(this.responseData))
-        console.log('this.responseData', this.responseData)
-        this.traverseTree(this.previewRes, 1)
+
+        this.traverseTree(this.previewRes)
       }
     },
-    traverseTree(nodes, id) {
-      let num = id
+    traverseTree(nodes) {
       for (const node of nodes) {
-        node.id = num
-        num = num + 1
+        node.id = this.$utils.randomString()
       }
 
       for (const node of nodes) {
-        num = num + 1
         if (node.children && node.children.length > 0) {
-          this.traverseTree(node.children, num)
+          this.traverseTree(node.children)
         }
       }
     },
@@ -1185,8 +1185,27 @@ export default {
       const index = children.findIndex((d) => d.id === data.id)
       children.splice(index, 1)
     },
+    paramTypeChange(type, item) {
+      if (type == 'Array') {
+        item.children = [
+          {
+            type: 'String',
+            paramKey: ' ',
+            position: item.position,
+            require: true,
+            hide: true,
+            freezed: true,
+            children: [],
+          },
+        ]
+      }
+    },
     addParam() {
-      this.paramData.push({ id: this.uuid, paramKey: '', children: [] })
+      this.paramData.push({
+        id: this.$utils.randomString(),
+        paramKey: '',
+        children: [],
+      })
       this.uuid++
     },
     addSubParam(data) {

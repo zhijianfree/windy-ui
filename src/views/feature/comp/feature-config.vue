@@ -24,7 +24,6 @@
                 ></el-empty>
                 <div v-else>
                   <draggable
-                    style="min-height: 100px"
                     v-model="displayList"
                     :disabled="!isEdit"
                     @add="addItem"
@@ -541,6 +540,7 @@ export default {
           let item = {
             id: e.id,
             pointId: e.pointId,
+            relatedId: executePoint.relatedId,
             name: executePoint.name,
             method: executePoint.method,
             service: executePoint.service,
@@ -664,7 +664,6 @@ export default {
 }
 
 .feature-content {
-  height: 75vh;
   min-height: 300px;
   padding: 0 10px;
   background-color: #fff;

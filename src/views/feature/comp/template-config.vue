@@ -153,27 +153,6 @@
               placeholder="请输入默认值"
             ></el-input>
           </el-col>
-          <el-col :span="1" v-if="item.type == 'Array'">
-            <div class="header-line">-</div>
-          </el-col>
-          <el-col :span="4" v-if="item.type == 'Array'">
-            <el-select
-              v-model="item.range"
-              multiple
-              filterable
-              allow-create
-              @change="dataChange"
-              placeholder="请添加枚举类型"
-            >
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              >
-              </el-option>
-            </el-select>
-          </el-col>
           <el-col :span="2">
             <div class="delete-icon">
               <i
@@ -248,13 +227,13 @@ export default {
         }
 
         rowData.params.forEach((e) => {
-          if (this.isEmpty(e.defaultValue)) {
+          if (this.isEmpty(e.initData)) {
             return
           }
           if (e.type == 2) {
-            e.range = e.defaultValue.range
+            e.range = e.initData.range
           }
-          e.initValue = e.defaultValue.defaultValue
+          e.initValue = e.initData.data
         })
         this.infoForm = rowData
       },
@@ -320,8 +299,8 @@ export default {
     dataChange() {
       let data = JSON.parse(JSON.stringify(this.infoForm))
       data.params.forEach((e) => {
-        e.defaultValue = {
-          defaultValue: e.initValue,
+        e.initData = {
+          data: e.initValue,
           range: e.range,
         }
       })
@@ -343,15 +322,15 @@ export default {
 
         let array = []
         requestParam.params.forEach((e) => {
-          e.defaultValue = {
-            defaultValue: e.initValue ? e.initValue : '',
+          e.initData = {
+            data: e.initValue ? e.initValue : '',
           }
           if (e.type == 2) {
-            e.defaultValue.range = e.range
+            e.initData.range = e.range
           }
 
           if (e.type == 1 && this.isEmpty(e.value)) {
-            e.defaultValue.defaultValue = '{}'
+            e.initData.data = '{}'
           }
 
           if (e.paramKey) {
