@@ -72,7 +72,7 @@ export default {
 
 <style scoped>
 .monaco-editor {
-  height: 200px;
+  min-height: 400px;
   text-align: left;
 }
 </style>

@@ -188,7 +188,7 @@
                     ><el-table-column
                       prop="paramKey"
                       label="参数名称"
-                      width="150px"
+                      width="200px"
                     >
                     </el-table-column>
                     <el-table-column prop="type" label="参数类型" width="150px">
@@ -227,7 +227,7 @@
                     ><el-table-column
                       prop="paramKey"
                       label="参数名称"
-                      width="150px"
+                      width="200px"
                     >
                     </el-table-column>
                     <el-table-column prop="type" label="参数类型" width="150px">
@@ -436,7 +436,10 @@
                             ></el-option>
                           </el-select>
                         </el-col>
-                        <el-col :span="3" v-if="!data.hide">
+                        <el-col
+                          :span="3"
+                          v-if="!data.hide && data.type != 'Object'"
+                        >
                           <el-input
                             size="mini"
                             :disabled="data.hide"
@@ -1002,10 +1005,24 @@ export default {
         return
       }
       this.apiForm = JSON.parse(JSON.stringify(data))
+      console.log('show item', this.apiForm)
       this.paramData = JSON.parse(data.requestParams)
       if (!this.paramData) {
         this.paramData = []
       }
+      this.paramData.forEach((e) => {
+        if (
+          (e.objectName =
+            'Array' &&
+            e.children &&
+            e.children[0] &&
+            e.children[0].objectName == 'Object')
+        ) {
+          e.children[0].hide = true
+          e.children[0].freezed = true
+        }
+      })
+      console.log('show paramData', this.paramData)
 
       this.responseData = JSON.parse(data.responseParams)
       if (!this.responseData) {

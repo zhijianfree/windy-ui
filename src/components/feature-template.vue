@@ -19,16 +19,13 @@
           <el-col :span="4">
             <div class="param_name">{{ item.paramKey }}:</div>
           </el-col>
-          <el-col :span="15">
+          <el-col :span="20">
             <FeatureEdit
               :point="executePoint.pointId"
               :feature="item"
               :isEdit="isEdit"
               @refreshData="refreshValue"
             />
-          </el-col>
-          <el-col :span="5">
-            <span class="param_desc">{{ item.desc }}</span>
           </el-col>
         </el-row>
       </div>
@@ -87,6 +84,7 @@ export default {
           p.value = update.item.value
         }
       })
+      console.log('refreshValue', this.executePoint.params)
       this.$emit('refreshData', {
         data: this.executePoint,
       })

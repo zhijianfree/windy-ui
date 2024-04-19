@@ -7,6 +7,7 @@
             size="mini"
             :disabled="!isEdit"
             v-model="item.variableKey"
+            @pointerdown.stop.native
             @input="notifyData"
             placeholder="请输入参数名称"
           ></el-input>
@@ -18,6 +19,7 @@
           <el-input
             size="mini"
             :disabled="!isEdit"
+            @pointerdown.stop.native
             @input="notifyData"
             v-model="item.variableValue"
             placeholder="请输入值"

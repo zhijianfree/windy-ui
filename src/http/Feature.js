@@ -221,9 +221,9 @@ export default {
         })
     })
   },
-  copyFeature(data) {
+  pasteFeature(data) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/copy`
+      let url = `/v1/devops/feature/paste`
       http
         .post(url, data)
         .then((res) => {
@@ -238,7 +238,20 @@ export default {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/delete/features`
       http
-        .post(url, data)
+        .delete(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  batchUpdateFeatures(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/batch/features`
+      http
+        .put(url, data)
         .then((res) => {
           resolve(res)
         })

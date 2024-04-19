@@ -25,15 +25,13 @@
                 <div v-else>
                   <draggable
                     v-model="displayList"
-                    :disabled="!isEdit"
+                    class="drag-box"
+                    v-bind="dragOptions"
                     @add="addItem"
-                    :group="{ name: 'api', pull: 'clone' }"
-                    animation="100"
                   >
                     <div
                       v-for="(executePoint, index) in displayList"
-                      :key="index"
-                      :name="executePoint.randomId"
+                      :key="executePoint.id"
                       class="content-item"
                     >
                       <div
@@ -80,6 +78,7 @@
                             <div>
                               <el-input
                                 placeholder="输入功能描述"
+                                @pointerdown.stop.native
                                 v-model="executePoint.desc"
                                 size="mini"
                               />
@@ -113,7 +112,10 @@
                           class="content-item-detail"
                         >
                           <FeatureTemplate
-                            v-if="executePoint.executeType == 1"
+                            v-if="
+                              executePoint.executeType == 1 ||
+                              executePoint.executeType == 4
+                            "
                             :data="executePoint"
                             :isEdit="isEdit"
                             :key="uuid"
@@ -168,7 +170,7 @@
                 <el-link
                   icon="el-icon-video-play"
                   v-if="!isEdit"
-                  type="danger"
+                  type="success"
                   :underline="false"
                   @click="startDebug"
                   size="middle"
@@ -187,10 +189,7 @@
                       v-for="(element, index) in featureItemList"
                       :key="index"
                     >
-                      <div
-                        class="feature-item"
-                        v-if="element.templateType == 2"
-                      >
+                      <div class="feature-item" v-if="element.isTool">
                         <div class="template-name">
                           {{ element.name }}
                         </div>
@@ -218,10 +217,7 @@
                     animation="100"
                   >
                     <div v-for="(element, index) in templateList" :key="index">
-                      <div
-                        class="feature-item"
-                        v-if="element.templateType != 2"
-                      >
+                      <div class="feature-item" v-if="!element.isTool">
                         <div class="template-name">
                           {{ element.name }}
                         </div>
@@ -275,6 +271,14 @@ export default {
     },
   },
   computed: {
+    dragOptions() {
+      return {
+        animation: 100,
+        group: 'api',
+        disabled: !this.isEdit,
+        ghostClass: 'ghost',
+      }
+    },
     isShowEmpty() {
       let flag = false
       if (
@@ -298,9 +302,9 @@ export default {
   },
   data() {
     return {
-      displayList: [{}],
+      displayList: [],
       allPoints: [],
-      menuType: '',
+      menuType: '2',
       toolType: '2',
       isDrag: false,
       featureItemList: [],
@@ -334,9 +338,6 @@ export default {
       let copyString = localStorage.getItem('copyItem')
       let pasteItem = JSON.parse(copyString)
       if (pasteItem && pasteItem.randomId) {
-        let lastItem = this.displayList[this.displayList.length - 1]
-        console.log('last', lastItem)
-
         pasteItem.randomId = this.$utils.randomString(20)
         pasteItem.writeType = '1'
         pasteItem.testStage = parseInt(this.menuType)
@@ -348,7 +349,6 @@ export default {
       }
     },
     copyExecutePoint(copyItem) {
-      console.log(copyItem)
       localStorage.setItem('copyItem', JSON.stringify(copyItem))
       this.$notify({
         title: '成功',
@@ -368,7 +368,6 @@ export default {
         type: 'warning',
       }).then(() => {
         if (!pointId) {
-          console.log('fake', this.displayList[index])
           this.removeItem(this.displayList[index])
           this.displayExepoints()
           return
@@ -437,7 +436,7 @@ export default {
           relatedId: e.relatedId,
         }
 
-        if (e.executeType != 1) {
+        if (e.executeType == 2 || e.executeType == 3) {
           item.executePoints = e.executePoints
         } else {
           item.params = e.params
@@ -510,8 +509,8 @@ export default {
     selectTestStep() {
       this.bindStepPoints()
       this.displayExepoints()
-      this.$forceUpdate()
-      this.uuid = this.$utils.randomString(20)
+      // this.$forceUpdate()
+      // this.uuid = this.$utils.randomString(20)
     },
     bindStepPoints() {
       if (this.displayList.length == 0) {
@@ -521,7 +520,9 @@ export default {
       let array = this.allPoints.filter((e) => {
         return e.testStage != currentStage
       })
-      this.allPoints = array.concat(this.displayList)
+      this.allPoints = array.concat(
+        JSON.parse(JSON.stringify(this.displayList))
+      )
     },
     refreshArray(data) {
       this.displayList = []
@@ -534,11 +535,11 @@ export default {
     getExecutePoint() {
       featureApi.getExecutePoints(this.featureId).then((res) => {
         this.allPoints = []
-        res.data.data.forEach((e) => {
+        res.data.forEach((e) => {
           let executePoint = e.executorUnit
           let data = executePoint.params
           let item = {
-            id: e.id,
+            id: e.sortOrder,
             pointId: e.pointId,
             relatedId: executePoint.relatedId,
             name: executePoint.name,
@@ -566,12 +567,14 @@ export default {
       featureApi.getServiceTemplates(this.serviceId).then((res) => {
         let array = res.data
         array.forEach((e) => {
+          e.isTool = e.templateType != 1
           e.executeType = e.templateType
         })
         this.featureItemList = array
       })
     },
     displayExepoints() {
+      this.displayList = []
       let array = []
       let stage = parseInt(this.menuType)
       this.allPoints.forEach((e) => {
@@ -681,5 +684,8 @@ export default {
   height: 400px;
   padding-bottom: 30px;
   overflow-y: scroll;
+}
+.drag-box {
+  min-height: 400px;
 }
 </style>

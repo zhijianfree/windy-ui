@@ -65,8 +65,9 @@
             show-checkbox
             node-key="featureId"
             @node-click="treeNodeClick"
+            @node-drop="dragNodeEvent"
             :default-expanded-keys="expendList"
-            :data="userCase"
+            :data="caseFeatures"
             :filter-node-method="filterNode"
             ref="tree"
           >
@@ -416,7 +417,7 @@ export default {
       infoForm: null,
       activeName: 'desc',
       filterText: '',
-      userCase: [],
+      caseFeatures: [],
       showDebugDialog: false,
       isConnect: false,
       serviceId: '',
@@ -453,6 +454,43 @@ export default {
     }
   },
   methods: {
+    dragNodeEvent(node) {
+      console.log('all', this.caseFeatures)
+      let array = []
+      this.loadItemFromTree(this.caseFeatures, array)
+
+      let index = 0
+      array.forEach((e) => {
+        e.sortOrder = index
+        index++
+      })
+      console.log('drag array ', array, array.length)
+      featureApi.batchUpdateFeatures({ featureOrders: array }).then((res) => {
+        if (res) {
+          this.$notify({
+            title: '成功',
+            dangerouslyUseHTMLString: true,
+            message: `用例<strong>[${node.data.featureName}]</strong>排序成功`,
+            type: 'success',
+          })
+        } else {
+          this.$notify({
+            title: '失败',
+            dangerouslyUseHTMLString: true,
+            message: `用例<strong>[${node.data.featureName}]</strong>排序失败`,
+            type: 'error',
+          })
+        }
+      })
+    },
+    loadItemFromTree(list, array) {
+      list.forEach((e) => {
+        array.push(e)
+        if (e.children) {
+          this.loadItemFromTree(e.children, array)
+        }
+      })
+    },
     clickCommand(command, data) {
       if (command == 'newItem') {
         this.startAddFeature()
@@ -539,7 +577,7 @@ export default {
         }
         let item = JSON.parse(copyString)
         item.targetFeature = data.featureId
-        featureApi.copyFeature(item).then((res) => {
+        featureApi.pasteFeature(item).then((res) => {
           if (res.data) {
             this.expendList = [data.featureId]
             localStorage.removeItem('copyItem')
@@ -738,9 +776,8 @@ export default {
       this.$router.go(-1)
     },
     requestCaseFeatures(caseId) {
-      this.userCase = []
       featureApi.getFeatureTree(caseId).then((res) => {
-        this.userCase = res.data
+        this.caseFeatures = res.data
       })
     },
     getCaseDetail() {

@@ -5,6 +5,7 @@
         <div class="item">
           <el-input
             size="mini"
+            @pointerdown.stop.native
             :disabled="!isEdit"
             v-model="item.compareKey"
             @input="notifyData"
@@ -36,6 +37,7 @@
             size="mini"
             :disabled="!isEdit"
             @input="notifyData"
+            @pointerdown.stop.native
             v-model="item.expectValue"
             placeholder="请输入期望值"
           >
