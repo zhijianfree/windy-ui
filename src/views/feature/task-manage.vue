@@ -205,7 +205,12 @@
           </el-select>
         </el-form-item>
         <el-form-item label="任务配置">
-          <monaco ref="editer" :codes="jsonStr" :readonly="false"></monaco>
+          <monaco
+            ref="editer"
+            :codes="jsonStr"
+            @change="dataChange"
+            :readonly="false"
+          ></monaco>
         </el-form-item>
 
         <!-- <el-form-item label="执行机器">
@@ -278,6 +283,9 @@ export default {
     }
   },
   methods: {
+    dataChange(info) {
+      this.jsonStr = info
+    },
     selectService(service) {
       this.testCases = []
       testCaseApi.getTestCaseList(service, 1, 100).then((res) => {

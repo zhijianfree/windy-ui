@@ -240,6 +240,7 @@ export default {
         let list = res.data
         this.displayTreeNode(list)
         this.recordData = list
+        let 
       })
     },
     displayTreeNode(list) {

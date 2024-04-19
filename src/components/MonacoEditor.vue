@@ -22,16 +22,25 @@ export default {
       },
     },
   },
+  watch: {
+    codes: {
+      immediate: true,
+      handler(n, o) {
+        this.content = n
+      },
+    },
+    content: {
+      handler(n, o) {
+        this.$emit('change', n)
+      },
+    },
+  },
   data() {
     return {
       monacoEditor: null,
       readOnly: true,
+      content: '',
     }
-  },
-  watch: {
-    codes(value) {
-      this.setDataValue(value)
-    },
   },
   methods: {
     getValue() {
@@ -42,7 +51,7 @@ export default {
         let self = this
         this.$refs.container.innerHTML = ''
         self.monacoEditor = monaco.editor.create(self.$refs.container, {
-          value: this.codes, // 见props
+          value: this.content, // 见props
           language: 'json',
           theme: 'vs-dark', // 编辑器主题：vs, hc-black, or vs-dark，更多选择详见官网
           editorOptions: {
@@ -53,6 +62,9 @@ export default {
             automaticLayout: true, // 自动布局
             glyphMargin: true, // 字形边缘
           },
+        })
+        self.monacoEditor.onDidChangeModelContent((a, b) => {
+          self.content = self.monacoEditor.getValue()
         })
         window.onresize = function () {
           self.monacoEditor.layout()
