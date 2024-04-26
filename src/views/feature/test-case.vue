@@ -182,20 +182,22 @@
               >全选</el-checkbox
             >
 
-            <el-tree
-              ref="tree"
-              :data="treeData"
-              show-checkbox
-              default-expand-all
-              @node-click="treeNodeClick"
-              highlight-current
-              node-key="featureId"
-              :props="{
-                children: 'children',
-                label: 'featureName',
-              }"
-            >
-            </el-tree>
+            <div class="tree-list">
+              <el-tree
+                ref="tree"
+                :data="treeData"
+                show-checkbox
+                default-expand-all
+                @node-click="treeNodeClick"
+                highlight-current
+                node-key="featureId"
+                :props="{
+                  children: 'children',
+                  label: 'featureName',
+                }"
+              >
+              </el-tree>
+            </div>
           </div>
         </el-col>
         <el-col :span="14">
@@ -221,8 +223,10 @@
       </el-row>
 
       <span slot="footer" class="dialog-footer">
-        <el-button @click="cancellCopy">取 消</el-button>
-        <el-button type="primary" @click="confirmCopy">确定复制</el-button>
+        <el-button size="mini" @click="cancellCopy">取 消</el-button>
+        <el-button size="mini" type="primary" @click="confirmCopy"
+          >确定复制</el-button
+        >
       </span>
     </el-dialog>
     <!-- 复制测试集结束 -->
@@ -446,5 +450,9 @@ export default {
 }
 .tag-item {
   margin: 0px 10px;
+}
+.tree-list {
+  max-height: 600px;
+  overflow-y: scroll;
 }
 </style>

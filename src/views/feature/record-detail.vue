@@ -52,6 +52,15 @@
           <h3>任务执行统计</h3>
           <div class="ui-container">
             <div class="ui-item">
+              <div class="ui-value ui-result">
+                <el-progress
+                  type="circle"
+                  :percentage="executePercent"
+                ></el-progress>
+              </div>
+              <div class="ui-label">执行进度</div>
+            </div>
+            <div class="ui-item">
               <div class="ui-value">{{ totalCount }}</div>
               <div class="ui-label">用例总数</div>
             </div>
@@ -172,7 +181,12 @@ export default {
   },
   computed: {
     resultPercent() {
-      return (this.successCount / this.totalCount).toFixed(2) * 100
+      var ratio = this.successCount / this.totalCount
+      return Math.round(ratio * 100)
+    },
+    executePercent() {
+      var ratio = (this.successCount + this.errorCount) / this.totalCount
+      return Math.round(ratio * 100)
     },
   },
   methods: {
@@ -235,13 +249,21 @@ export default {
       return data.featureName.indexOf(value) !== -1
     },
     getTaskHistories() {
-      this.recordData = []
       taskApi.getTaskHistoryTree(this.recordId).then((res) => {
         let list = res.data
+        this.errorCount = 0
+        this.successCount = 0
         this.displayTreeNode(list)
         this.recordData = list
-        let 
+        if (this.errorCount + this.successCount == this.totalCount) {
+          clearInterval(this.queryInterval)
+        }
       })
+    },
+    startInterval() {
+      this.queryInterval = setInterval(() => {
+        this.getTaskHistories()
+      }, 2000)
     },
     displayTreeNode(list) {
       list.forEach((e) => {
@@ -292,6 +314,7 @@ export default {
     this.recordId = this.$route.query.recordId
     this.getRecordDetail()
     this.getTaskHistories()
+    this.startInterval()
   },
 }
 </script>

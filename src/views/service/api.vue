@@ -34,7 +34,7 @@
                       size="mini"
                       icon="el-icon-tickets"
                       @click="queryHistory"
-                      >查看构建记录</el-button
+                      >二方包构建记录</el-button
                     >
                   </el-col>
                   <el-col :span="5">

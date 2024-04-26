@@ -25,12 +25,12 @@ export default {
   watch: {
     codes: {
       immediate: true,
-      handler(n, o) {
+      handler(n) {
         this.content = n
       },
     },
     content: {
-      handler(n, o) {
+      handler(n) {
         this.$emit('change', n)
       },
     },
@@ -63,7 +63,7 @@ export default {
             glyphMargin: true, // 字形边缘
           },
         })
-        self.monacoEditor.onDidChangeModelContent((a, b) => {
+        self.monacoEditor.onDidChangeModelContent(() => {
           self.content = self.monacoEditor.getValue()
         })
         window.onresize = function () {
