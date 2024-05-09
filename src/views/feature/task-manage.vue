@@ -205,6 +205,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="任务配置">
+          <el-button
+            type="primary"
+            icon="el-icon-refresh"
+            size="mini"
+            class="sync-btn"
+            @click="refreshConfig"
+            >同步测试集配置</el-button
+          >
           <monaco
             ref="editer"
             :codes="jsonStr"
@@ -264,7 +272,7 @@ export default {
       executeList: [],
       testCases: [],
       services: [],
-      jsonStr: ``,
+      jsonStr: `a`,
       taskCurrentPage: 1,
       taskTotal: 0,
       recordCurrentPage: 1,
@@ -283,6 +291,9 @@ export default {
     }
   },
   methods: {
+    refreshConfig() {
+      this.selectTestCase(this.taskForm.testCaseId)
+    },
     dataChange(info) {
       this.jsonStr = info
     },
@@ -354,7 +365,6 @@ export default {
       this.taskForm = row
       this.showDialog = true
       this.selectService(row.serviceId)
-      this.selectTestCase(row.testCaseId)
       this.jsonStr = JSON.stringify(JSON.parse(row.taskConfig), null, 3)
       if (row.machines) {
         this.executeList = JSON.parse(row.machines)
@@ -496,5 +506,8 @@ export default {
 }
 .loading-status {
   font-size: 20px;
+}
+.sync-btn {
+  margin: 10px 10px;
 }
 </style>

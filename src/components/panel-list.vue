@@ -53,68 +53,75 @@
                   </div>
                 </template>
                 <template slot="content">
-                  <div>
-                    <Panel>
-                      <template slot="title">
-                        <div class="desc-div">
-                          <i class="el-icon-s-promotion" /> Request
-                        </div>
-                      </template>
-                      <template slot="content">
-                        <div
-                          class="request-list"
-                          v-for="(line, index) in result.executeDetailVo
-                            .requestDetailVo.request"
-                          :key="index"
-                        >
-                          {{ line }}
-                        </div>
-                        <div>
-                          {{
-                            result.executeDetailVo.requestDetailVo.requestBody
-                          }}
-                        </div>
-                      </template>
-                    </Panel>
-                    <Panel>
-                      <template slot="title">
-                        <div class="desc-div">
-                          <i class="el-icon-camera-solid" /> Response
-                        </div>
-                      </template>
-                      <template slot="content">
-                        <div>
-                          <div class="request-list">
-                            responseBody:
-                            <json-viewer
-                              v-if="
-                                result.executeDetailVo.responseDetailVo
-                                  .responseBody
-                              "
-                              :value="
-                                result.executeDetailVo.responseDetailVo
-                                  .responseBody
-                              "
-                              :expand-depth="5"
-                              copyable
-                            ></json-viewer>
-                          </div>
-                        </div>
-                      </template>
-                    </Panel>
-                    <div
-                      v-if="
-                        result.executeDetailVo.responseDetailVo.errorMessage
-                      "
-                    >
-                      <div class="desc-div error-icon">
-                        <i class="el-icon-warning" /> Error
+                  <Panel>
+                    <template slot="title">
+                      <div class="desc-div">
+                        <i class="el-icon-s-promotion" /> Request
                       </div>
+                    </template>
+                    <template slot="content">
                       <div class="request-list">
-                        {{
-                          result.executeDetailVo.responseDetailVo.errorMessage
-                        }}
+                        <json-viewer
+                          v-if="result.executeDetailVo.requestTips"
+                          :value="result.executeDetailVo.requestTips"
+                          :expand-depth="5"
+                          copyable
+                        ></json-viewer>
                       </div>
+                    </template>
+                  </Panel>
+                  <Panel>
+                    <template slot="title">
+                      <div class="desc-div">
+                        <i class="el-icon-camera-solid" /> Response
+                      </div>
+                    </template>
+                    <template slot="content">
+                      <div
+                        class="request-list"
+                        v-if="
+                          result.compareResult &&
+                          !result.compareResult.compareStatus &&
+                          result.compareResult.description
+                        "
+                      >
+                        比较错误：
+                        <span
+                          style="
+                            color: #f56c6c;
+                            font-size: 16px;
+                            font-weight: 900;
+                          "
+                          >{{ result.compareResult.description }}</span
+                        >
+                      </div>
+                      <div>
+                        <div class="request-list">
+                          响应结果:
+                          <json-viewer
+                            v-if="
+                              result.executeDetailVo.responseDetailVo
+                                .responseBody
+                            "
+                            :value="
+                              result.executeDetailVo.responseDetailVo
+                                .responseBody
+                            "
+                            :expand-depth="5"
+                            copyable
+                          ></json-viewer>
+                        </div>
+                      </div>
+                    </template>
+                  </Panel>
+                  <div
+                    v-if="result.executeDetailVo.responseDetailVo.errorMessage"
+                  >
+                    <div class="desc-div error-icon">
+                      <i class="el-icon-warning" /> Error
+                    </div>
+                    <div class="request-list">
+                      {{ result.executeDetailVo.responseDetailVo.errorMessage }}
                     </div>
                   </div>
                 </template>

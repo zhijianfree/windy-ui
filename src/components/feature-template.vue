@@ -84,7 +84,6 @@ export default {
           p.value = update.item.value
         }
       })
-      console.log('refreshValue', this.executePoint.params)
       this.$emit('refreshData', {
         data: this.executePoint,
       })

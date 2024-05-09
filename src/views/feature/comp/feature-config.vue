@@ -114,7 +114,8 @@
                           <FeatureTemplate
                             v-if="
                               executePoint.executeType == 1 ||
-                              executePoint.executeType == 4
+                              executePoint.executeType == 4 ||
+                              executePoint.executeType == 5
                             "
                             :data="executePoint"
                             :isEdit="isEdit"
@@ -275,6 +276,7 @@ export default {
       return {
         animation: 100,
         group: 'api',
+        revertClone: true,
         disabled: !this.isEdit,
         ghostClass: 'ghost',
       }
@@ -372,15 +374,18 @@ export default {
           this.displayExepoints()
           return
         }
-        featureApi.deleteExecutePoint(pointId).then((res) => {
-          if (res.data == 1) {
-            this.removeItem(this.displayList[index])
-            this.displayExepoints()
-            this.$message.success('删除执行点成功')
-            return
-          }
-          this.$message.warning('删除执行点失败')
-        })
+        this.deletePoint(pointId, index)
+      })
+    },
+    deletePoint(pointId, index) {
+      featureApi.deleteExecutePoint(pointId).then((res) => {
+        if (res.data == 1) {
+          this.removeItem(this.displayList[index])
+          this.displayExepoints()
+          this.$message.success('删除执行点成功')
+          return
+        }
+        this.$message.warning('删除执行点失败')
       })
     },
     removeItem(item) {
@@ -496,11 +501,31 @@ export default {
       this.uuid = this.$utils.randomString(20)
     },
     refreshValue(update) {
+      //删除添加到if或者for中的执行点
+      let removeArray = []
+      if (update.data.executePoints) {
+        update.data.executePoints.forEach((e) => {
+          removeArray.push(e.randomId)
+        })
+      }
+      this.allPoints = this.allPoints.filter((e) => {
+        let result = removeArray.indexOf(e.randomId) < 0
+        if (!result) {
+          this.deletePoint(e.pointId)
+        }
+        return result
+      })
+
+      //更新数据
+      let updateArray = []
       this.allPoints.forEach((e) => {
         if (e.randomId == update.data.randomId) {
-          e = update.data
+          updateArray.push(update.data)
+        } else {
+          updateArray.push(e)
         }
       })
+      this.allPoints = updateArray
       this.displayExepoints()
     },
     startDrag() {
@@ -567,7 +592,7 @@ export default {
       featureApi.getServiceTemplates(this.serviceId).then((res) => {
         let array = res.data
         array.forEach((e) => {
-          e.isTool = e.templateType != 1
+          e.isTool = e.templateType != 1 && e.templateType != 5
           e.executeType = e.templateType
         })
         this.featureItemList = array

@@ -185,6 +185,9 @@ export default {
       return Math.round(ratio * 100)
     },
     executePercent() {
+      if (this.totalCount == 0) {
+        return 0
+      }
       var ratio = (this.successCount + this.errorCount) / this.totalCount
       return Math.round(ratio * 100)
     },

@@ -344,6 +344,7 @@ export default {
       previewData: [],
       uploadTemplates: [],
       isCreate: false,
+      pluginType: 5,
     }
   },
   watch: {
@@ -433,7 +434,7 @@ export default {
         }
       })
       this.getServiceApi()
-      templateApi.getTemplateByType(3).then((res) => {
+      templateApi.getTemplateByType(this.pluginType).then((res) => {
         this.uploadTemplates = res.data
       })
     },

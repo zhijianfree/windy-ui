@@ -11,9 +11,6 @@ export default {
     // 编辑器中呈现的内容
     codes: {
       type: String,
-      default: function () {
-        return ''
-      },
     },
     readonly: {
       type: Boolean,
@@ -27,6 +24,7 @@ export default {
       immediate: true,
       handler(n) {
         this.content = n
+        this.setDataValue(n)
       },
     },
     content: {
@@ -72,7 +70,9 @@ export default {
       })
     },
     setDataValue(data) {
-      this.monacoEditor.setValue(data)
+      if (this.monacoEditor) {
+        this.monacoEditor.setValue(data)
+      }
     },
   },
   mounted() {

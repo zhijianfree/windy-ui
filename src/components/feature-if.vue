@@ -6,7 +6,9 @@
         <el-input
           :disabled="!isEdit"
           v-model="condition"
+          placeholder="请输入ongl表达式"
           @input="notifyData"
+          @pointerdown.stop.native
           size="mini"
           class="condition-input"
           inline
@@ -57,7 +59,6 @@
 <script>
 import draggable from 'vuedraggable'
 import FeatureTemplate from './feature-template'
-import featureApi from '../http/Feature'
 export default {
   props: {
     data: Object,
@@ -78,11 +79,18 @@ export default {
   },
   methods: {
     addPoint(e) {
-      this.points[e.newIndex - 1].randomId = this.$utils.randomString(20)
-      this.points[e.newIndex - 1].writeType = '1'
-      this.points[e.newIndex - 1].sortOrder = e.newIndex
+      console.log('add item', e)
+      console.log('posts', this.points)
+      let index = e.newIndex == 0 ? 0 : e.newIndex - 1
+      if (!this.points[index].randomId) {
+        this.points[index].randomId = this.$utils.randomString(20)
+        this.points[index].writeType = '1'
+        this.points[index].sortOrder = e.newIndex
+      }
+
       this.isEdit = true
       this.uuid = new Date().valueOf()
+      this.notifyData()
     },
     notifyData() {
       this.refreshValue()
@@ -95,16 +103,21 @@ export default {
         }
 
         let point = {
-          compareDefine: e.compareDefine,
-          variableDefine: e.variableDefine,
           executorUnit: {
             method: e.method,
             name: e.name,
             description: e.description,
             service: e.service,
             params: e.params,
+            invokeType: e.invokeType,
+            headers: e.headers,
+            relatedId: e.relatedId,
           },
           featureId: this.executeData.pointId,
+          randomId: e.randomId,
+          compareDefine: e.compareDefine,
+          variableDefine: e.variableDefine,
+          executeType: e.executeType,
         }
         array.push(point)
       })
@@ -116,22 +129,13 @@ export default {
         data: data,
       })
     },
-    deleteExecutePoint(index, pointId) {
+    deleteExecutePoint(index) {
       this.$confirm('确认删除用例执行点?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
       }).then(() => {
-        featureApi.deleteExecutePoint(pointId).then((res) => {
-          if (res.data == 1) {
-            this.uuid = new Date().valueOf()
-            this.forFeatures.splice(index, 1)
-            this.updateFeatureList()
-            this.$message.success('删除执行点成功')
-            return
-          }
-          this.$message.warning('删除执行点失败')
-        })
+        this.points.splice(index, 1)
       })
     },
   },
