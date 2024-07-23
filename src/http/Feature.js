@@ -104,6 +104,19 @@ export default {
         })
     })
   },
+  getAllTemplates() {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/templates`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getServiceTemplates(serviceId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/${serviceId}/templates`

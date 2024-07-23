@@ -79,8 +79,6 @@ export default {
   },
   methods: {
     addPoint(e) {
-      console.log('add item', e)
-      console.log('posts', this.points)
       let index = e.newIndex == 0 ? 0 : e.newIndex - 1
       if (!this.points[index].randomId) {
         this.points[index].randomId = this.$utils.randomString(20)

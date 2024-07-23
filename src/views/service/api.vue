@@ -77,13 +77,15 @@
               :data="apiTreeData"
               show-checkbox
               draggable
+              node-key="apiId"
               :filter-node-method="filterNode"
               :props="apiProps"
               @node-drop="handleApiDragEnd"
               @check-change="selectTreeNode"
               @node-click="treeNodeSelect"
               :allow-drop="allowApiDrop"
-              ref="tree"
+              :default-expanded-keys="expendKeys"
+              ref="apiTree"
             >
               <div class="tree-node" slot-scope="{ node, data }">
                 <i
@@ -135,8 +137,13 @@
                     ><el-tag type="success" size="small">{{
                       apiForm.method
                     }}</el-tag>
-                    {{ apiForm.resource }}</el-descriptions-item
-                  >
+                    <span class="uri-text">{{ apiForm.resource }}</span>
+                    <i
+                      title="复制"
+                      class="el-icon-document-copy copy-icon"
+                      @click="copyToClipboard(apiForm.resource)"
+                    />
+                  </el-descriptions-item>
                   <el-descriptions-item label="修改时间">{{
                     apiForm.updateTime | dateFormat
                   }}</el-descriptions-item>
@@ -870,6 +877,7 @@ export default {
         ],
       },
       loading: null,
+      expendKeys: [],
     }
   },
   watch: {
@@ -896,6 +904,19 @@ export default {
     },
   },
   methods: {
+    copyToClipboard(text) {
+      // 创建一个临时的 textarea 元素
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      document.body.appendChild(textarea)
+      // 选中文本并执行复制命令
+      textarea.select()
+      document.execCommand('copy')
+      // 清理临时元素
+      document.body.removeChild(textarea)
+      // 提示复制成功
+      this.$message.success('复制成功')
+    },
     httpRequest(param) {
       const formData = new FormData()
       formData.append(`file`, param.file)
@@ -910,6 +931,7 @@ export default {
           this.selectService()
         } else {
           this.$message.error('导入api失败')
+          this.showImportDialog = false
         }
       })
     },
@@ -1133,6 +1155,8 @@ export default {
         serviceApi.updateApi(data).then((res) => {
           if (res.data) {
             this.$message.success({ showClose: true, message: '修改接口成功' })
+            this.expendKeys = [data.apiId]
+            this.selectService()
             this.updateApi = false
           }
         })
@@ -1142,6 +1166,8 @@ export default {
         if (res.data) {
           this.$message.success('添加接口成功')
           this.updateApi = false
+          this.expendKeys = [data.apiId]
+          this.selectService()
         } else {
           this.$message.error('添加接口失败')
         }
@@ -1342,6 +1368,14 @@ export default {
 }
 </script>
 <style scoped>
+.uri-text {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.copy-icon {
+  font-size: 15px;
+  cursor: pointer;
+}
 .folder-icon {
   color: #e6a23c;
   margin-right: 10px;

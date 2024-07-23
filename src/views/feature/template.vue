@@ -497,7 +497,8 @@ export default {
       })
     },
     templateChange(data) {
-      this.infoForm = data
+      this.infoForm = JSON.parse(JSON.stringify(data))
+      this.$forceUpdate()
     },
     submitTemplates() {
       let data = {

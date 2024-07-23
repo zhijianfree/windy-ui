@@ -307,6 +307,12 @@ export default {
 
       let header = {}
       this.headerList.forEach((e) => {
+        if (!e.key) {
+          e.key = ''
+        }
+        if (!e.value) {
+          e.value = ''
+        }
         header[e.key] = e.value
       })
       data.headers = header

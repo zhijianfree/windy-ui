@@ -174,7 +174,13 @@
             placeholder="请输入任务描述"
           ></el-input>
         </el-form-item>
-        <el-form-item label="选择服务" prop="serviceId">
+        <el-form-item label="测试集类型">
+          <el-radio-group v-model="caseType" @change="chooseType">
+            <el-radio :label="1">功能测试集</el-radio>
+            <el-radio :label="2">e2e测试集</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="选择服务" v-if="caseType == 1" prop="serviceId">
           <el-select
             v-model="taskForm.serviceId"
             @change="selectService"
@@ -272,11 +278,12 @@ export default {
       executeList: [],
       testCases: [],
       services: [],
-      jsonStr: `a`,
+      jsonStr: ``,
       taskCurrentPage: 1,
       taskTotal: 0,
       recordCurrentPage: 1,
       recordTotal: 0,
+      caseType: 1,
       taskRule: {
         taskName: [
           { required: true, message: '请输入任务名称', trigger: 'blur' },
@@ -291,6 +298,14 @@ export default {
     }
   },
   methods: {
+    chooseType(type) {
+      if (type == 2) {
+        this.testCases = []
+        testCaseApi.getE2EList().then((res) => {
+          this.testCases = res.data
+        })
+      }
+    },
     refreshConfig() {
       this.selectTestCase(this.taskForm.testCaseId)
     },
@@ -371,13 +386,19 @@ export default {
       }
     },
     deleteTask(row) {
-      taskApi.deleteTask(row.taskId).then((res) => {
-        if (res.data) {
-          this.$message.success('删除成功')
-          this.getTasks(this.taskCurrentPage, this.queryForm.name)
-        } else {
-          this.$message.error('删除失败')
-        }
+      this.$confirm(`确认删除任务【${row.taskName}】?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        taskApi.deleteTask(row.taskId).then((res) => {
+          if (res.data) {
+            this.$message.success('删除成功')
+            this.getTasks(this.taskCurrentPage, this.queryForm.name)
+          } else {
+            this.$message.error('删除失败')
+          }
+        })
       })
     },
     closeDialog() {

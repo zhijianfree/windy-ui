@@ -1,6 +1,10 @@
 <template>
   <div>
-    <div ref="container" class="monaco-editor"></div>
+    <div
+      ref="container"
+      style="height: 300px; width: 100%"
+      class="monaco-editor"
+    ></div>
   </div>
 </template>
 
@@ -12,6 +16,10 @@ export default {
     codes: {
       type: String,
     },
+    language: {
+      type: String,
+      default: 'json',
+    },
     readonly: {
       type: Boolean,
       default: function () {
@@ -22,14 +30,21 @@ export default {
   watch: {
     codes: {
       immediate: true,
-      handler(n) {
-        this.content = n
-        this.setDataValue(n)
+      handler(val) {
+        if (val) {
+          this.content = val
+          this.setDataValue(val)
+        }
       },
     },
     content: {
       handler(n) {
         this.$emit('change', n)
+      },
+    },
+    readonly: {
+      handler(val) {
+        this.monacoEditor.updateOptions({ readOnly: val })
       },
     },
   },
@@ -38,6 +53,7 @@ export default {
       monacoEditor: null,
       readOnly: true,
       content: '',
+      hoverProvider: null,
     }
   },
   methods: {
@@ -45,39 +61,59 @@ export default {
       return this.monacoEditor.getValue()
     },
     initEditer() {
+      this.monacoEditor = monaco.editor.create(this.$refs.container, {
+        value: this.content,
+        language: this.type,
+        theme: 'vs-dark',
+        readOnly: this.readOnly,
+        automaticLayout: true, // 自动布局
+        lineNumbers: 'on', // 显示行号
+        fontFamily: "Consolas, 'Courier New', monospace", // 字体设置
+        fontSize: 14, // 字体大小
+        tabSize: 2, // 制表符大小
+        wordWrap: 'on', // 自动换行
+        find: true,
+        scrollBeyondLastLine: false, // 是否允许滚动超过最后一行
+        minimap: {
+          enabled: true, // 是否显示缩略图
+        },
+      })
+      this.monacoEditor.onDidChangeModelContent(() => {
+        this.content = this.monacoEditor.getValue()
+      })
+      window.addEventListener('resize', () => {
+        this.monacoEditor.layout()
+      })
+      // 使用 nextTick 确保编辑器完全初始化后设置值
       this.$nextTick(() => {
-        let self = this
-        this.$refs.container.innerHTML = ''
-        self.monacoEditor = monaco.editor.create(self.$refs.container, {
-          value: this.content, // 见props
-          language: 'json',
-          theme: 'vs-dark', // 编辑器主题：vs, hc-black, or vs-dark，更多选择详见官网
-          editorOptions: {
-            selectOnLineNumbers: true,
-            roundedSelection: false,
-            readOnly: false,
-            cursorStyle: 'line', // 光标样式
-            automaticLayout: true, // 自动布局
-            glyphMargin: true, // 字形边缘
-          },
-        })
-        self.monacoEditor.onDidChangeModelContent(() => {
-          self.content = self.monacoEditor.getValue()
-        })
-        window.onresize = function () {
-          self.monacoEditor.layout()
-        }
+        this.setDataValue(this.content)
       })
     },
     setDataValue(data) {
+      if (!data || data == '') {
+        return
+      }
       if (this.monacoEditor) {
-        this.monacoEditor.setValue(data)
+        const currentPosition = this.monacoEditor.getPosition()
+        const selection = this.monacoEditor.getSelection()
+
+        this.monacoEditor.setValue(data || '')
+
+        // 恢复光标位置
+        if (currentPosition) {
+          this.monacoEditor.setPosition(currentPosition)
+        }
+        if (selection) {
+          this.monacoEditor.setSelection(selection)
+        }
+        this.monacoEditor.focus()
       }
     },
   },
   mounted() {
-    this.initEditer()
     this.readOnly = this.readonly
+    this.type = this.language
+    this.initEditer()
   },
 }
 </script>

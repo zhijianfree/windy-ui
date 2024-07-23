@@ -10,8 +10,8 @@
   "dependencies": {
     "axios": "^0.23.0",
     "element-ui": "^2.15.6",
-    "monaco-editor-vue": "^1.0.10",
-    "monaco-editor-webpack-plugin": "^7.0.1",
+    "monaco-editor": "0.45.0",
+    "monaco-editor-webpack-plugin": "7.1.0",
     "vue": "^2.6.11",
     "vue-contextmenujs": "^1.4.11",
     "vue-json-viewer": "^2.2.22",

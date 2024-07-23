@@ -27,6 +27,7 @@
                     v-model="displayList"
                     class="drag-box"
                     v-bind="dragOptions"
+                    @end="dragEnd"
                     @add="addItem"
                   >
                     <div
@@ -114,8 +115,7 @@
                           <FeatureTemplate
                             v-if="
                               executePoint.executeType == 1 ||
-                              executePoint.executeType == 4 ||
-                              executePoint.executeType == 5
+                              executePoint.executeType == 4
                             "
                             :data="executePoint"
                             :isEdit="isEdit"
@@ -181,6 +181,7 @@
               <el-collapse v-model="toolType" accordion>
                 <el-collapse-item title="基础工具" name="1">
                   <draggable
+                    class="tool-list"
                     @start="startDrag"
                     :list="featureItemList"
                     :group="{ name: 'api', pull: 'clone' }"
@@ -203,12 +204,22 @@
                 </el-collapse-item>
                 <el-collapse-item title="业务模版" name="2">
                   <div>
-                    <el-input
-                      size="mini"
-                      clearable
-                      v-model="filterName"
-                      placeholder="输入模版名称过滤"
-                    />
+                    <el-row :gutter="20">
+                      <el-col :span="20">
+                        <el-input
+                          size="mini"
+                          clearable
+                          v-model="filterName"
+                          placeholder="输入模版名称过滤"
+                        />
+                      </el-col>
+                      <el-col :span="4">
+                        <i
+                          class="el-icon-refresh refresh-icon"
+                          @click="getCaseInfo"
+                        />
+                      </el-col>
+                    </el-row>
                   </div>
                   <draggable
                     @start="startDrag"
@@ -242,11 +253,13 @@ import FeatureTemplate from '@/components/feature-template'
 import FeatureTool from '@/components/feature-tool'
 import draggable from 'vuedraggable'
 import featureApi from '../../../http/Feature'
+import testCaseApi from '../..//../http/TestCase'
 import collapse from '../../../lib/collapse'
 export default {
   props: {
     service: String,
     feature: String,
+    case: String,
   },
   components: {
     draggable,
@@ -266,6 +279,14 @@ export default {
       handler(val) {
         this.serviceId = val
         this.getExecutePoint()
+      },
+      deep: true,
+      immediate: true,
+    },
+    case: {
+      handler(val) {
+        this.caseId = val
+        this.getCaseInfo()
       },
       deep: true,
       immediate: true,
@@ -316,6 +337,8 @@ export default {
       featureId: '',
       filterName: '',
       serviceId: '',
+      caseId: '',
+      caseInfo: {},
     }
   },
   methods: {
@@ -423,7 +446,6 @@ export default {
       })
     },
     saveConfig() {
-      console.log('this.allPoints', this.allPoints)
       this.displayList.forEach((e) => {
         e.editDesc = false
       })
@@ -486,7 +508,26 @@ export default {
     clickEdit() {
       this.isEdit = !this.isEdit
     },
+    dragEnd() {
+      //每当拖拽的时候，整理下所有执行点的顺序，重新排序时不会错乱
+      let array = JSON.parse(JSON.stringify(this.allPoints))
+      let groups = {}
+      array.forEach((e) => {
+        let key = e.testStage + ''
+        if (!groups[key]) {
+          groups[key] = []
+        }
+        groups[key].push(e)
+      })
+      groups[this.menuType] = this.displayList
+      let result = []
+      Object.values(groups).forEach((group) => {
+        result = result.concat(group)
+      })
+      this.allPoints = result
+    },
     addItem(e) {
+      console.log(e.newIndex)
       let array = JSON.parse(JSON.stringify(this.templateList))
       let item = array[e.oldIndex]
       item.isActive = true
@@ -588,12 +629,37 @@ export default {
         this.menuType = '2'
         this.displayExepoints()
       })
-
+      this.getTemplates()
+    },
+    getCaseInfo() {
+      testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
+        this.caseInfo = res.data
+        this.getTemplates()
+      })
+    },
+    getTemplates() {
+      if (!this.caseInfo) {
+        this.getCaseInfo()
+        return
+      }
+      if (this.caseInfo.caseType == 2) {
+        featureApi.getAllTemplates().then((res) => {
+          let array = res.data
+          array.forEach((e) => {
+            e.isTool = e.templateType != 1 && e.templateType != 5
+            e.executeType = e.templateType
+            e.service = e.service ? e.service : ''
+          })
+          this.featureItemList = array
+        })
+        return
+      }
       featureApi.getServiceTemplates(this.serviceId).then((res) => {
         let array = res.data
         array.forEach((e) => {
           e.isTool = e.templateType != 1 && e.templateType != 5
           e.executeType = e.templateType
+          e.service = e.service ? e.service : ''
         })
         this.featureItemList = array
       })
@@ -612,6 +678,8 @@ export default {
   },
   created() {
     this.getExecutePoint()
+    this.caseId = this.$route.query.caseId
+    this.getCaseInfo()
   },
 }
 </script>
@@ -705,6 +773,11 @@ export default {
     linear-gradient(90deg, hsla(0, 0%, 100%, 0.3) 1px, transparent 0);
   background-size: 75px 75px, 75px 75px, 15px 15px, 15px 15px;
 }
+.tool-list {
+  height: 300px;
+  padding-bottom: 30px;
+  overflow-y: scroll;
+}
 .template-list {
   height: 400px;
   padding-bottom: 30px;
@@ -712,5 +785,9 @@ export default {
 }
 .drag-box {
   min-height: 400px;
+}
+.refresh-icon {
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>

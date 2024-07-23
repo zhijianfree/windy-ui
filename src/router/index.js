@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import TestCase from '../views/feature/test-case.vue'
+import TestE2E from '../views/feature/test-e2e.vue'
 import Feature from '../views/feature/feature.vue'
 import Template from '../views/feature/template.vue'
 import Task from '../views/feature/task-manage.vue'
@@ -21,6 +22,11 @@ const routes = [
     path: '/case',
     name: 'TestCase',
     component: TestCase,
+  },
+  {
+    path: '/e2e',
+    name: 'TestE2E',
+    component: TestE2E,
   },
   {
     path: '/feature',

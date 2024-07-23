@@ -8,7 +8,7 @@
       >
       </FeatureFor>
     </div>
-     <div v-if="executePoint.executeType == 3">
+    <div v-if="executePoint.executeType == 3">
       <FeatureIF
         :data="executePoint"
         :isEdit="isEdit"
@@ -16,11 +16,20 @@
       >
       </FeatureIF>
     </div>
+    <div v-if="executePoint.executeType == 6">
+      <monaco
+        :codes="executePoint.service"
+        @change="dataChange"
+        language="javascript"
+        :readonly="!isEdit"
+      ></monaco>
+    </div>
   </div>
 </template>
 <script>
 import FeatureFor from '@/components/feature-for'
 import FeatureIF from '@/components/feature-if'
+import monaco from '@/components/MonacoEditor.vue'
 export default {
   props: {
     data: Object,
@@ -28,7 +37,8 @@ export default {
   },
   components: {
     FeatureFor,
-    FeatureIF
+    FeatureIF,
+    monaco,
   },
   watch: {
     data(val) {
@@ -42,12 +52,19 @@ export default {
     }
   },
   methods: {
+    dataChange(info) {
+      this.executePoint.service = info
+      this.$emit('refreshData', {
+        data: this.executePoint,
+      })
+    },
     refreshValue(update) {
       this.$emit('refreshData', update)
     },
   },
   created() {
     this.executePoint = this.data
+    console.log(this.executePoint)
   },
 }
 </script>

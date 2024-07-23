@@ -13,6 +13,32 @@ export default {
         })
     })
   },
+  getE2EPage(page, size) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/e2e/page?page=${page}&pageSize=${size}`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getE2EList() {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/e2e/cases`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   createTestCase(testCase) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/case`

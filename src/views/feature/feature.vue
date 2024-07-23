@@ -190,6 +190,7 @@
               <FeatureConfig
                 :feature="selectFeatureId"
                 :service="serviceId"
+                :case="caseId"
                 :key="uuid"
               />
             </el-tab-pane>
