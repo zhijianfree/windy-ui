@@ -4,6 +4,8 @@ import TestCase from '../views/feature/test-case.vue'
 import Feature from '../views/feature/feature.vue'
 import Template from '../views/feature/template.vue'
 import Task from '../views/feature/task-manage.vue'
+import Demand from '../views/demand/demand.vue'
+import Workbench from '../views/demand/workbench.vue'
 import RecordDetail from '../views/feature/record-detail.vue'
 import Service from '../views/service/service.vue'
 import ServiceApi from '../views/service/api.vue'
@@ -21,6 +23,16 @@ const routes = [
     path: '/case',
     name: 'TestCase',
     component: TestCase,
+  },
+  {
+    path: '/demand',
+    name: 'Demand',
+    component: Demand,
+  },
+  {
+    path: '/workbench',
+    name: 'Workbench',
+    component: Workbench,
   },
   {
     path: '/feature',
