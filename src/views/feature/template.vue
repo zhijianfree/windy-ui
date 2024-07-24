@@ -173,6 +173,8 @@
       :visible.sync="showAPIDialog"
       title="API生成模版"
       width="60%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
       @close="closeApiGenerate"
     >
       <div v-if="!previewData || previewData.length < 1">
@@ -193,9 +195,10 @@
                 <el-tree
                   :data="apiTreeData"
                   show-checkbox
+                  node-key="apiId"
+                  :check-on-click-node="true"
                   :filter-node-method="filterNode"
                   :props="apiProps"
-                  @check-change="selectTreeNode"
                   ref="apiTree"
                 >
                   <div class="tree-node" slot-scope="{ node, data }">
@@ -264,6 +267,9 @@
       </div>
       <div v-else>
         <h3>模版预览</h3>
+        <el-button type="primary" @click="showBatchOperate" size="mini"
+          >批量操作</el-button
+        >
         <el-table :data="previewData" size="mini" style="width: 100%">
           <el-table-column prop="name" label="模版名称"> </el-table-column>
           <el-table-column prop="description" label="模版描述">
@@ -305,6 +311,107 @@
         >
       </span>
     </el-dialog>
+    <el-dialog
+      :visible.sync="showBatchDialog"
+      title="模版批量操作"
+      width="60%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <div class="alert-info">
+        <el-alert
+          title="批量操作所有模版"
+          type="info"
+          description="通过批量操作功能给所有的模版添加指定信息，比如可以给模版添加固定的Header信息，避免生成模版后手动操作提高效率。"
+        >
+        </el-alert>
+      </div>
+
+      <el-row v-for="(item, num) in variableList" :key="num" class="param-line">
+        <el-col :span="3">
+          <el-input
+            size="mini"
+            v-model="item.paramKey"
+            placeholder="请输入参数名"
+          ></el-input>
+        </el-col>
+        <el-col :span="1">
+          <div class="header-line">-</div>
+        </el-col>
+        <el-col :span="2">
+          <el-select size="mini" v-model="item.position" placeholder="参数位置">
+            <el-option
+              v-for="item in positionList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+
+        <el-col :span="1">
+          <div class="header-line">-</div>
+        </el-col>
+        <el-col :span="3">
+          <el-input
+            size="mini"
+            v-model="item.description"
+            placeholder="请输入参数描述"
+          ></el-input>
+        </el-col>
+
+        <el-col :span="1">
+          <div class="header-line">-</div>
+        </el-col>
+        <el-col :span="3">
+          <el-input
+            size="mini"
+            v-model="item.initValue"
+            placeholder="请输入默认值"
+          ></el-input>
+        </el-col>
+        <el-col :span="1" v-if="item.position != 'Header'">
+          <div class="header-line">-</div>
+        </el-col>
+        <el-col :span="3" v-if="item.position != 'Header'">
+          <el-select
+            v-model="item.type"
+            size="mini"
+            placeholder="请选择参数类型"
+          >
+            <el-option
+              v-for="item in paramTypeList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="2">
+          <div class="delete-icon">
+            <i
+              class="el-icon-remove-outline op-icon"
+              @click="deleteItem(num)"
+            />
+            <i
+              class="el-icon-circle-plus-outline op-icon"
+              v-if="num == variableList.length - 1"
+              @click="addItem"
+            />
+          </div>
+        </el-col>
+      </el-row>
+      <span slot="footer">
+        <el-button size="mini" @click="showBatchDialog = false"
+          >取 消</el-button
+        >
+        <el-button size="mini" type="primary" @click="batchOperate"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -335,7 +442,6 @@ export default {
         children: 'children',
         label: 'apiName',
       },
-      selectNodes: [],
       generateForm: {
         invokeType: 2,
       },
@@ -345,6 +451,22 @@ export default {
       uploadTemplates: [],
       isCreate: false,
       pluginType: 5,
+      showBatchDialog: false,
+      variableList: [],
+      paramTypeList: [
+        { label: 'String', value: 'String' },
+        { label: 'Map', value: 'Map' },
+        { label: 'Array', value: 'Array' },
+        { label: 'Integer', value: 'Integer' },
+        { label: 'Float', value: 'Float' },
+        { label: 'Double', value: 'Double' },
+      ],
+      positionList: [
+        { label: 'Body', value: 'Body' },
+        { label: 'Path', value: 'Path' },
+        { label: 'Query', value: 'Query' },
+        { label: 'Header', value: 'Header' },
+      ],
     }
   },
   watch: {
@@ -353,6 +475,52 @@ export default {
     },
   },
   methods: {
+    batchOperate() {
+      let headerList = this.variableList.filter((param) => {
+        return param.position == 'Header'
+      })
+      let paramList = this.variableList.filter((param) => {
+        return param.position != 'Header'
+      })
+
+      const headerObj = {}
+      headerList.forEach((item) => {
+        headerObj[item.paramKey] = item.initValue
+      })
+
+      this.previewData.forEach((e) => {
+        e.headers = e.headers
+          ? Object.assign({}, e.headers, headerObj)
+          : headerObj
+
+        paramList.forEach((param) => {
+          let item = {
+            paramKey: param.paramKey,
+            type: param.type,
+            description: param.description,
+            position: param.position,
+            initValue: {
+              data: param.initValue,
+            },
+          }
+          if (!e.params) {
+            e.params = []
+          }
+          e.params.push(item)
+        })
+      })
+      this.showBatchDialog = false
+    },
+    deleteItem(index) {
+      this.variableList.splice(index, 1)
+    },
+    addItem() {
+      this.variableList.push({ position: 'Header' })
+    },
+    showBatchOperate() {
+      this.showBatchDialog = true
+      this.variableList = [{ position: 'Header' }]
+    },
     selectTemplate() {
       this.generateForm.className = ''
       this.generateForm.methodName = ''
@@ -377,7 +545,7 @@ export default {
       })
     },
     nextStep() {
-      if (this.selectNodes.length < 1) {
+      if (this.$refs.apiTree.getCheckedKeys().length < 1) {
         this.$message.warning('请先选择生成的api')
         return
       }
@@ -396,10 +564,11 @@ export default {
       this.showDialog = true
     },
     genarateApi() {
+      console.log()
       serviceApi
         .generateTemplate({
           serviceId: this.serviceId,
-          apiIds: this.selectNodes,
+          apiIds: this.$refs.apiTree.getCheckedKeys(),
           invokeType: this.generateForm.invokeType,
           relatedId: this.generateForm.relatedId,
           cover: this.generateForm.cover,
@@ -437,17 +606,6 @@ export default {
       templateApi.getTemplateByType(this.pluginType).then((res) => {
         this.uploadTemplates = res.data
       })
-    },
-    selectTreeNode(data, checked) {
-      console.log('xxxx', data, checked)
-      if (checked) {
-        this.selectNodes.push(data.apiId)
-      } else {
-        let index = this.selectNodes.indexOf(data.apiId)
-        if (index != -1) {
-          this.selectNodes.splice(index, 1)
-        }
-      }
     },
     getServiceApi() {
       serviceApi.getApiList(this.serviceId).then((res) => {
@@ -634,5 +792,23 @@ export default {
 }
 .filter {
   margin: 10px 20px 10px 0px;
+}
+.header-line {
+  text-align: center;
+}
+.delete-icon {
+  font-size: 20px;
+  cursor: pointer;
+}
+.op-icon {
+  margin-left: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.alert-info {
+  margin: 0 20px 20px 20px;
+}
+.param-line {
+  margin: 10px;
 }
 </style>

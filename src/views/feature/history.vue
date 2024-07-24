@@ -41,6 +41,13 @@
               icon="el-icon-refresh"
               >刷新</el-button
             >
+            <el-button
+              type="primary"
+              size="mini"
+              @click="startDebug"
+              icon="el-icon-video-play"
+              >调试</el-button
+            >
           </template>
           <template slot-scope="scope">
             <el-button type="text" @click="showRecord(scope.row)" size="small"
@@ -142,6 +149,16 @@ export default {
     }
   },
   methods: {
+    startDebug() {
+      featureApi.startFeature(this.featureId).then((res) => {
+        if (res.data) {
+          this.$message.success('开始执行，请查看运行日志')
+          this.refreshRecords()
+        } else {
+          this.$message.error('执行失败')
+        }
+      })
+    },
     refreshRecords() {
       this.getFeatureHistory(this.featureId)
     },

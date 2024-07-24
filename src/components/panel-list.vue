@@ -22,10 +22,7 @@
         </template>
         <template slot="content">
           <!-- if for执行结果展示开始 -->
-          <div
-            v-if="item.executeType == 2 || item.executeType == 3"
-            class="cycle-div"
-          >
+          <div v-if="item.executeType == 2" class="cycle-div">
             <div v-for="(result, index) in item.resultList" :key="index">
               <Panel>
                 <template slot="title">

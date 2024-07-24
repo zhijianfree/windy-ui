@@ -3,6 +3,7 @@
     <div class="feature-content gridBackground">
       <div>
         <el-row :gutter="20">
+          <!--- 开始编写用例-->
           <el-col :span="18">
             <div class="edit-content" @contextmenu.prevent="onContextmenu">
               <div class="menu-type">
@@ -16,7 +17,6 @@
                   <el-radio-button label="3">清理</el-radio-button>
                 </el-radio-group>
               </div>
-              <!--- 开始-->
               <div>
                 <el-empty
                   v-if="isShowEmpty"
@@ -35,6 +35,7 @@
                       :key="executePoint.id"
                       class="content-item"
                     >
+                      <!-- 执行点头部开始 -->
                       <div
                         class="content-item-title"
                         :key="uuid"
@@ -107,6 +108,9 @@
                           @click="closeDiv(executePoint)"
                         />
                       </div>
+                      <!-- 执行点头部结束 -->
+
+                      <!-- 执行点内容开始 -->
                       <collapse>
                         <div
                           v-show="executePoint.isActive"
@@ -132,12 +136,16 @@
                           />
                         </div>
                       </collapse>
+                      <!-- 执行点内容结束 -->
                     </div>
                   </draggable>
                 </div>
               </div>
             </div>
           </el-col>
+          <!--- 编写用例结束-->
+
+          <!-- 模版列表开始 -->
           <el-col :span="6">
             <div class="feature-config-list">
               <div class="operate">
@@ -182,7 +190,7 @@
                 <el-collapse-item title="基础工具" name="1">
                   <draggable
                     class="tool-list"
-                    @start="startDrag"
+                    @start="startDrag($event, { list: featureItemList })"
                     :list="featureItemList"
                     :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
@@ -221,28 +229,49 @@
                       </el-col>
                     </el-row>
                   </div>
-                  <draggable
-                    @start="startDrag"
-                    class="template-list"
-                    :list="featureItemList"
-                    :group="{ name: 'api', pull: 'clone' }"
-                    animation="100"
-                  >
-                    <div v-for="(element, index) in templateList" :key="index">
-                      <div class="feature-item" v-if="!element.isTool">
-                        <div class="template-name">
-                          {{ element.name }}
-                        </div>
-                        <div class="template-desc">
-                          {{ element.description }}
-                        </div>
-                      </div>
+                  <div v-for="(item, index) in templateGroup" :key="index">
+                    <div @click="closeTemplates(item)" class="service-title">
+                      {{ item.name }}
+                      <i
+                        :class="{
+                          'el-icon-arrow-down': item.isActive,
+                          'right-icon': true,
+                          'el-icon-arrow-right': !item.isActive,
+                        }"
+                        @click="closeTemplates(item)"
+                      />
                     </div>
-                  </draggable>
+                    <collapse>
+                      <div v-show="item.showList">
+                        <draggable
+                          @start="startDrag($event, item)"
+                          class="template-list"
+                          :list="item.list"
+                          :group="{ name: 'api', pull: 'clone' }"
+                          animation="100"
+                        >
+                          <div
+                            v-for="(element, index) in item.list"
+                            :key="index"
+                          >
+                            <div class="feature-item" v-if="!element.isTool">
+                              <div class="template-name">
+                                {{ element.name }}
+                              </div>
+                              <div class="template-desc">
+                                {{ element.description }}
+                              </div>
+                            </div>
+                          </div>
+                        </draggable>
+                      </div>
+                    </collapse>
+                  </div>
                 </el-collapse-item>
               </el-collapse>
             </div>
           </el-col>
+          <!-- 模版列表结束 -->
         </el-row>
       </div>
     </div>
@@ -254,6 +283,7 @@ import FeatureTool from '@/components/feature-tool'
 import draggable from 'vuedraggable'
 import featureApi from '../../../http/Feature'
 import testCaseApi from '../..//../http/TestCase'
+import serviceApi from '../..//../http/Service'
 import collapse from '../../../lib/collapse'
 export default {
   props: {
@@ -315,6 +345,19 @@ export default {
       }
       return flag
     },
+    templateGroup() {
+      return this.serviceGroup.filter((data) => {
+        if (!this.filterName) {
+          return true
+        }
+
+        let temp = data.list.filter((item) => {
+          return item.name.toLowerCase().includes(this.filterName.toLowerCase())
+        })
+        data.list = temp
+        return temp.length > 0
+      })
+    },
     templateList() {
       return this.featureItemList.filter(
         (data) =>
@@ -330,6 +373,7 @@ export default {
       menuType: '2',
       toolType: '2',
       isDrag: false,
+      dragGroupList: [],
       featureItemList: [],
       isEdit: false,
       uuid: '',
@@ -339,9 +383,17 @@ export default {
       serviceId: '',
       caseId: '',
       caseInfo: {},
+      serviceList: [],
+      testActive: false,
+      testShow: false,
+      serviceGroup: [],
     }
   },
   methods: {
+    closeTemplates(item) {
+      item.isActive = !item.isActive
+      item.showList = !item.showList
+    },
     onContextmenu(event) {
       this.$contextmenu({
         items: [
@@ -527,9 +579,7 @@ export default {
       this.allPoints = result
     },
     addItem(e) {
-      console.log(e.newIndex)
-      let array = JSON.parse(JSON.stringify(this.templateList))
-      let item = array[e.oldIndex]
+      let item = this.dragGroupList[e.oldIndex]
       item.isActive = true
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
@@ -569,7 +619,8 @@ export default {
       this.allPoints = updateArray
       this.displayExepoints()
     },
-    startDrag() {
+    startDrag(event, item) {
+      this.dragGroupList = item.list
       this.isDrag = true
     },
     selectTestStep() {
@@ -650,6 +701,7 @@ export default {
             e.executeType = e.templateType
             e.service = e.service ? e.service : ''
           })
+          this.exchangeGroup(array)
           this.featureItemList = array
         })
         return
@@ -661,7 +713,58 @@ export default {
           e.executeType = e.templateType
           e.service = e.service ? e.service : ''
         })
+        // this.exchangeGroup(array)
         this.featureItemList = array
+
+        const serviceObj = {}
+        this.serviceList.forEach((obj) => (serviceObj[obj.serviceId] = obj))
+        let service = serviceObj[this.serviceId]
+        if (service) {
+          this.serviceGroup = [
+            {
+              name: service.serviceName,
+              isActive: false,
+              showList: false,
+              list: array,
+            },
+          ]
+        }
+      })
+    },
+    exchangeGroup(array) {
+      let map = {}
+      array.forEach((e) => {
+        let list = map[e.owner]
+        if (!list) {
+          list = []
+        }
+
+        list.push(e)
+        map[e.owner] = list
+      })
+
+      const serviceObj = {}
+      this.serviceList.forEach((obj) => (serviceObj[obj.serviceId] = obj))
+
+      let groupList = []
+      for (let key in map) {
+        if (key && key != '') {
+          let service = serviceObj[key]
+          if (service) {
+            groupList.push({
+              name: service.serviceName,
+              isActive: false,
+              showList: false,
+              list: map[key],
+            })
+          }
+        }
+      }
+      this.serviceGroup = groupList
+    },
+    getServices() {
+      serviceApi.getServices().then((res) => {
+        this.serviceList = res.data
       })
     },
     displayExepoints() {
@@ -677,6 +780,7 @@ export default {
     },
   },
   created() {
+    this.getServices()
     this.getExecutePoint()
     this.caseId = this.$route.query.caseId
     this.getCaseInfo()
@@ -789,5 +893,17 @@ export default {
 .refresh-icon {
   font-size: 18px;
   cursor: pointer;
+}
+.service-title {
+  position: relative;
+  color: #fff;
+  height: 40px;
+  line-height: 40px;
+  background: #606266;
+  padding-left: 20px;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 5px;
 }
 </style>
