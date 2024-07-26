@@ -29,28 +29,138 @@
       <div></div>
     </div>
     <div class="content">
-      <el-tabs type="border-card">
+      <el-tabs type="border-card" v-model="activeName">
         <el-tab-pane label="缺陷" name="bug">
           <span slot="label"><i class="el-icon-question"></i> 缺陷</span>
-          <div>
-            <el-row>
-              <el-col :span="1">
-                <el-tag type="success">未解决</el-tag>
-              </el-col>
-              <el-col :span="23"
-                >这是一个很长很长的bugggggggggggggggggggggggggggggggggg</el-col
-              >
-            </el-row>
-            <el-row>
-              <el-col :span="1">p3</el-col>
-            </el-row>
+          <div class="content-detail">
+            <div class="bug-div" v-for="(item, index) in bugList" :key="index">
+              <el-row class="bug-row">
+                <el-col :span="1">
+                  <el-tag type="success" size="small">未解决</el-tag>
+                </el-col>
+                <el-col :span="23" class="bug-description">
+                  <textview
+                    text="这是一个很长很长的bugggggggggggggggggggggggggggggggggg这是一个很长很长的bugggggggggggggggggggggggggggggggggg这是一个很长很长的bugggggggggggggggggggggggggggggggggg这是一个很长很长的bugggggggggggggggggggggggggggggggggg"
+                    :len="100"
+                  >
+                  </textview>
+                </el-col>
+              </el-row>
+              <div class="bug-bottom">
+                <span class="bug-level">P3</span>
+                <span
+                  ><i class="el-icon-s-shop" /> 关联需求谢谢谢谢谢谢谢谢</span
+                >
+                <span
+                  ><i class="el-icon-camera-solid bug-icon" /> [hakjsdhk3821321]
+                  <i class="el-icon-document-copy"
+                /></span>
+              </div>
+              <div class="time-div">创建时间: 07-08</div>
+            </div>
+          </div>
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page.sync="currentPage"
+              :page-sizes="[10, 20, 50]"
+              :page-size="10"
+              layout="sizes, prev, pager, next"
+              :total="total"
+            >
+            </el-pagination>
           </div>
         </el-tab-pane>
         <el-tab-pane label="需求" name="demand">
           <span slot="label"><i class="el-icon-s-opportunity"></i> 需求</span>
+          <div class="content-detail">
+            <div class="bug-div" v-for="(item, index) in bugList" :key="index">
+              <div>
+                <div class="demand-title">
+                  <textview
+                    text="需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title"
+                    :len="100"
+                  >
+                  </textview>
+                </div>
+                <div class="demand-desc">
+                  <textview
+                    :len="200"
+                    :showpop="false"
+                    text="需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述"
+                  >
+                  </textview>
+                </div>
+              </div>
+              <div class="bug-bottom">
+                <span class="bug-level">P3</span>
+                <span><i class="el-icon-user-solid" /> 古月澜</span>
+                <span
+                  ><i class="el-icon-camera-solid bug-icon" /> [hakjsdhk3821321]
+                  <i class="el-icon-document-copy"
+                /></span>
+              </div>
+              <div class="time-div">提出时间: 07-08</div>
+            </div>
+          </div>
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page.sync="currentPage"
+              :page-sizes="[10, 20, 50]"
+              :page-size="10"
+              layout="sizes, prev, pager, next"
+              :total="total"
+            >
+            </el-pagination>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="工作项" name="work">
           <span slot="label"><i class="el-icon-s-claim"></i> 工作项</span>
+          <div class="content-detail">
+            <div class="bug-div" v-for="(item, index) in bugList" :key="index">
+              <div>
+                <div class="demand-title">
+                  <textview
+                    text="需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title"
+                    :len="100"
+                  >
+                  </textview>
+                </div>
+                <div class="demand-desc">
+                  <textview
+                    :showpop="false"
+                    :len="200"
+                    text="需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述"
+                  >
+                  </textview>
+                </div>
+              </div>
+              <div class="bug-bottom">
+                <span
+                  ><i class="el-icon-camera-solid bug-icon" /> [hakjsdhk3821321]
+                  <i class="el-icon-document-copy"
+                /></span>
+                <span><i class="el-icon-user-solid" /> 工时: 1 天</span>
+                <span><i class="el-icon-time" /> 结束点: 2024-10-01</span>
+              </div>
+              <div class="time-div">开始时间: 07-08</div>
+            </div>
+          </div>
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page.sync="currentPage"
+              :page-sizes="[10, 20, 50]"
+              :page-size="10"
+              layout="sizes, prev, pager, next"
+              :total="total"
+            >
+            </el-pagination>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -58,17 +168,57 @@
 </template>
 <script>
 import img from '../../../public/logo.svg'
+import textview from '../../components/text-view.vue'
 export default {
+  components: {
+    textview,
+  },
   data() {
     return {
       imageUrl: img,
       searchText: '',
-      activeName: '',
+      activeName: 'bug',
       bugData: [],
+      bugList: [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+      ],
+      total: 30,
+      currentPage: 1,
     }
   },
   methods: {
-    handleClick(tab) {},
+    handleClick(tab) {
+      console.log(tab)
+    },
+    handleSizeChange(size) {
+      console.log(size)
+    },
+    handleCurrentChange(page) {
+      console.log(page)
+    },
   },
 }
 </script>
@@ -96,7 +246,7 @@ export default {
 }
 
 .ui-container {
-  width: 300px;
+  width: 450px;
   position: absolute;
   top: 10px;
   right: 60px;
@@ -125,6 +275,75 @@ export default {
 
 .ui-label {
   font-size: 14px;
+  color: #909399;
+}
+
+.content-detail {
+  height: 500px;
+  overflow-y: scroll;
+}
+.time-div {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 13px;
+  color: #909399;
+}
+.bug-div {
+  position: relative;
+  color: #303133;
+  font-size: 13px !important;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 15px;
+}
+.bug-div:hover {
+  background-color: #f2f6fc;
+  cursor: pointer;
+}
+
+.bug-row {
+  display: flex;
+  align-items: center;
+}
+
+.bug-description {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  word-break: break-all;
+}
+.bug-level {
+  width: 30px;
+  height: 20px;
+  font-size: 12px;
+  border-radius: 5px;
+  margin-right: 10px;
+  display: flex;
+  color: #fff;
+  justify-content: center;
+  align-items: center;
+  background-color: #409eff;
+}
+.bug-bottom {
+  margin-top: 10px;
+  display: flex;
+  color: #909399;
+}
+.bug-bottom span {
+  margin-right: 10px;
+}
+.bug-icon {
+  color: #f56c6c;
+}
+.pagination {
+  margin-top: 10px;
+}
+.demand-title {
+  font-size: 14px;
+}
+.demand-desc {
+  font-size: 12px;
+  margin-top: 5px;
   color: #909399;
 }
 </style>
