@@ -143,9 +143,35 @@ export default {
         })
     })
   },
+  getTaskHistoryTree(recordId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/task/records/${recordId}/history/tree`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getTaskHistories(recordId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/task/record/${recordId}/history`
+      let url = `/v1/devops/feature/task/records/${recordId}/histories`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getTaskRecordByTriggerId(triggerId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/task/${triggerId}/record`
       http
         .get(url)
         .then((res) => {

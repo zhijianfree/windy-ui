@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div class="for-title">
+    <div class="for-box">
       <div class="for-start">
-        for(int i =0; i {{ str }}
-        <el-input
+        循环次数
+        <el-input-number
           :disabled="!isEdit"
           v-model="condition"
           @input="notifyData"
@@ -11,7 +11,6 @@
           class="size-input"
           inline
         />
-        ; i ++)
       </div>
       {
       <div>
@@ -144,11 +143,11 @@ export default {
 .size-input {
   width: 100px;
 }
-.for-title {
+.for-box {
   margin: 5px;
   border: 2px dashed #dcdfe6;
   padding: 10px;
-  width: 500px;
+  margin: 10px;
   border-radius: 4px;
 }
 .for-content {

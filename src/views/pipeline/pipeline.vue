@@ -104,7 +104,7 @@
                 <el-collapse-item name="3">
                   <template slot="title">
                     <i class="el-icon-s-custom title-icon" />
-                    个人流水线
+                    自定义流水线
                   </template>
                   <div
                     v-for="(item, index) in customList"
@@ -299,6 +299,7 @@
       title="节点日志"
       :visible.sync="isShowNodeLog"
       :destroy-on-close="true"
+      @close="closeNodeLog"
       width="70%"
     >
       <span
@@ -313,6 +314,37 @@
           <span>{{ item }}</span>
         </li>
       </ul>
+      <div v-if="recordList && recordList.length > 0">
+        <el-button type="primary" size="mini" @click="openTaskDetail"
+          >查看任务详情</el-button
+        >
+        <el-table :data="recordList" size="mini" height="400px">
+          <el-table-column prop="featureName" label="用例名称">
+          </el-table-column>
+          <el-table-column
+            prop="executeStatus"
+            label="用例状态"
+            :filters="[
+              { text: '成功', value: 1 },
+              { text: '失败', value: 2 },
+              { text: '超时', value: 3 },
+              { text: '运行中', value: 4 },
+            ]"
+            :filter-method="filterStatus"
+          >
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.executeStatus | statusFormat">{{
+                scope.row.executeStatus | statusName
+              }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="执行时间">
+            <template slot-scope="scope">
+              {{ scope.row.createTime | dateFormat }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-dialog>
     <!-- 节点日志结束 -->
 
@@ -358,6 +390,7 @@ import PipelineConfig from './comp/pipeline-config.vue'
 import pipelineApi from '../../http/Pipeline'
 import publishApi from '../../http/Publish'
 import serviceApi from '../../http/Service'
+import taskApi from '../../http/Task'
 import historyApi from '../../http/PipelineHistory'
 import actionApi from '../../http/PipelineAction'
 import utils from '../../lib/pipeline'
@@ -395,9 +428,18 @@ export default {
       approvalNode: {},
       showApproval: false,
       bindGit: false,
+      recordList: [],
+      taskRecordId: '',
     }
   },
   methods: {
+    closeNodeLog() {
+      this.recordList = []
+      this.taskRecordId = ''
+    },
+    filterStatus(value, row) {
+      return row.executeStatus === value
+    },
     executeWay(executeType) {
       let label = '-'
       switch (executeType) {
@@ -561,6 +603,8 @@ export default {
           return
         }
 
+        console.log('ddd', res)
+        let nodeType = res.data.executeType
         historyApi.getPipelienStatus(this.history.historyId).then((res) => {
           res.data.nodeStatusList.forEach((e) => {
             if (e.nodeId == node.nodeId) {
@@ -568,10 +612,33 @@ export default {
               this.logForm.status = e.status
               this.logForm.messageList = e.message
               this.isShowNodeLog = true
+
+              if (nodeType == 'TEST') {
+                this.getTaskHistories(e.recordId)
+              }
             }
           })
         })
       })
+    },
+    getTaskHistories(triggerId) {
+      taskApi.getTaskRecordByTriggerId(triggerId).then((res) => {
+        this.taskRecordId = res.data.recordId
+        taskApi.getTaskHistories(this.taskRecordId).then((res) => {
+          this.recordList = res.data
+        })
+      })
+    },
+    openTaskDetail() {
+      let array = window.location.href.split('//')
+      let domain = array[1].split('/')[0]
+      console.log(
+        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`
+      )
+      window.open(
+        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`,
+        '_blank'
+      )
     },
     getPrenode(arr, index) {
       let tmp = {}

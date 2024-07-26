@@ -1,7 +1,12 @@
 <template>
   <div class="content">
     <!-- 表单查询开始 -->
-    <el-form :inline="true" :model="queryForm" size="mini">
+    <el-form
+      :inline="true"
+      :model="queryForm"
+      size="mini"
+      @submit.native.prevent
+    >
       <el-form-item label="任务名称">
         <el-input
           @input="startQuery"
@@ -169,7 +174,13 @@
             placeholder="请输入任务描述"
           ></el-input>
         </el-form-item>
-        <el-form-item label="选择服务" prop="serviceId">
+        <el-form-item label="测试集类型">
+          <el-radio-group v-model="caseType" @change="chooseType">
+            <el-radio :label="1">功能测试集</el-radio>
+            <el-radio :label="2">e2e测试集</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="选择服务" v-if="caseType == 1" prop="serviceId">
           <el-select
             v-model="taskForm.serviceId"
             @change="selectService"
@@ -200,7 +211,20 @@
           </el-select>
         </el-form-item>
         <el-form-item label="任务配置">
-          <monaco ref="editer" :codes="jsonStr" :readonly="false"></monaco>
+          <el-button
+            type="primary"
+            icon="el-icon-refresh"
+            size="mini"
+            class="sync-btn"
+            @click="refreshConfig"
+            >同步测试集配置</el-button
+          >
+          <monaco
+            ref="editer"
+            :codes="jsonStr"
+            @change="dataChange"
+            :readonly="false"
+          ></monaco>
         </el-form-item>
 
         <!-- <el-form-item label="执行机器">
@@ -259,6 +283,7 @@ export default {
       taskTotal: 0,
       recordCurrentPage: 1,
       recordTotal: 0,
+      caseType: 1,
       taskRule: {
         taskName: [
           { required: true, message: '请输入任务名称', trigger: 'blur' },
@@ -273,6 +298,20 @@ export default {
     }
   },
   methods: {
+    chooseType(type) {
+      if (type == 2) {
+        this.testCases = []
+        testCaseApi.getE2EList().then((res) => {
+          this.testCases = res.data
+        })
+      }
+    },
+    refreshConfig() {
+      this.selectTestCase(this.taskForm.testCaseId)
+    },
+    dataChange(info) {
+      this.jsonStr = info
+    },
     selectService(service) {
       this.testCases = []
       testCaseApi.getTestCaseList(service, 1, 100).then((res) => {
@@ -341,20 +380,25 @@ export default {
       this.taskForm = row
       this.showDialog = true
       this.selectService(row.serviceId)
-      this.selectTestCase(row.testCaseId)
       this.jsonStr = JSON.stringify(JSON.parse(row.taskConfig), null, 3)
       if (row.machines) {
         this.executeList = JSON.parse(row.machines)
       }
     },
     deleteTask(row) {
-      taskApi.deleteTask(row.taskId).then((res) => {
-        if (res.data) {
-          this.$message.success('删除成功')
-          this.getTasks(this.taskCurrentPage, this.queryForm.name)
-        } else {
-          this.$message.error('删除失败')
-        }
+      this.$confirm(`确认删除任务【${row.taskName}】?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        taskApi.deleteTask(row.taskId).then((res) => {
+          if (res.data) {
+            this.$message.success('删除成功')
+            this.getTasks(this.taskCurrentPage, this.queryForm.name)
+          } else {
+            this.$message.error('删除失败')
+          }
+        })
       })
     },
     closeDialog() {
@@ -444,7 +488,7 @@ export default {
     deleteTaskRecord(row) {
       taskApi.deleteTaskRecord(row.recordId).then(() => {
         this.$message.success('删除成功')
-        this.getTaskRecords(1)
+        this.getTaskRecords(this.recordCurrentPage)
       })
     },
     dateFormat(time) {
@@ -483,5 +527,8 @@ export default {
 }
 .loading-status {
   font-size: 20px;
+}
+.sync-btn {
+  margin: 10px 10px;
 }
 </style>

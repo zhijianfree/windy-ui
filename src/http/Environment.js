@@ -91,4 +91,17 @@ export default {
         })
     })
   },
+  getNodeList(envId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/environment/${envId}/nodes`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }

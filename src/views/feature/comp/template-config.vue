@@ -5,6 +5,7 @@
       ref="infoForm"
       :rules="infoRule"
       size="small"
+      :disabled="!isEdit"
       label-width="120px"
     >
       <el-form-item label="模版名称" prop="name">
@@ -16,8 +17,9 @@
       </el-form-item>
       <el-form-item label="模版类型" prop="invokeType">
         <el-radio-group v-model="infoForm.invokeType" @change="dataChange">
-          <el-radio :label="1">默认模版</el-radio>
-          <el-radio :label="2">Http</el-radio>
+          <el-radio :label="1">本地方法调用</el-radio>
+          <el-radio :label="2">HTTP调用</el-radio>
+          <el-radio :label="3">关联模版</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item
@@ -49,12 +51,13 @@
           </el-col>
           <el-col :span="2">
             <i
+              v-if="isEdit"
               class="el-icon-remove-outline op-icon"
               @click="removeHeader(index)"
             />
             <i
               class="el-icon-circle-plus-outline op-icon"
-              v-if="index == headerList.length - 1"
+              v-if="index == headerList.length - 1 && isEdit"
               @click="addHeader"
             />
           </el-col>
@@ -124,6 +127,24 @@
           <el-col :span="1">
             <div class="header-line">-</div>
           </el-col>
+          <el-col :span="2">
+            <el-select
+              v-model="item.position"
+              @change="dataChange"
+              placeholder="参数位置"
+            >
+              <el-option
+                v-for="item in positionList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="1">
+            <div class="header-line">-</div>
+          </el-col>
           <el-col :span="3">
             <el-input
               size="mini"
@@ -132,36 +153,16 @@
               placeholder="请输入默认值"
             ></el-input>
           </el-col>
-          <el-col :span="1" v-if="item.type == 2">
-            <div class="header-line">-</div>
-          </el-col>
-          <el-col :span="4" v-if="item.type == 2">
-            <el-select
-              v-model="item.range"
-              multiple
-              filterable
-              allow-create
-              @change="dataChange"
-              placeholder="请添加枚举类型"
-            >
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              >
-              </el-option>
-            </el-select>
-          </el-col>
           <el-col :span="2">
             <div class="delete-icon">
               <i
+                v-if="isEdit"
                 class="el-icon-remove-outline op-icon"
                 @click="deleteItem(num)"
               />
               <i
                 class="el-icon-circle-plus-outline op-icon"
-                v-if="num == infoForm.params.length - 1"
+                v-if="num == infoForm.params.length - 1 && isEdit"
                 @click="addItem"
               />
             </div>
@@ -177,7 +178,7 @@
           :autosize="{ minRows: 2, maxRows: 4 }"
         ></el-input>
       </el-form-item>
-      <el-form-item>
+      <el-form-item v-if="isEdit">
         <el-button size="mini" type="primary" @click="submit('infoForm')"
           >确定</el-button
         >
@@ -191,13 +192,25 @@ import templateApi from '../../../http/Template'
 export default {
   props: {
     config: Object,
+    service: String,
     isEdit: Boolean,
+    isCreate: {
+      type: Boolean,
+      default: false,
+    },
   },
   watch: {
+    service: {
+      handler(val) {
+        this.serviceId = val
+      },
+      deep: true,
+      immediate: true,
+    },
     config: {
       handler(val) {
         let rowData = JSON.parse(JSON.stringify(val))
-        if (rowData.headers) {
+        if (rowData.headers && Object.keys(rowData.headers).length > 0) {
           let array = []
           Object.keys(rowData.headers).forEach((key) => {
             array.push({ key: key, value: rowData.headers[key] })
@@ -207,19 +220,20 @@ export default {
           this.headerList = [{ key: '', value: '' }]
         }
 
-        if (!rowData.params) {
+        if (!rowData.params || rowData.params.length == 0) {
           this.infoForm = rowData
+          this.infoForm.params = [{ position: 'Body' }]
           return
         }
 
         rowData.params.forEach((e) => {
-          if (this.isEmpty(e.defaultValue)) {
+          if (this.isEmpty(e.initData)) {
             return
           }
           if (e.type == 2) {
-            e.range = e.defaultValue.range
+            e.range = e.initData.range
           }
-          e.initValue = e.defaultValue.defaultValue
+          e.initValue = e.initData.data
         })
         this.infoForm = rowData
       },
@@ -229,6 +243,7 @@ export default {
   },
   data() {
     return {
+      serviceId: '',
       infoForm: {},
       headerList: [],
       infoRule: {
@@ -244,18 +259,24 @@ export default {
       },
       options: [],
       paramTypeList: [
-        { label: 'String', value: 0 },
-        { label: 'Map', value: 1 },
-        { label: 'List', value: 2 },
-        { label: 'Integer', value: 3 },
-        { label: 'Float', value: 4 },
-        { label: 'Double', value: 5 },
+        { label: 'String', value: 'String' },
+        { label: 'Map', value: 'Map' },
+        { label: 'Array', value: 'Array' },
+        { label: 'Integer', value: 'Integer' },
+        { label: 'Float', value: 'Float' },
+        { label: 'Double', value: 'Double' },
       ],
       httpMethods: [
         { label: 'Post', value: 'Post' },
         { label: 'Get', value: 'Get' },
         { label: 'Put', value: 'Put' },
         { label: 'Delete', value: 'Delete' },
+      ],
+      positionList: [
+        { label: 'Body', value: 'Body' },
+        { label: 'Path', value: 'Path' },
+        { label: 'Query', value: 'Query' },
+        { label: 'Header', value: 'Header' },
       ],
     }
   },
@@ -273,19 +294,25 @@ export default {
       this.infoForm.params.splice(index, 1)
     },
     addItem() {
-      this.infoForm.params.push({})
+      this.infoForm.params.push({ position: 'Body' })
     },
     dataChange() {
       let data = JSON.parse(JSON.stringify(this.infoForm))
       data.params.forEach((e) => {
-        e.defaultValue = {
-          defaultValue: e.initValue,
+        e.initData = {
+          data: e.initValue,
           range: e.range,
         }
       })
 
       let header = {}
       this.headerList.forEach((e) => {
+        if (!e.key) {
+          e.key = ''
+        }
+        if (!e.value) {
+          e.value = ''
+        }
         header[e.key] = e.value
       })
       data.headers = header
@@ -298,18 +325,25 @@ export default {
         }
 
         let requestParam = JSON.parse(JSON.stringify(this.infoForm))
+
+        let array = []
         requestParam.params.forEach((e) => {
-          e.defaultValue = {
-            defaultValue: e.initValue ? e.initValue : '',
+          e.initData = {
+            data: e.initValue ? e.initValue : '',
           }
           if (e.type == 2) {
-            e.defaultValue.range = e.range
+            e.initData.range = e.range
           }
 
           if (e.type == 1 && this.isEmpty(e.value)) {
-            e.defaultValue.defaultValue = '{}'
+            e.initData.data = '{}'
+          }
+
+          if (e.paramKey) {
+            array.push(e)
           }
         })
+        requestParam.params = array
 
         let headers = {}
         if (this.headerList.length > 0) {
@@ -320,24 +354,25 @@ export default {
             headers[e.key] = e.value
           })
         }
+        requestParam.owner = this.serviceId
         requestParam.headers = headers
 
-        if (this.isEdit) {
+        if (!this.isCreate) {
           templateApi.updateTemplate(requestParam).then(() => {
-            this.$message.success(`修改成功`)
+            this.$message.success({ message: `修改成功`, showClose: true })
             this.$emit('complete')
           })
           return
         }
 
         templateApi.createTemplate(requestParam).then(() => {
-          this.$message.success(`添加成功`)
+          this.$message.success({ message: `添加成功`, showClose: true })
           this.$emit('complete')
         })
       })
     },
     closeDialog() {
-      this.infoForm = { params: [{}] }
+      this.infoForm = { params: [{ position: 'Body' }] }
       this.$emit('complete')
     },
   },

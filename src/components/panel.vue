@@ -6,8 +6,8 @@
       </div>
     </div>
     <transition>
-      <div v-show="boxshow && isAuto" class="lesson">
-        <div class=" animate__animated  animate__fadeIndown">
+      <div v-show="boxshow" class="lesson">
+        <div class="animate__animated animate__fadeIndown">
           <slot name="content"> </slot>
         </div>
       </div>
@@ -17,23 +17,17 @@
 
 <script>
 export default {
-  props: {
-    isAuto: {
-      type: Boolean,
-      default: true,
-    },
-  },
   data() {
     return {
       boxshow: false,
-    };
+    }
   },
   methods: {
     showCourse() {
-      this.boxshow = !this.boxshow;
+      this.boxshow = !this.boxshow
     },
   },
-};
+}
 </script>
 
 <style scoped>

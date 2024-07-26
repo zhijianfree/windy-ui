@@ -1,8 +1,8 @@
 import http from '../lib/http'
 export default {
-  getTemplatePage(page, size, name) {
+  getTemplatePage(serviceId, page, size, name) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/templates/page?page=${page}&size=${size}&name=${name}`
+      let url = `/v1/devops/feature/${serviceId}/templates/page?page=${page}&size=${size}&name=${name}`
       http
         .get(url)
         .then((res) => {
@@ -29,6 +29,19 @@ export default {
   getTemplate(templateId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/template/${templateId}`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getTemplateByType(invokeType) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/types/${invokeType}/templates`
       http
         .get(url)
         .then((res) => {
