@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div class="title">
-      <el-page-header @back="goBack" :content="caseName"> </el-page-header>
-    </div>
     <el-row>
       <el-col :span="5">
+        <div class="title">
+          <el-page-header @back="goBack" :content="caseName"> </el-page-header>
+        </div>
         <!-- 用例列表开始 -->
         <div class="api-list">
           <div class="service-panel">
@@ -65,8 +65,9 @@
             show-checkbox
             node-key="featureId"
             @node-click="treeNodeClick"
-            :data="userCase"
-            default-expand-all
+            @node-drop="dragNodeEvent"
+            :default-expanded-keys="expendList"
+            :data="caseFeatures"
             :filter-node-method="filterNode"
             ref="tree"
           >
@@ -80,18 +81,34 @@
                 />
                 {{ data.featureName }}</span
               >
-              <span style="float: right" v-if="data.featureType == 2">
+              <span style="float: right">
                 <el-dropdown @command="(val) => clickCommand(val, data)">
                   <el-button type="text">...</el-button>
                   <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item command="newItem"
-                      >新增用例</el-dropdown-item
+                    <el-dropdown-item
+                      command="newItem"
+                      v-if="data.featureType == 2"
+                      ><i class="el-icon-tickets" />新增用例</el-dropdown-item
                     >
-                    <el-dropdown-item command="newFolder"
-                      >新增目录</el-dropdown-item
+                    <el-dropdown-item
+                      command="newFolder"
+                      v-if="data.featureType == 2"
+                      ><i
+                        class="el-icon-folder-opened"
+                      />新增目录</el-dropdown-item
                     >
                     <el-dropdown-item command="delete"
                       ><i class="el-icon-delete" />删除</el-dropdown-item
+                    >
+                    <el-dropdown-item command="copyFeature"
+                      ><i class="el-icon-document-copy" />复制</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      command="pasteFeature"
+                      v-if="data.featureType == 2"
+                      ><i
+                        class="el-icon-document-checked"
+                      />粘贴</el-dropdown-item
                     >
                   </el-dropdown-menu>
                 </el-dropdown>
@@ -170,7 +187,12 @@
               name="config"
               v-if="infoForm.featureType == 1"
             >
-              <FeatureConfig :feature="selectFeatureId" />
+              <FeatureConfig
+                :feature="selectFeatureId"
+                :service="serviceId"
+                :case="caseId"
+                :key="uuid"
+              />
             </el-tab-pane>
             <!-- 用例编写结束 -->
             <el-tab-pane
@@ -396,10 +418,10 @@ export default {
       infoForm: null,
       activeName: 'desc',
       filterText: '',
-      userCase: [],
+      caseFeatures: [],
       showDebugDialog: false,
       isConnect: false,
-      service: '',
+      serviceId: '',
       showFeatureDialog: false,
       featureForm: {},
       isEditFeature: false,
@@ -429,9 +451,47 @@ export default {
           { required: true, message: '请输入名称', trigger: 'blur' },
         ],
       },
+      expendList: [],
     }
   },
   methods: {
+    dragNodeEvent(node) {
+      console.log('all', this.caseFeatures)
+      let array = []
+      this.loadItemFromTree(this.caseFeatures, array)
+
+      let index = 0
+      array.forEach((e) => {
+        e.sortOrder = index
+        index++
+      })
+      console.log('drag array ', array, array.length)
+      featureApi.batchUpdateFeatures({ featureOrders: array }).then((res) => {
+        if (res) {
+          this.$notify({
+            title: '成功',
+            dangerouslyUseHTMLString: true,
+            message: `用例<strong>[${node.data.featureName}]</strong>排序成功`,
+            type: 'success',
+          })
+        } else {
+          this.$notify({
+            title: '失败',
+            dangerouslyUseHTMLString: true,
+            message: `用例<strong>[${node.data.featureName}]</strong>排序失败`,
+            type: 'error',
+          })
+        }
+      })
+    },
+    loadItemFromTree(list, array) {
+      list.forEach((e) => {
+        array.push(e)
+        if (e.children) {
+          this.loadItemFromTree(e.children, array)
+        }
+      })
+    },
     clickCommand(command, data) {
       if (command == 'newItem') {
         this.startAddFeature()
@@ -467,6 +527,64 @@ export default {
           .catch((e) => {
             this.$message.error(e.response.data.message)
           })
+      }
+      if (command == 'copyFeature') {
+        let featureIds = []
+        if (data.featureType == 2) {
+          let checkedFeatures = this.$refs.tree.getCheckedKeys()
+          if (checkedFeatures.length < 1) {
+            this.$notify({
+              title: '未选中用例',
+              dangerouslyUseHTMLString: true,
+              message: `请先选择用例，才可复制`,
+              type: 'error',
+            })
+            return
+          }
+          data.children.forEach((e) => {
+            let index = checkedFeatures.indexOf(e.featureId)
+            if (index != -1 && e.featureType == 1) {
+              featureIds.push(e.featureId)
+            }
+          })
+        } else {
+          featureIds.push(data.featureId)
+        }
+        console.log('copy', featureIds)
+        localStorage.setItem(
+          'copyFeature',
+          JSON.stringify({
+            featureIds: featureIds,
+            featureType: data.featureType,
+          })
+        )
+        this.$notify({
+          title: '成功',
+          dangerouslyUseHTMLString: true,
+          message: `执行点<strong>[${data.featureName}]</strong>已复制`,
+          type: 'success',
+        })
+      }
+      if (command == 'pasteFeature') {
+        let copyString = localStorage.getItem('copyFeature')
+        if (copyString == null || copyString == '' || copyString == undefined) {
+          this.$notify({
+            title: '粘贴失败',
+            dangerouslyUseHTMLString: true,
+            message: `粘贴用例为空，请复制之后重新尝试`,
+            type: 'warning',
+          })
+          return
+        }
+        let item = JSON.parse(copyString)
+        item.targetFeature = data.featureId
+        featureApi.pasteFeature(item).then((res) => {
+          if (res.data) {
+            this.expendList = [data.featureId]
+            localStorage.removeItem('copyItem')
+            this.requestCaseFeatures(this.caseId)
+          }
+        })
       }
     },
     handleClose(tag) {
@@ -641,8 +759,10 @@ export default {
       this.dynamicTags = []
       this.formStepList = data.testStep.split('|')
       this.selectFeatureId = data.featureId
+      this.expendList = [data.featureId]
       featureApi.getFeatureDetail(data.featureId).then((res) => {
         this.dynamicTags = res.data.tags
+        this.uuid = this.$utils.randomString(20)
       })
     },
     filterNode(value, data) {
@@ -657,21 +777,21 @@ export default {
       this.$router.go(-1)
     },
     requestCaseFeatures(caseId) {
-      this.userCase = []
       featureApi.getFeatureTree(caseId).then((res) => {
-        this.userCase = res.data
+        this.caseFeatures = res.data
       })
     },
     getCaseDetail() {
       testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
         this.caseName = res.data.testCaseName
+        this.serviceId = res.data.serviceId
       })
     },
   },
   created() {
     this.caseId = this.$route.query.caseId
-    this.requestCaseFeatures(this.caseId)
     this.getCaseDetail()
+    this.requestCaseFeatures(this.caseId)
   },
 }
 </script>

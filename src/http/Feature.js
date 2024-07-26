@@ -104,9 +104,22 @@ export default {
         })
     })
   },
-  getFeatureTemplates() {
+  getAllTemplates() {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/feature/templates`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getServiceTemplates(serviceId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/${serviceId}/templates`
       http
         .get(url)
         .then((res) => {
@@ -208,9 +221,22 @@ export default {
         })
     })
   },
-  copyFeature(data) {
+  copyCaseFeature(data) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/copy`
+      let url = `/v1/devops/feature/case/copy`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  pasteFeature(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/feature/paste`
       http
         .post(url, data)
         .then((res) => {
@@ -225,7 +251,20 @@ export default {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/delete/features`
       http
-        .post(url, data)
+        .delete(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  batchUpdateFeatures(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/batch/features`
+      http
+        .put(url, data)
         .then((res) => {
           resolve(res)
         })

@@ -3,8 +3,9 @@
     <div class="feature-content gridBackground">
       <div>
         <el-row :gutter="20">
+          <!--- 开始编写用例-->
           <el-col :span="18">
-            <div class="edit-content">
+            <div class="edit-content" @contextmenu.prevent="onContextmenu">
               <div class="menu-type">
                 <el-radio-group
                   v-model="menuType"
@@ -16,7 +17,6 @@
                   <el-radio-button label="3">清理</el-radio-button>
                 </el-radio-group>
               </div>
-              <!--- 开始-->
               <div>
                 <el-empty
                   v-if="isShowEmpty"
@@ -24,23 +24,39 @@
                 ></el-empty>
                 <div v-else>
                   <draggable
-                    style="min-height: 100px"
                     v-model="displayList"
-                    :disabled="!isEdit"
+                    class="drag-box"
+                    v-bind="dragOptions"
+                    @end="dragEnd"
                     @add="addItem"
-                    :group="{ name: 'api', pull: 'clone' }"
-                    animation="100"
                   >
                     <div
                       v-for="(executePoint, index) in displayList"
-                      :key="index"
-                      :name="executePoint.randomId"
+                      :key="executePoint.id"
                       class="content-item"
                     >
-                      <div class="content-item-title" :key="uuid">
+                      <!-- 执行点头部开始 -->
+                      <div
+                        class="content-item-title"
+                        :key="uuid"
+                        @dblclick="closeDiv(executePoint)"
+                      >
                         <el-row :gutter="10">
-                          <el-col :span="5">
-                            {{ executePoint.name }}
+                          <el-col :span="executePoint.editDesc ? 6 : 13">
+                            <span
+                              @dblclick="
+                                () => {
+                                  if (isEdit && !executePoint.editDesc) {
+                                    exchangeEditStatus(executePoint)
+                                  }
+                                }
+                              "
+                              >{{ executePoint.description }}
+                            </span>
+                            <i
+                              class="el-icon-document-copy"
+                              @click="copyExecutePoint(executePoint)"
+                            />
                           </el-col>
                           <el-col :span="4">
                             <i
@@ -56,16 +72,6 @@
                               class="el-icon-edit-outline delete-point"
                             />
                           </el-col>
-                          <el-col
-                            :span="8"
-                            v-if="
-                              executePoint.description && !executePoint.editDesc
-                            "
-                          >
-                            <el-tag type="success">
-                              {{ executePoint.description }}
-                            </el-tag>
-                          </el-col>
 
                           <el-col
                             :span="8"
@@ -74,6 +80,7 @@
                             <div>
                               <el-input
                                 placeholder="输入功能描述"
+                                @pointerdown.stop.native
                                 v-model="executePoint.desc"
                                 size="mini"
                               />
@@ -101,15 +108,22 @@
                           @click="closeDiv(executePoint)"
                         />
                       </div>
+                      <!-- 执行点头部结束 -->
+
+                      <!-- 执行点内容开始 -->
                       <collapse>
                         <div
                           v-show="executePoint.isActive"
                           class="content-item-detail"
                         >
                           <FeatureTemplate
-                            v-if="executePoint.executeType == 1"
+                            v-if="
+                              executePoint.executeType == 1 ||
+                              executePoint.executeType == 4
+                            "
                             :data="executePoint"
                             :isEdit="isEdit"
+                            :key="uuid"
                             :type="executePoint.writeType"
                             @refreshData="refreshValue"
                           />
@@ -117,16 +131,21 @@
                             v-else
                             :data="executePoint"
                             :isEdit="isEdit"
+                            :key="uuid"
                             @refreshData="refreshValue"
                           />
                         </div>
                       </collapse>
+                      <!-- 执行点内容结束 -->
                     </div>
                   </draggable>
                 </div>
               </div>
             </div>
           </el-col>
+          <!--- 编写用例结束-->
+
+          <!-- 模版列表开始 -->
           <el-col :span="6">
             <div class="feature-config-list">
               <div class="operate">
@@ -160,7 +179,7 @@
                 <el-link
                   icon="el-icon-video-play"
                   v-if="!isEdit"
-                  type="danger"
+                  type="success"
                   :underline="false"
                   @click="startDebug"
                   size="middle"
@@ -170,7 +189,8 @@
               <el-collapse v-model="toolType" accordion>
                 <el-collapse-item title="基础工具" name="1">
                   <draggable
-                    @start="startDrag"
+                    class="tool-list"
+                    @start="startDrag($event, { list: featureItemList })"
                     :list="featureItemList"
                     :group="{ name: 'api', pull: 'clone' }"
                     animation="100"
@@ -179,10 +199,7 @@
                       v-for="(element, index) in featureItemList"
                       :key="index"
                     >
-                      <div
-                        class="feature-item"
-                        v-if="element.templateType != 1"
-                      >
+                      <div class="feature-item" v-if="element.isTool">
                         <div class="template-name">
                           {{ element.name }}
                         </div>
@@ -194,48 +211,85 @@
                   </draggable>
                 </el-collapse-item>
                 <el-collapse-item title="业务模版" name="2">
-                  <draggable
-                    @start="startDrag"
-                    style="height: 500px"
-                    :list="featureItemList"
-                    :group="{ name: 'api', pull: 'clone' }"
-                    animation="100"
-                  >
-                    <div
-                      v-for="(element, index) in featureItemList"
-                      :key="index"
-                    >
-                      <div
-                        class="feature-item"
-                        v-if="element.templateType == 1"
-                      >
-                        <div class="template-name">
-                          {{ element.name }}
-                        </div>
-                        <div class="template-desc">
-                          {{ element.description }}
-                        </div>
-                      </div>
+                  <div>
+                    <el-row :gutter="20">
+                      <el-col :span="20">
+                        <el-input
+                          size="mini"
+                          clearable
+                          v-model="filterName"
+                          placeholder="输入模版名称过滤"
+                        />
+                      </el-col>
+                      <el-col :span="4">
+                        <i
+                          class="el-icon-refresh refresh-icon"
+                          @click="getCaseInfo"
+                        />
+                      </el-col>
+                    </el-row>
+                  </div>
+                  <div v-for="(item, index) in templateGroup" :key="index">
+                    <div @click="closeTemplates(item)" class="service-title">
+                      {{ item.name }}
+                      <i
+                        :class="{
+                          'el-icon-arrow-down': item.isActive,
+                          'right-icon': true,
+                          'el-icon-arrow-right': !item.isActive,
+                        }"
+                        @click="closeTemplates(item)"
+                      />
                     </div>
-                  </draggable>
+                    <collapse>
+                      <div v-show="item.showList">
+                        <draggable
+                          @start="startDrag($event, item)"
+                          class="template-list"
+                          :list="item.list"
+                          :group="{ name: 'api', pull: 'clone' }"
+                          animation="100"
+                        >
+                          <div
+                            v-for="(element, index) in item.list"
+                            :key="index"
+                          >
+                            <div class="feature-item" v-if="!element.isTool">
+                              <div class="template-name">
+                                {{ element.name }}
+                              </div>
+                              <div class="template-desc">
+                                {{ element.description }}
+                              </div>
+                            </div>
+                          </div>
+                        </draggable>
+                      </div>
+                    </collapse>
+                  </div>
                 </el-collapse-item>
               </el-collapse>
             </div>
           </el-col>
+          <!-- 模版列表结束 -->
         </el-row>
       </div>
     </div>
   </div>
 </template>
 <script>
-import FeatureTemplate from "@/components/feature-template";
-import FeatureTool from "@/components/feature-tool";
-import draggable from "vuedraggable";
-import featureApi from "../../../http/Feature";
-import collapse from "../../../lib/collapse";
+import FeatureTemplate from '@/components/feature-template'
+import FeatureTool from '@/components/feature-tool'
+import draggable from 'vuedraggable'
+import featureApi from '../../../http/Feature'
+import testCaseApi from '../..//../http/TestCase'
+import serviceApi from '../..//../http/Service'
+import collapse from '../../../lib/collapse'
 export default {
   props: {
+    service: String,
     feature: String,
+    case: String,
   },
   components: {
     draggable,
@@ -246,99 +300,210 @@ export default {
   watch: {
     feature: {
       handler(val) {
-        this.featureId = val;
-        this.getExecutePoint();
+        this.featureId = val
+      },
+      deep: true,
+      immediate: true,
+    },
+    service: {
+      handler(val) {
+        this.serviceId = val
+        this.getExecutePoint()
+      },
+      deep: true,
+      immediate: true,
+    },
+    case: {
+      handler(val) {
+        this.caseId = val
+        this.getCaseInfo()
       },
       deep: true,
       immediate: true,
     },
   },
   computed: {
+    dragOptions() {
+      return {
+        animation: 100,
+        group: 'api',
+        revertClone: true,
+        disabled: !this.isEdit,
+        ghostClass: 'ghost',
+      }
+    },
     isShowEmpty() {
-      let flag = false;
+      let flag = false
       if (
         this.displayList.length == 0 ||
         this.displayList.length == undefined
       ) {
-        flag = true;
+        flag = true
       }
       if (this.isDrag) {
-        flag = false;
+        flag = false
       }
-      return flag;
+      return flag
+    },
+    templateGroup() {
+      return this.serviceGroup.filter((data) => {
+        if (!this.filterName) {
+          return true
+        }
+
+        let temp = data.list.filter((item) => {
+          return item.name.toLowerCase().includes(this.filterName.toLowerCase())
+        })
+        data.list = temp
+        return temp.length > 0
+      })
+    },
+    templateList() {
+      return this.featureItemList.filter(
+        (data) =>
+          !this.filterName ||
+          data.name.toLowerCase().includes(this.filterName.toLowerCase())
+      )
     },
   },
   data() {
     return {
-      displayList: [{}],
+      displayList: [],
       allPoints: [],
-      menuType: "",
-      toolType: "2",
+      menuType: '2',
+      toolType: '2',
       isDrag: false,
+      dragGroupList: [],
       featureItemList: [],
       isEdit: false,
-      uuid: "",
+      uuid: '',
       isActive: false,
-      featureId: "",
-    };
+      featureId: '',
+      filterName: '',
+      serviceId: '',
+      caseId: '',
+      caseInfo: {},
+      serviceList: [],
+      testActive: false,
+      testShow: false,
+      serviceGroup: [],
+    }
   },
   methods: {
+    closeTemplates(item) {
+      item.isActive = !item.isActive
+      item.showList = !item.showList
+    },
+    onContextmenu(event) {
+      this.$contextmenu({
+        items: [
+          {
+            label: '粘贴执行点',
+            disabled: !this.isEdit,
+            onClick: () => {
+              this.pasteExecutePoint()
+            },
+          },
+        ],
+        event,
+        zIndex: 3,
+        minWidth: 230,
+      })
+      return true
+    },
+    pasteExecutePoint() {
+      let copyString = localStorage.getItem('copyItem')
+      let pasteItem = JSON.parse(copyString)
+      if (pasteItem && pasteItem.randomId) {
+        pasteItem.randomId = this.$utils.randomString(20)
+        pasteItem.writeType = '1'
+        pasteItem.testStage = parseInt(this.menuType)
+        pasteItem.pointId = null
+        this.allPoints.push(pasteItem)
+        this.displayExepoints()
+
+        localStorage.removeItem('copyItem')
+      }
+    },
+    copyExecutePoint(copyItem) {
+      localStorage.setItem('copyItem', JSON.stringify(copyItem))
+      this.$notify({
+        title: '成功',
+        dangerouslyUseHTMLString: true,
+        message: `执行点<strong>[${copyItem.description}]</strong>已复制`,
+        type: 'success',
+      })
+    },
     closeDiv(executePoint) {
-      executePoint.isActive = !executePoint.isActive;
-      this.uuid = this.$utils.randomString(20);
+      executePoint.isActive = !executePoint.isActive
+      this.uuid = this.$utils.randomString(20)
     },
     deleteExecutePoint(index, pointId) {
-      this.$confirm("确认删除用例执行点?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('确认删除用例执行点?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       }).then(() => {
         if (!pointId) {
-          this.displayList.splice(index, 1);
-          this.updateFeatureList();
-          return;
+          this.removeItem(this.displayList[index])
+          this.displayExepoints()
+          return
         }
-        featureApi.deleteExecutePoint(pointId).then((res) => {
-          if (res.data == 1) {
-            this.displayList.splice(index, 1);
-            this.updateFeatureList();
-            this.$message.success("删除执行点成功");
-            return;
-          }
-          this.$message.warning("删除执行点失败");
-        });
-      });
+        this.deletePoint(pointId, index)
+      })
+    },
+    deletePoint(pointId, index) {
+      featureApi.deleteExecutePoint(pointId).then((res) => {
+        if (res.data == 1) {
+          this.removeItem(this.displayList[index])
+          this.displayExepoints()
+          this.$message.success('删除执行点成功')
+          return
+        }
+        this.$message.warning('删除执行点失败')
+      })
+    },
+    removeItem(item) {
+      let index = -1
+      for (let i in this.allPoints) {
+        if (this.allPoints[i]['randomId'] === item.randomId) {
+          index = i
+          break
+        }
+      }
+      if (index == -1) return
+      this.allPoints.splice(index, 1)
     },
     startDebug() {
       featureApi.startFeature(this.featureId).then((res) => {
         if (res.data) {
-          this.$message.success("开始执行，请查看运行日志");
+          this.$message.success('开始执行，请查看运行日志')
         } else {
-          this.$message.error("执行失败");
+          this.$message.error('执行失败')
         }
-      });
+      })
     },
     resetOrder() {
-      this.bindStepPoints();
+      this.bindStepPoints()
       this.allPoints.sort((m, n) => {
-        let before = m.testStage;
-        let current = n.testStage;
+        let before = m.testStage
+        let current = n.testStage
         if (before > current) {
-          return 1;
+          return 1
         }
         if (before < current) {
-          return -1;
+          return -1
         }
-        return 0;
-      });
+        return 0
+      })
     },
     saveConfig() {
       this.displayList.forEach((e) => {
-        e.editDesc = false;
-      });
-      let index = 0;
-      let array = [];
-      this.resetOrder();
+        e.editDesc = false
+      })
+      let index = 0
+      let array = []
+      this.resetOrder()
       this.allPoints.forEach((e) => {
         let item = {
           method: e.method,
@@ -346,12 +511,14 @@ export default {
           invokeType: e.invokeType,
           description: e.description,
           service: e.service,
-        };
+          headers: e.headers,
+          relatedId: e.relatedId,
+        }
 
-        if (e.executeType != 1) {
-          item.executePoints = e.executePoints;
+        if (e.executeType == 2 || e.executeType == 3) {
+          item.executePoints = e.executePoints
         } else {
-          item.params = e.params;
+          item.params = e.params
         }
 
         array.push({
@@ -365,132 +532,260 @@ export default {
           variableDefine: e.variableDefine,
           executeType: e.executeType,
           description: e.description,
-        });
-        index++;
-      });
+        })
+        index++
+      })
       let data = {
         featureId: this.featureId,
         testFeatures: array,
-      };
+      }
 
       featureApi.updateFeature(data).then(() => {
-        this.$message.success("保存成功");
-        this.isEdit = false;
-      });
+        this.$message.success('保存成功')
+        this.isEdit = false
+        this.getExecutePoint()
+      })
     },
     exchangeEditStatus(item, isUpdateText) {
       if (isUpdateText) {
-        item.description = item.desc;
+        item.description = item.desc
       }
-      item.editDesc = !item.editDesc;
-      this.uuid = this.$utils.randomString(20);
+      item.editDesc = !item.editDesc
+      this.uuid = this.$utils.randomString(20)
     },
     cancelEdit() {
-      this.getExecutePoint();
-      this.isEdit = false;
+      this.getExecutePoint()
+      this.isEdit = false
     },
     clickEdit() {
-      this.isEdit = !this.isEdit;
+      this.isEdit = !this.isEdit
+    },
+    dragEnd() {
+      //每当拖拽的时候，整理下所有执行点的顺序，重新排序时不会错乱
+      let array = JSON.parse(JSON.stringify(this.allPoints))
+      let groups = {}
+      array.forEach((e) => {
+        let key = e.testStage + ''
+        if (!groups[key]) {
+          groups[key] = []
+        }
+        groups[key].push(e)
+      })
+      groups[this.menuType] = this.displayList
+      let result = []
+      Object.values(groups).forEach((group) => {
+        result = result.concat(group)
+      })
+      this.allPoints = result
     },
     addItem(e) {
-      this.displayList = JSON.parse(JSON.stringify(this.displayList));
-      let item = this.displayList[e.newIndex];
-      item.isActive = true;
-      item.randomId = this.$utils.randomString(20);
-      item.writeType = "1";
-      item.sortOrder = e.newIndex;
-      item.testStage = parseInt(this.menuType);
-      item.pointId = null;
-      this.allPoints.push(item);
-      this.isEdit = true;
-      this.displayExepoints();
+      let item = this.dragGroupList[e.oldIndex]
+      item.isActive = true
+      item.randomId = this.$utils.randomString(20)
+      item.writeType = '1'
+      item.sortOrder = e.newIndex
+      item.testStage = parseInt(this.menuType)
+      item.pointId = null
+      this.allPoints.push(item)
+      this.isEdit = true
+      this.displayExepoints()
+      this.uuid = this.$utils.randomString(20)
     },
     refreshValue(update) {
+      //删除添加到if或者for中的执行点
+      let removeArray = []
+      if (update.data.executePoints) {
+        update.data.executePoints.forEach((e) => {
+          removeArray.push(e.randomId)
+        })
+      }
+      this.allPoints = this.allPoints.filter((e) => {
+        let result = removeArray.indexOf(e.randomId) < 0
+        if (!result) {
+          this.deletePoint(e.pointId)
+        }
+        return result
+      })
+
+      //更新数据
+      let updateArray = []
       this.allPoints.forEach((e) => {
         if (e.randomId == update.data.randomId) {
-          e = update.data;
+          updateArray.push(update.data)
+        } else {
+          updateArray.push(e)
         }
-      });
-      this.displayExepoints();
+      })
+      this.allPoints = updateArray
+      this.displayExepoints()
     },
-    startDrag() {
-      this.isDrag = true;
+    startDrag(event, item) {
+      this.dragGroupList = item.list
+      this.isDrag = true
     },
     selectTestStep() {
-      this.bindStepPoints();
-      this.displayExepoints();
-      this.$forceUpdate();
+      this.bindStepPoints()
+      this.displayExepoints()
+      // this.$forceUpdate()
+      // this.uuid = this.$utils.randomString(20)
     },
     bindStepPoints() {
       if (this.displayList.length == 0) {
-        return;
+        return
       }
-      let currentStage = this.displayList[0].testStage;
+      let currentStage = this.displayList[0].testStage
       let array = this.allPoints.filter((e) => {
-        return e.testStage != currentStage;
-      });
-      this.allPoints = array.concat(this.displayList);
+        return e.testStage != currentStage
+      })
+      this.allPoints = array.concat(
+        JSON.parse(JSON.stringify(this.displayList))
+      )
     },
     refreshArray(data) {
-      this.displayList = [];
-      let index = 0;
+      this.displayList = []
+      let index = 0
       data.forEach((e) => {
-        this.$set(this.displayList, index, e);
-        index++;
-      });
+        this.$set(this.displayList, index, e)
+        index++
+      })
     },
     getExecutePoint() {
       featureApi.getExecutePoints(this.featureId).then((res) => {
-        this.allPoints = [];
-        res.data.data.forEach((e) => {
-          let executePoint = e.executorUnit;
-          let data = executePoint.params;
+        this.allPoints = []
+        res.data.forEach((e) => {
+          let executePoint = e.executorUnit
+          let data = executePoint.params
           let item = {
-            id: e.id,
+            id: e.sortOrder,
             pointId: e.pointId,
+            relatedId: executePoint.relatedId,
             name: executePoint.name,
             method: executePoint.method,
             service: executePoint.service,
             description: e.description,
+            invokeType: executePoint.invokeType,
+            headers: executePoint.headers,
             params: data,
             executePoints: executePoint.executePoints,
             compareDefine: e.compareDefine,
             variableDefine: e.variableDefine,
-            writeType: "1",
+            writeType: '1',
             executeType: e.executeType,
             randomId: this.$utils.randomString(20),
             testStage: e.testStage,
             isActive: false,
-          };
-          this.allPoints.push(item);
-        });
-        this.menuType = "1";
-        this.displayExepoints();
-      });
-
-      featureApi.getFeatureTemplates().then((res) => {
-        let array = res.data;
+          }
+          this.allPoints.push(item)
+        })
+        this.menuType = '2'
+        this.displayExepoints()
+      })
+      this.getTemplates()
+    },
+    getCaseInfo() {
+      testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
+        this.caseInfo = res.data
+        this.getTemplates()
+      })
+    },
+    getTemplates() {
+      if (!this.caseInfo) {
+        this.getCaseInfo()
+        return
+      }
+      if (this.caseInfo.caseType == 2) {
+        featureApi.getAllTemplates().then((res) => {
+          let array = res.data
+          array.forEach((e) => {
+            e.isTool = e.templateType != 1 && e.templateType != 5
+            e.executeType = e.templateType
+            e.service = e.service ? e.service : ''
+          })
+          this.exchangeGroup(array)
+          this.featureItemList = array
+        })
+        return
+      }
+      featureApi.getServiceTemplates(this.serviceId).then((res) => {
+        let array = res.data
         array.forEach((e) => {
-          e.executeType = e.templateType;
-        });
-        this.featureItemList = array;
-      });
+          e.isTool = e.templateType != 1 && e.templateType != 5
+          e.executeType = e.templateType
+          e.service = e.service ? e.service : ''
+        })
+        // this.exchangeGroup(array)
+        this.featureItemList = array
+
+        const serviceObj = {}
+        this.serviceList.forEach((obj) => (serviceObj[obj.serviceId] = obj))
+        let service = serviceObj[this.serviceId]
+        if (service) {
+          this.serviceGroup = [
+            {
+              name: service.serviceName,
+              isActive: false,
+              showList: false,
+              list: array,
+            },
+          ]
+        }
+      })
+    },
+    exchangeGroup(array) {
+      let map = {}
+      array.forEach((e) => {
+        let list = map[e.owner]
+        if (!list) {
+          list = []
+        }
+
+        list.push(e)
+        map[e.owner] = list
+      })
+
+      const serviceObj = {}
+      this.serviceList.forEach((obj) => (serviceObj[obj.serviceId] = obj))
+
+      let groupList = []
+      for (let key in map) {
+        if (key && key != '') {
+          let service = serviceObj[key]
+          if (service) {
+            groupList.push({
+              name: service.serviceName,
+              isActive: false,
+              showList: false,
+              list: map[key],
+            })
+          }
+        }
+      }
+      this.serviceGroup = groupList
+    },
+    getServices() {
+      serviceApi.getServices().then((res) => {
+        this.serviceList = res.data
+      })
     },
     displayExepoints() {
-      let array = [];
-      let stage = parseInt(this.menuType);
+      this.displayList = []
+      let array = []
+      let stage = parseInt(this.menuType)
       this.allPoints.forEach((e) => {
         if (e.testStage == stage) {
-          array.push(e);
+          array.push(e)
         }
-      });
-      this.displayList = array;
+      })
+      this.displayList = array
     },
   },
   created() {
-    this.getExecutePoint();
+    this.getServices()
+    this.getExecutePoint()
+    this.caseId = this.$route.query.caseId
+    this.getCaseInfo()
   },
-};
+}
 </script>
 <style scoped>
 .operate {
@@ -569,7 +864,6 @@ export default {
 }
 
 .feature-content {
-  height: 75vh;
   min-height: 300px;
   padding: 0 10px;
   background-color: #fff;
@@ -582,5 +876,34 @@ export default {
     linear-gradient(hsla(0, 0%, 100%, 0.3) 1px, transparent 0),
     linear-gradient(90deg, hsla(0, 0%, 100%, 0.3) 1px, transparent 0);
   background-size: 75px 75px, 75px 75px, 15px 15px, 15px 15px;
+}
+.tool-list {
+  height: 300px;
+  padding-bottom: 30px;
+  overflow-y: scroll;
+}
+.template-list {
+  height: 400px;
+  padding-bottom: 30px;
+  overflow-y: scroll;
+}
+.drag-box {
+  min-height: 400px;
+}
+.refresh-icon {
+  font-size: 18px;
+  cursor: pointer;
+}
+.service-title {
+  position: relative;
+  color: #fff;
+  height: 40px;
+  line-height: 40px;
+  background: #606266;
+  padding-left: 20px;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 5px;
 }
 </style>

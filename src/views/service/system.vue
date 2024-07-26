@@ -14,7 +14,7 @@
         <el-tab-pane label="Git配置" name="git">
           <el-form :model="systemForm" size="mini" label-width="120px">
             <el-form-item label="类型" prop="gitType">
-              <el-radio-group v-model="systemForm.gitType">
+              <el-radio-group v-model="systemForm.gitType" @change="changeGit">
                 <el-radio label="Gitea">Gitea</el-radio>
                 <el-radio label="Gitlab">Gitlab</el-radio>
               </el-radio-group>
@@ -23,10 +23,14 @@
               <el-input
                 type="text"
                 v-model="systemForm.gitDomain"
-                placeholder="请输入git地址"
+                placeholder="请输入git访问地址"
               />
             </el-form-item>
-            <el-form-item label="拥有者" prop="owner">
+            <el-form-item
+              label="拥有者"
+              prop="owner"
+              v-if="systemForm.gitType != 'Gitlab'"
+            >
               <el-input
                 type="text"
                 v-model="systemForm.owner"
@@ -73,13 +77,14 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
-        <el-tab-pane label="Maven仓库配置" name="maven">
+        <el-tab-pane label="Maven配置" name="maven">
           <el-form :model="mavenForm" size="mini" label-width="120px">
-            <el-form-item label="maven仓库地址" prop="mavenUrl">
+            <h5>Maven仓库</h5>
+            <el-form-item label="推送远程仓库" prop="mavenUrl">
               <el-input
                 type="text"
                 v-model="mavenForm.mavenUrl"
-                placeholder="请输入Maven仓库地址"
+                placeholder="仓库地址"
               />
             </el-form-item>
             <el-form-item label="用户" prop="userName">
@@ -106,77 +111,85 @@
   </div>
 </template>
 <script>
-import systemApi from "../../http/System";
+import systemApi from '../../http/System'
 export default {
   data() {
     return {
       systemForm: {},
       repoForm: {},
       mavenForm: {},
-      configType: "git",
-    };
+      configType: 'git',
+    }
   },
   methods: {
+    changeGit(type) {
+      if (type == 'Gitlab') {
+        this.systemForm.owner = 'oauth2'
+      }
+      if (type != 'Gitlab' && this.systemForm.owner == 'oauth2') {
+        this.systemForm.owner = ''
+      }
+    },
     getGitConfig() {
       systemApi.requestGitConfig().then((res) => {
-        this.systemForm = res.data;
-      });
+        this.systemForm = res.data
+      })
     },
     getRepoConfig() {
       systemApi.getImageRepository().then((res) => {
-        this.repoForm = res.data;
-      });
+        this.repoForm = res.data
+      })
     },
     getMavenConfig() {
       systemApi.requestMavenConfig().then((res) => {
-        this.mavenForm = res.data;
-      });
+        this.mavenForm = res.data
+      })
     },
     submitMaven() {
       systemApi.updateMavenConfig(this.mavenForm).then((res) => {
         if (res.data) {
-          this.$message.success("修改Maven配置成功");
+          this.$message.success('修改Maven配置成功')
         } else {
-          this.$message.error("修改Maven配置失败");
+          this.$message.error('修改Maven配置失败')
         }
-      });
+      })
     },
     submitGit() {
       systemApi.updateGitConfig(this.systemForm).then((res) => {
         if (res.data) {
-          this.$message.success("修改Git配置成功");
+          this.$message.success('修改Git配置成功')
         } else {
-          this.$message.error("修改Git配置失败");
+          this.$message.error('修改Git配置失败')
         }
-      });
+      })
     },
     submitImage() {
       systemApi.updateRepository(this.repoForm).then((res) => {
         if (res.data) {
-          this.$message.success("修改镜像仓库成功");
+          this.$message.success('修改镜像仓库成功')
         } else {
-          this.$message.error("修改镜像仓库失败");
+          this.$message.error('修改镜像仓库失败')
         }
-      });
+      })
     },
     clickTab() {
-      if (this.configType == "git") {
-        this.getGitConfig();
+      if (this.configType == 'git') {
+        this.getGitConfig()
       }
 
-      if (this.configType == "repo") {
-        this.getRepoConfig();
+      if (this.configType == 'repo') {
+        this.getRepoConfig()
       }
 
-      if (this.configType == "maven") {
-        this.getMavenConfig();
+      if (this.configType == 'maven') {
+        this.getMavenConfig()
       }
     },
   },
   created() {
-    this.getGitConfig();
+    this.getGitConfig()
   },
-};
+}
 </script>
 <style scoped>
 .content {

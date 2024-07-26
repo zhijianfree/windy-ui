@@ -1,36 +1,16 @@
 <template>
   <div>
+    <h2 class="title">e2e测试</h2>
     <div class="service">
       <el-row>
         <el-col :span="22">
-          <el-form
-            :inline="true"
-            :model="queryForm"
-            size="mini"
-            class="demo-form-inline"
-            @submit.native.prevent
-          >
-            <el-form-item label="服务列表">
-              <el-select
-                v-model="service"
-                size="small"
-                @change="selectService"
-                placeholder="选择服务"
-              >
-                <el-option
-                  v-for="(item, index) in serviceList"
-                  :key="index"
-                  :label="item.serviceName"
-                  :value="item.serviceId"
-                ></el-option>
-              </el-select>
-            </el-form-item>
+          <el-form :inline="true" size="mini">
             <el-form-item>
               <el-button
                 type="primary"
                 icon="el-icon-circle-plus-outline"
                 @click="startCreate"
-                >新增测试集</el-button
+                >新增e2e测试</el-button
               >
             </el-form-item>
           </el-form>
@@ -40,8 +20,7 @@
     <!-- 测试集表格开始 -->
     <div class="content">
       <el-table :data="featureData" size="mini">
-        <el-table-column prop="testCaseName" label="测试集"> </el-table-column>
-        <!-- <el-table-column prop="author" label="创建人"> </el-table-column> -->
+        <el-table-column prop="testCaseName" label="e2e用例"> </el-table-column>
         <el-table-column prop="description" label="描述"> </el-table-column>
         <el-table-column prop="updateTime" label="最近编辑时间">
           <template slot-scope="scope">
@@ -89,10 +68,10 @@
     <!-- 测试集表格结束 -->
     <!-- 创建测试集开始 -->
     <el-dialog
-      title="创建测试集"
+      title="创建e2e测试"
       :visible.sync="showDialog"
       @close="closeDialog"
-      width="70%"
+      width="60%"
     >
       <el-form
         :model="caseForm"
@@ -101,32 +80,22 @@
         size="small"
         label-width="120px"
       >
-        <el-form-item label="测试集名称" prop="testCaseName">
+        <el-form-item label="测试名称" prop="testCaseName">
           <el-input
             v-model="caseForm.testCaseName"
-            placeholder="请输入测试集名称"
+            placeholder="请输入e2e测试名称"
           ></el-input>
         </el-form-item>
-        <el-form-item label="测试集描述" prop="description">
+        <el-form-item label="测试描述" prop="description">
           <el-input
+            type="textarea"
+            :autosize="{ minRows: 4, maxRows: 10 }"
             v-model="caseForm.description"
-            placeholder="请输入测试集描述"
+            placeholder="请输入测试描述"
           ></el-input>
-        </el-form-item>
-        <el-form-item label="选择服务" prop="serviceId">
-          <el-select v-model="caseForm.serviceId" placeholder="请选择">
-            <el-option
-              v-for="item in serviceList"
-              :key="item.serviceId"
-              :label="item.serviceName"
-              :value="item.serviceId"
-            >
-            </el-option>
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submit('caseForm')">确认</el-button>
-
           <el-button type="info" @click="closeDialog">取消</el-button>
         </el-form-item>
       </el-form>
@@ -233,14 +202,11 @@
   </div>
 </template>
 <script>
-import serviceApi from '../../http/Service'
 import testCaseApi from '../../http/TestCase'
 import featureApi from '../../http/Feature'
 export default {
   data() {
     return {
-      service: '',
-      serviceList: [],
       activeName: '1',
       tableData: [],
       showHistory: false,
@@ -262,13 +228,10 @@ export default {
       featureForm: {},
       rule: {
         testCaseName: [
-          { required: true, message: '请输入测试集名称', trigger: 'blur' },
+          { required: true, message: '请输入e2e测试名称', trigger: 'blur' },
         ],
         description: [
           { required: true, message: '请输入详细描述', trigger: 'blur' },
-        ],
-        serviceId: [
-          { required: true, message: '请选择关联的服务', trigger: 'select' },
         ],
       },
     }
@@ -369,7 +332,7 @@ export default {
         if (!valid) {
           return false
         }
-
+        this.caseForm.caseType = 2
         testCaseApi.createTestCase(this.caseForm).then((res) => {
           this.closeDialog()
           if (res.data) {
@@ -384,22 +347,11 @@ export default {
     startCreate() {
       this.showDialog = true
     },
-    getServices() {
-      this.serviceList = []
-      serviceApi.getServices().then((res) => {
-        this.serviceList = res.data
-        this.service = this.serviceList[0].serviceId
-        this.selectService()
-      })
-    },
-    selectService() {
-      this.getTestCaseList(1)
-    },
     pageChange(page) {
       this.getTestCaseList(page)
     },
     getTestCaseList(page) {
-      testCaseApi.getTestCaseList(this.service, page, 10).then((res) => {
+      testCaseApi.getE2EPage(page, 10).then((res) => {
         this.currentPage = page
         this.totalSize = res.data.total
         this.featureData = res.data.data
@@ -427,7 +379,7 @@ export default {
     },
   },
   created() {
-    this.getServices()
+    this.getTestCaseList(1)
   },
 }
 </script>
@@ -454,5 +406,8 @@ export default {
 .tree-list {
   max-height: 600px;
   overflow-y: scroll;
+}
+.title {
+  margin: 10px;
 }
 </style>

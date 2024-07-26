@@ -2,7 +2,7 @@
   <div>
     <div class="title-line">
       <el-form :inline="true" size="mini" class="demo-form-inline">
-        <el-form-item label="服务列表">
+        <el-form-item label="服务列表" @submit.native.prevent>
           <el-select
             v-model="service"
             size="small"

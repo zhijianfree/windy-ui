@@ -5,6 +5,7 @@
         <div class="item">
           <el-input
             size="mini"
+            @pointerdown.stop.native
             :disabled="!isEdit"
             v-model="item.compareKey"
             @input="notifyData"
@@ -36,11 +37,12 @@
             size="mini"
             :disabled="!isEdit"
             @input="notifyData"
+            @pointerdown.stop.native
             v-model="item.expectValue"
             placeholder="请输入期望值"
           >
             <template slot="append">
-              <i class="el-icon-full-screen" />
+              <i class="el-icon-full-screen" @click="diaplayString(item)" />
             </template>
           </el-input>
         </div>
@@ -62,26 +64,50 @@
     >
       <div class="add-button"><i class="el-icon-plus" /> 新增</div>
     </div>
+
+    <el-dialog
+      title="数据编辑"
+      :visible.sync="showDetail"
+      @close="closeEditor"
+      width="60%"
+    >
+      <monaco ref="editer" :codes="jsonStr" :readonly="false"></monaco>
+    </el-dialog>
   </div>
 </template>
 <script>
 import featureApi from '../http/Feature'
+import monaco from '@/components/MonacoEditor.vue'
 export default {
   props: {
     data: Array,
     point: String,
     isEdit: Boolean,
   },
+  components: {
+    monaco,
+  },
   data() {
     return {
+      showDetail: false,
       operator: '',
       operatorList: [],
       compareData: [],
       disableSelect: 'disable-select',
       pointId: '',
+      jsonStr: '',
+      chooseItem: null,
     }
   },
   methods: {
+    closeEditor() {
+      this.chooseItem.expectValue = this.$refs.editer.getValue()
+    },
+    diaplayString(item) {
+      this.chooseItem = item
+      this.showDetail = true
+      this.jsonStr = item.expectValue
+    },
     deleteValueItem(array, index) {
       array.splice(index, 1)
       if (array.length == 0) {

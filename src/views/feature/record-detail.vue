@@ -11,6 +11,16 @@
           >
         </div>
         <div class="search">
+          <span class="filter-txt">状态过滤:</span>
+          <el-radio-group
+            class="status-box"
+            v-model="filterStatus"
+            @change="chooseStatus"
+          >
+            <el-radio :label="1">全部</el-radio>
+            <el-radio :label="2">失败</el-radio>
+            <el-radio :label="3">成功</el-radio>
+          </el-radio-group>
           <el-input
             size="mini"
             placeholder="输入用例名进行过滤"
@@ -21,8 +31,8 @@
         <el-tree
           node-key="featureId"
           @node-click="treeNodeClick"
+          :default-expanded-keys="errorList"
           :data="recordData"
-          default-expand-all
           :filter-node-method="filterNode"
           :props="{
             children: 'children',
@@ -30,22 +40,87 @@
           }"
           ref="tree"
         >
+          <span slot-scope="{ node, data }">
+            <span class="custom-tree-node" :style="{ color: data.status }">{{
+              node.label
+            }}</span>
+          </span>
         </el-tree>
       </el-col>
       <el-col :span="18">
-        <div class="drawer-content">
-          <div class="record-title">执行历史记录</div>
-          <el-tabs v-model="activeName">
-            <el-tab-pane label="预置" name="preset">
-              <PanelList :list="presetList" />
-            </el-tab-pane>
-            <el-tab-pane label="执行" name="execute">
-              <PanelList :list="executeList" />
-            </el-tab-pane>
-            <el-tab-pane label="清理" name="clean">
-              <PanelList :list="cleanList" />
-            </el-tab-pane>
-          </el-tabs>
+        <div class="percent-box">
+          <h3>任务执行统计</h3>
+          <div class="ui-container">
+            <div class="ui-item">
+              <div class="ui-value ui-result">
+                <el-progress
+                  type="circle"
+                  :percentage="executePercent"
+                ></el-progress>
+              </div>
+              <div class="ui-label">执行进度</div>
+            </div>
+            <div class="ui-item">
+              <div class="ui-value">{{ totalCount }}</div>
+              <div class="ui-label">用例总数</div>
+            </div>
+            <div class="ui-item">
+              <div class="ui-value ui-success">{{ successCount }}</div>
+              <div class="ui-label">成功数</div>
+            </div>
+            <div class="ui-item">
+              <div class="ui-value ui-error">{{ errorCount }}</div>
+              <div class="ui-label">失败数</div>
+            </div>
+            <div class="ui-item">
+              <div class="ui-value ui-result">{{ resultPercent }}%</div>
+              <div class="ui-label">成功率</div>
+            </div>
+          </div>
+        </div>
+
+        <el-empty
+          v-if="isShowEmpty"
+          description="请在左侧点击详细用例查看详情"
+        ></el-empty>
+        <div v-else class="drawer-content">
+          <div class="record-title">
+            【{{ chooseFeature.featureName }}】执行历史记录
+          </div>
+          <div class="execute-detail">
+            <el-tabs v-model="activeName">
+              <el-tab-pane name="preset">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!presetError"
+                  >预置</el-badge
+                >
+                <PanelList :list="presetList" />
+              </el-tab-pane>
+              <el-tab-pane name="execute">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!executeError"
+                  >执行</el-badge
+                >
+                <PanelList :list="executeList" />
+              </el-tab-pane>
+              <el-tab-pane name="clean">
+                <el-badge
+                  slot="label"
+                  is-dot
+                  class="tab-label"
+                  :hidden="!cleanError"
+                  >清理</el-badge
+                >
+                <PanelList :list="cleanList" />
+              </el-tab-pane>
+            </el-tabs>
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -63,6 +138,7 @@
 </template>
 <script>
 import taskApi from '../../http/Task'
+import caseApi from '../../http/TestCase'
 import featureApi from '../../http/Feature'
 import PanelList from '../../components/panel-list.vue'
 import JsonViewer from 'vue-json-viewer'
@@ -84,49 +160,131 @@ export default {
       cleanList: [],
       jsonData: [],
       dialogVisible: false,
+      chooseFeature: {},
+      isShowEmpty: true,
+      errorList: [],
+      presetError: false,
+      executeError: false,
+      cleanError: false,
+      filterStatus: 1,
+      totalCount: 0,
+      successCount: 0,
+      errorCount: 0,
+      displayAll: false,
     }
   },
   watch: {
     filterText(val) {
+      this.displayAll = true
       this.$refs.tree.filter(val)
     },
   },
+  computed: {
+    resultPercent() {
+      var ratio = this.successCount / this.totalCount
+      return Math.round(ratio * 100)
+    },
+    executePercent() {
+      if (this.totalCount == 0) {
+        return 0
+      }
+      var ratio = (this.successCount + this.errorCount) / this.totalCount
+      return Math.round(ratio * 100)
+    },
+  },
   methods: {
+    chooseStatus() {
+      this.displayAll = this.filterStatus != 1
+      this.$refs.tree.filter()
+    },
     goBack() {
       this.$router.go(-1)
     },
     treeNodeClick(data) {
       this.resultList = []
-
       this.activeName = 'preset'
+      this.chooseFeature = data
+      this.isShowEmpty = false
       featureApi.getExecuteRecords(data.historyId).then((res) => {
         this.resultList = res.data
         this.filterRecord()
       })
     },
     filterRecord() {
-      this.presetList.splice(0, this.presetList.length)
-      this.executeList.splice(0, this.executeList.length)
-      this.cleanList.splice(0, this.cleanList.length)
+      this.presetList = []
+      this.executeList = []
+      this.cleanList = []
       this.resultList.forEach((e) => {
         if (1 == e.testStage) {
           this.presetList.push(e)
+          if (e.status != 1) {
+            this.presetError = true
+          }
         }
         if (2 == e.testStage) {
           this.executeList.push(e)
+          if (e.status != 1) {
+            this.executeError = true
+          }
         }
         if (3 == e.testStage) {
           this.cleanList.push(e)
+          if (e.status != 1) {
+            this.cleanError = true
+          }
         }
       })
     },
     filterNode(value, data) {
+      if (
+        this.filterStatus == 3 &&
+        (!data.executeStatus || data.executeStatus != 1)
+      ) {
+        return false
+      }
+      if (
+        this.filterStatus == 2 &&
+        (!data.executeStatus || data.executeStatus != 2)
+      ) {
+        return false
+      }
       if (!value) return true
-      return data.label.indexOf(value) !== -1
+      return data.featureName.indexOf(value) !== -1
     },
     getTaskHistories() {
-      taskApi.getTaskHistories(this.recordId).then((res) => {
-        this.recordData = res.data
+      taskApi.getTaskHistoryTree(this.recordId).then((res) => {
+        let list = res.data
+        this.errorCount = 0
+        this.successCount = 0
+        this.displayTreeNode(list)
+        this.recordData = list
+        if (this.errorCount + this.successCount == this.totalCount) {
+          clearInterval(this.queryInterval)
+        }
+      })
+    },
+    startInterval() {
+      this.queryInterval = setInterval(() => {
+        this.getTaskHistories()
+      }, 2000)
+    },
+    displayTreeNode(list) {
+      list.forEach((e) => {
+        if (e.executeStatus) {
+          e.status = '#67C23A'
+          if (e.executeStatus != 1) {
+            e.status = '#F56C6C'
+            this.errorCount++
+            this.errorList.push(e.featureId)
+            // this.treeNodeClick(e)
+          } else {
+            this.successCount++
+          }
+        }
+
+        if (e.children && e.children.length > 0) {
+          this.displayTreeNode(e.children)
+        }
       })
     },
     showRecordConfig() {
@@ -141,7 +299,17 @@ export default {
     },
     getRecordDetail() {
       taskApi.getTaskRecordDetail(this.recordId).then((res) => {
-        this.recordName = res.data.taskName
+        this.recordName = `任务名称: ${res.data.taskName}`
+        this.getCaseFeatures(res.data.testCaseId)
+      })
+    },
+    getCaseFeatures(caseId) {
+      caseApi.getCaseFeatures(caseId).then((res) => {
+        res.data.forEach((e) => {
+          if (e.featureType == 1) {
+            this.totalCount++
+          }
+        })
       })
     },
   },
@@ -149,6 +317,7 @@ export default {
     this.recordId = this.$route.query.recordId
     this.getRecordDetail()
     this.getTaskHistories()
+    this.startInterval()
   },
 }
 </script>
@@ -164,5 +333,55 @@ export default {
 }
 .record-title {
   font-weight: 800;
+}
+.execute-detail {
+  margin-top: 20px;
+}
+.custom-tree-node {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: 14px;
+}
+.tab-label {
+  margin-top: 10px;
+}
+
+.ui-container {
+  width: 60%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ui-item {
+  text-align: center;
+}
+
+.ui-value {
+  font-size: 35px;
+  font-weight: bold;
+}
+.ui-success {
+  color: #67c23a;
+}
+
+.ui-error {
+  color: #f56c6c;
+}
+.ui-result {
+  color: #409eff;
+}
+
+.ui-label {
+  font-size: 14px;
+  color: #909399;
+}
+.percent-box {
+  margin-bottom: 50px;
+}
+.filter-txt {
+  font-size: 14px;
+}
+.status-box {
+  margin: 10px 20px;
 }
 </style>

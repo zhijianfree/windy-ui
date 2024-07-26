@@ -51,7 +51,11 @@
           </template>
           <el-menu-item index="/case">
             <i class="el-icon-cpu"></i>
-            测试集</el-menu-item
+            功能测试</el-menu-item
+          >
+          <el-menu-item index="/e2e">
+            <i class="el-icon-cpu"></i>
+            e2e测试</el-menu-item
           >
           <el-menu-item index="/template">
             <i class="el-icon-s-platform"></i>
