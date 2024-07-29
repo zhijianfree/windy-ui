@@ -1,21 +1,8 @@
 import http from '../lib/http'
 export default {
-  getTaskList(page, size, name) {
+  getDemandList(page, size, name, status) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/tasks?page=${page}&pageSize=${size}&name=${name}`
-      http
-        .get(url)
-        .then((res) => {
-          resolve(res)
-        })
-        .catch((e) => {
-          reject(e)
-        })
-    })
-  },
-  getAllTaskList(serviceId) {
-    return new Promise((resolve, reject) => {
-      let url = `/v1/devops/feature/${serviceId}/tasks`
+      let url = `/v1/devops/demands?page=${page}&size=${size}&name=${name}&status=${status}`
       http
         .get(url)
         .then((res) => {

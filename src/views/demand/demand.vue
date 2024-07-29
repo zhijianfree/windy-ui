@@ -29,17 +29,14 @@
     </div>
     <div class="table-list">
       <el-table :data="tableData" height="400" style="width: 100%">
-        <el-table-column prop="demandName" label="需求名称" width="400">
+        <el-table-column prop="demandName" label="需求名称" width="600">
         </el-table-column>
         <el-table-column prop="proposer" label="提出人" width="180">
-        </el-table-column>
-        <el-table-column prop="proposeTeam" label="提出团队"> </el-table-column>
-        <el-table-column prop="acceptTime" label="需求接受时间">
         </el-table-column>
         <el-table-column prop="status" label="需求状态"> </el-table-column>
         <el-table-column prop="expectTime" label="期待结束时间">
         </el-table-column>
-        <el-table-column prop="proposeTeam" label="提出团队"> </el-table-column>
+
         <el-table-column prop="tag" label="需求标签"> </el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
@@ -49,6 +46,18 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="pagination">
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+          :current-page.sync="currentPage"
+          :page-sizes="[10, 20, 50]"
+          :page-size="10"
+          layout="sizes, prev, pager, next"
+          :total="total"
+        >
+        </el-pagination>
+      </div>
     </div>
     <el-dialog
       :title="demandTitle"
@@ -174,18 +183,31 @@
         </div>
       </div>
     </el-dialog>
+    <el-dialog
+      :title="demandTitle"
+      :visible.sync="showDemandDetail"
+      width="90%"
+    >
+      <detail :demand="demandDetail.demandId"></detail>
+    </el-dialog>
   </div>
 </template>
 <script>
 import demandApi from '../../http/DemandApi'
+import detail from './detail.vue'
 export default {
+  components: {
+    detail,
+  },
   data() {
     return {
       tableData: [{}],
       queryForm: {},
       statusList: [],
       demandForm: {},
+      demandId: '',
       showDemandDialog: false,
+      showDemandDetail: false,
       demandTitle: '创建需求',
       tagList: [
         { text: '个人需求', value: '个人需求' },
@@ -194,15 +216,32 @@ export default {
       ],
       completeDate: null,
       abilityList: ['用户体验', '功能增强', '性能', '可靠性', '安全', '运维'],
+      currentPage: 1,
+      currentSize: 10,
+      total: 0,
+      demandDetail: {},
     }
   },
   methods: {
-    viewDemand() {},
+    viewDemand(row) {
+      this.showDemandDetail = true
+      this.demandDetail = row
+    },
     createDemand() {
       this.showDemandDialog = true
     },
+    handlePageChange(page) {
+      this.currentPage = page
+      this.getDemandList()
+    },
+    handleSizeChange(size) {
+      this.currentSize = size
+      this.getDemandList()
+    },
     submitDemand(formName) {
       console.log(formName)
+      console.log(this.completeDate.getMilliseconds())
+      this.demandForm.expectTime = this.completeDate.getMilliseconds()
       demandApi.createDemand(this.demandForm).then((res) => {
         if (res.data) {
           this.$message.success('创建需求成功')
@@ -212,6 +251,18 @@ export default {
         }
       })
     },
+    getDemandList() {
+      demandApi
+        .getDemandList(this.currentPage, this.currentSize)
+        .then((res) => {
+          console.log(res)
+          this.tableData = res.data.data
+          this.total = res.data.total
+        })
+    },
+  },
+  created() {
+    this.getDemandList()
   },
 }
 </script>

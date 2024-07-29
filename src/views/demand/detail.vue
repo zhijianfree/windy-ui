@@ -1,12 +1,6 @@
 <template>
   <div>
     <div class="title-line">
-      <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/demand/list' }"
-          >需求列表</el-breadcrumb-item
-        >
-        <el-breadcrumb-item>需求详情</el-breadcrumb-item>
-      </el-breadcrumb>
       <div class="btn-list">
         <el-button
           size="mini"
@@ -66,9 +60,7 @@
             >
             </el-input>
           </el-form-item>
-          <el-form-item label="附件">
-            xxxx.doc
-          </el-form-item>
+          <el-form-item label="附件"> xxxx.doc </el-form-item>
         </el-form>
         <div class="comments-div">
           <div>
@@ -89,7 +81,7 @@
         <div class="comment-list">
           <div class="history" v-for="(item, index) in comments" :key="index">
             <div class="user-div">
-              <span><i class="el-icon-s-custom"/></span> {{ item.userName }}
+              <span><i class="el-icon-s-custom" /></span> {{ item.userName }}
               {{ item.createTime }}
             </div>
             <div class="history-content">
@@ -167,9 +159,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="搁置天数">
-            3
-          </el-form-item>
+          <el-form-item label="搁置天数"> 3 </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -177,9 +167,21 @@
 </template>
 <script>
 import Clipboard from 'clipboard'
-import DemandApi from '../../http/Demand'
+import DemandApi from '../../http/DemandApi'
 import CommentApi from '../../http/Comment'
 export default {
+  props: {
+    demand: {
+      type: String,
+    },
+  },
+  watch: {
+    demand: {
+      handler() {
+        this.init()
+      },
+    },
+  },
   data() {
     return {
       demandForm: {},
@@ -211,10 +213,10 @@ export default {
       let _this = this
       let clipboard = new Clipboard('.copy-icon')
 
-      clipboard.on('success', function() {
+      clipboard.on('success', function () {
         _this.$message.success('复制成功')
       })
-      clipboard.on('error', function() {
+      clipboard.on('error', function () {
         _this.$message.success('复制失败')
       })
     },
@@ -263,14 +265,13 @@ export default {
         }
       })
     },
+    init() {
+      this.getDemandDetail()
+      this.getstatusList()
+      this.getCommentsList()
+    },
   },
-  created() {
-    this.demandId = this.$route.query.demandId
-    this.isEdit = this.$route.query.edit
-    this.getDemandDetail()
-    this.getstatusList()
-    this.getCommentsList()
-  },
+  created() {},
 }
 </script>
 <style scoped>
