@@ -5,18 +5,36 @@ module.exports = {
     config.plugin('monaco-editor').use(MonacoWebpackPlugin, [
       {
         // Languages are loaded on demand at runtime
-        languages: ['json', 'javscript'],
+        languages: ['json', 'javascript'],
+        features: ['!gotoSymbol'],
       },
     ])
+    config.module
+      .rule('babel')
+      .test(/\.js$/)
+      .exclude.add(/node_modules\/(?!monaco-editor)/)
+      .end()
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: ['@babel/preset-env'],
+        plugins: ['@babel/plugin-proposal-class-properties'],
+      })
 
-    config.plugin('html').tag((args) => {
+    config.plugin('html').tap((args) => {
       args[0].title = 'Windy'
       return args
     })
   },
-}
-
-module.exports = {
+  css: {
+    loaderOptions: {
+      less: {
+        lessOptions: {
+          strictMath: true,
+        },
+      },
+    },
+  },
   devServer: {
     host: 'localhost',
     open: true,

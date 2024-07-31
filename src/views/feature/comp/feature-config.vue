@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="feature-content gridBackground">
+    <div class="feature-content gridBackground" ref="parent">
       <div>
         <el-row :gutter="20">
           <!--- 开始编写用例-->
@@ -26,6 +26,7 @@
                   <draggable
                     v-model="displayList"
                     class="drag-box"
+                    ref="child"
                     v-bind="dragOptions"
                     @end="dragEnd"
                     @add="addItem"
@@ -579,7 +580,7 @@ export default {
       this.allPoints = result
     },
     addItem(e) {
-      let item = this.dragGroupList[e.oldIndex]
+      let item = JSON.parse(JSON.stringify(this.dragGroupList[e.oldIndex]))
       item.isActive = true
       item.randomId = this.$utils.randomString(20)
       item.writeType = '1'
@@ -844,6 +845,7 @@ export default {
   background-color: #ffffff;
   height: 80vh;
   padding: 10px 20px;
+  padding-right: 10px;
 }
 
 .delete-point {
@@ -887,9 +889,7 @@ export default {
   padding-bottom: 30px;
   overflow-y: scroll;
 }
-.drag-box {
-  min-height: 400px;
-}
+
 .refresh-icon {
   font-size: 18px;
   cursor: pointer;
@@ -905,5 +905,10 @@ export default {
   cursor: pointer;
   border-radius: 5px;
   margin: 5px;
+}
+</style>
+<style lang="less" scoped>
+.drag-box {
+  height: calc(80vh - 60px);
 }
 </style>

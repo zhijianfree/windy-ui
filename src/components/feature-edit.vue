@@ -129,8 +129,19 @@
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Integer' || data.type == 'Long'">
+      <el-input
+        v-if="backshow"
+        size="small"
+        style="width: 400px"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        @pointerdown.stop.native
+        :placeholder="data.description"
+      ></el-input>
       <el-input-number
         size="small"
+        v-else
         :disabled="!isEdit"
         v-model="data.value"
         @input="notifyData"
@@ -138,11 +149,27 @@
         controls-position="right"
         :placeholder="data.description"
       ></el-input-number>
+      <el-checkbox
+        style="margin-left: 10px"
+        :disabled="!isEdit"
+        v-model="backshow"
+        >使用变量</el-checkbox
+      >
     </div>
     <!-- Integer数据类型展示结束 -->
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Boolean'">
+      <el-input
+        v-if="backshow"
+        size="small"
+        style="width: 400px"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        @pointerdown.stop.native
+        :placeholder="data.description"
+      ></el-input>
       <el-switch
         size="small"
         :disabled="!isEdit"
@@ -152,11 +179,27 @@
         inactive-color="#909399"
       >
       </el-switch>
+      <el-checkbox
+        style="margin-left: 10px"
+        :disabled="!isEdit"
+        v-model="backshow"
+        >使用变量</el-checkbox
+      >
     </div>
     <!-- Integer数据类型展示结束 -->
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Float'">
+      <el-input
+        v-if="backshow"
+        size="small"
+        style="width: 400px"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        @pointerdown.stop.native
+        :placeholder="data.description"
+      ></el-input>
       <el-input-number
         size="small"
         :precision="2"
@@ -168,11 +211,27 @@
         controls-position="right"
         :placeholder="data.description"
       ></el-input-number>
+      <el-checkbox
+        style="margin-left: 10px"
+        :disabled="!isEdit"
+        v-model="backshow"
+        >使用变量</el-checkbox
+      >
     </div>
     <!-- Integer数据类型展示结束 -->
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Double'">
+      <el-input
+        v-if="backshow"
+        size="small"
+        style="width: 400px"
+        :disabled="!isEdit"
+        v-model="data.value"
+        @input="notifyData"
+        @pointerdown.stop.native
+        :placeholder="data.description"
+      ></el-input>
       <el-input-number
         size="small"
         :precision="2"
@@ -184,6 +243,12 @@
         controls-position="right"
         :placeholder="data.description"
       ></el-input-number>
+      <el-checkbox
+        style="margin-left: 10px"
+        :disabled="!isEdit"
+        v-model="backshow"
+        >使用变量</el-checkbox
+      >
     </div>
     <!-- Integer数据类型展示结束 -->
 
@@ -245,6 +310,7 @@ export default {
       uniqId: '',
       jsonStr: '',
       showDetail: false,
+      backshow: false,
     }
   },
   methods: {
@@ -300,7 +366,6 @@ export default {
     },
     notifyData() {
       let data = this.data
-      console.log(data)
       if (this.data.type == 'Map') {
         let item = {}
         this.paramList.forEach((e) => {
@@ -411,6 +476,17 @@ export default {
 
       if (!this.data.value && this.data.initData && this.data.initData.data) {
         this.data.value = this.data.initData.data
+      }
+
+      if (
+        this.data.type != 'String' &&
+        this.data.type != 'Map' &&
+        this.data.type != 'Array' &&
+        this.data &&
+        this.data.value &&
+        (this.data.value + '').indexOf('$') != -1
+      ) {
+        this.backshow = true
       }
     },
   },

@@ -882,7 +882,7 @@ export default {
   },
   watch: {
     filterText(val) {
-      this.$refs.tree.filter(val)
+      this.$refs.apiTree.filter(val)
     },
     apiForm: {
       handler(val, old) {
@@ -1281,6 +1281,9 @@ export default {
     selectService() {
       serviceApi.getApiList(this.serviceId).then((res) => {
         this.apiTreeData = this.buildTree(res.data)
+        setTimeout(() => {
+          this.$refs.apiTree.filter(this.filterText)
+        }, 100)
       })
     },
     buildTree(data, parentId = null) {

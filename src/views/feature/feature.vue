@@ -3,7 +3,15 @@
     <el-row>
       <el-col :span="5">
         <div class="title">
-          <el-page-header @back="goBack" :content="caseName"> </el-page-header>
+          <el-page-header @back="goBack">
+            <span slot="content">
+              <i
+                class="el-icon-edit-outline edit-name-icon"
+                @click="startEditCase"
+              />
+              <testview :text="caseName" :len="20"></testview>
+            </span>
+          </el-page-header>
         </div>
         <!-- 用例列表开始 -->
         <div class="api-list">
@@ -230,7 +238,7 @@
             placeholder="请输入名称"
           />
         </el-form-item>
-        <el-form-item label="用例标签" v-if="createData.type == 1">
+        <el-form-item label="用例标签">
           <el-tag
             :key="index"
             v-for="(tag, index) in dynamicTags"
@@ -396,17 +404,53 @@
       </div>
     </el-dialog>
     <!-- 全局环境变量结束 -->
+    <!-- 开始编辑测试集 -->
+    <el-dialog title="编辑测试集" :visible.sync="showCaseDialog" width="60%">
+      <el-form
+        :model="caseDetail"
+        ref="caseForm"
+        size="mini"
+        :rules="caseRule"
+        label-width="120px"
+      >
+        <el-form-item label="测试集名称" prop="testCaseName">
+          <el-input
+            v-model="caseDetail.testCaseName"
+            placeholder="请输入测试集名称"
+          />
+        </el-form-item>
+        <el-form-item label="测试集描述" prop="description">
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 4, maxRows: 10 }"
+            v-model="caseDetail.description"
+            placeholder="请输入测试描述"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button size="mini" @click="showCaseDialog = !showCaseDialog"
+          >取 消</el-button
+        >
+        <el-button size="mini" type="primary" @click="submitCase('caseForm')"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+    <!-- 编辑测试集结束 -->
   </div>
 </template>
 <script>
 import history from './history.vue'
 import FeatureConfig from './comp/feature-config.vue'
+import testview from '../../components/text-view.vue'
 import featureApi from '../../http/Feature'
 import testCaseApi from '../../http/TestCase'
 export default {
   components: {
     history,
     FeatureConfig,
+    testview,
   },
   watch: {
     filterText(val) {
@@ -415,6 +459,8 @@ export default {
   },
   data() {
     return {
+      showCaseDialog: false,
+      caseDetail: {},
       infoForm: null,
       activeName: 'desc',
       filterText: '',
@@ -452,9 +498,36 @@ export default {
         ],
       },
       expendList: [],
+      caseRule: {
+        testCaseName: [
+          { required: true, message: '请输入测试集名称', trigger: 'blur' },
+        ],
+        description: [
+          { required: true, message: '请输入详细描述', trigger: 'blur' },
+        ],
+      },
     }
   },
   methods: {
+    submitCase(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+        testCaseApi.updateTestCase(this.caseDetail).then((res) => {
+          if (res.data) {
+            this.$message.success('修改测试集成功')
+            this.getCaseDetail()
+            this.showCaseDialog = false
+            return
+          }
+          this.$message.error('修改测试集失败')
+        })
+      })
+    },
+    startEditCase() {
+      this.showCaseDialog = true
+    },
     dragNodeEvent(node) {
       console.log('all', this.caseFeatures)
       let array = []
@@ -754,6 +827,7 @@ export default {
       }
     },
     treeNodeClick(data) {
+      console.log('ddddd', data)
       this.activeName = 'desc'
       this.infoForm = data
       this.dynamicTags = []
@@ -785,6 +859,7 @@ export default {
       testCaseApi.getTestCaseDetail(this.caseId).then((res) => {
         this.caseName = res.data.testCaseName
         this.serviceId = res.data.serviceId
+        this.caseDetail = res.data
       })
     },
   },
@@ -938,5 +1013,9 @@ export default {
 .folder-Text i {
   color: #70c745;
   font-size: 16px;
+}
+.edit-name-icon {
+  margin-right: 10px;
+  cursor: pointer;
 }
 </style>

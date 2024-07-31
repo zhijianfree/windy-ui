@@ -78,6 +78,23 @@ export default {
           enabled: true, // 是否显示缩略图
         },
       })
+      // if (this.monacoEditor.languages.typescript) {
+      //   this.monacoEditor.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+      //     {
+      //       noSemanticValidation: false,
+      //       noSyntaxValidation: false,
+      //     }
+      //   )
+
+      //   this.monacoEditor.languages.typescript.javascriptDefaults.setCompilerOptions(
+      //     {
+      //       target: monaco.languages.typescript.ScriptTarget.ES5,
+      //       allowNonTsExtensions: true,
+      //       noLib: false,
+      //     }
+      //   )
+      // }
+
       this.monacoEditor.onDidChangeModelContent(() => {
         this.content = this.monacoEditor.getValue()
       })
