@@ -7,16 +7,20 @@
         style="width: 100%"
         height="500"
       >
-        <el-table-column prop="historyId" label="执行ID"> </el-table-column>
-        <el-table-column fixed prop="featureName" label="用例">
+        <el-table-column prop="featureName" label="用例">
+          <template slot-scope="scope">
+            <textview :text="scope.row.featureName" :len="15" />
+          </template>
         </el-table-column>
+        <el-table-column prop="historyId" label="执行ID"> </el-table-column>
+
         <el-table-column
           prop="createTime"
           label="执行时间"
           :formatter="dateFormat"
         >
         </el-table-column>
-        <el-table-column prop="executeStatus" label="结果">
+        <el-table-column prop="executeStatus" label="结果" width="100px">
           <template slot-scope="scope">
             <el-tag v-if="scope.row.executeStatus == 1" type="success"
               >成功</el-tag
@@ -120,9 +124,12 @@
 <script>
 import featureApi from '../../http/Feature'
 import PanelList from '../../components/panel-list.vue'
+import textview from '../../components/text-view.vue'
+
 export default {
   components: {
     PanelList,
+    textview,
   },
   props: {
     feature: String,

@@ -122,6 +122,7 @@
                               executePoint.executeType == 1 ||
                               executePoint.executeType == 4
                             "
+                            :case="caseId"
                             :data="executePoint"
                             :isEdit="isEdit"
                             :key="uuid"
@@ -910,5 +911,6 @@ export default {
 <style lang="less" scoped>
 .drag-box {
   height: calc(80vh - 60px);
+  overflow-y: scroll;
 }
 </style>

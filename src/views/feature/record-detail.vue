@@ -171,6 +171,7 @@ export default {
       successCount: 0,
       errorCount: 0,
       displayAll: false,
+      recordStatus: 0,
     }
   },
   watch: {
@@ -300,16 +301,24 @@ export default {
     getRecordDetail() {
       taskApi.getTaskRecordDetail(this.recordId).then((res) => {
         this.recordName = `任务名称: ${res.data.taskName}`
+        this.recordStatus = res.data.status
         this.getCaseFeatures(res.data.testCaseId)
+        if (res.data.status == 4) {
+          this.startInterval()
+        }
       })
     },
     getCaseFeatures(caseId) {
       caseApi.getCaseFeatures(caseId).then((res) => {
-        res.data.forEach((e) => {
-          if (e.featureType == 1) {
-            this.totalCount++
-          }
-        })
+        if (this.recordStatus != 4) {
+          this.totalCount = this.errorCount + this.successCount
+        } else {
+          res.data.forEach((e) => {
+            if (e.featureType == 1) {
+              this.totalCount++
+            }
+          })
+        }
       })
     },
   },
@@ -317,7 +326,6 @@ export default {
     this.recordId = this.$route.query.recordId
     this.getRecordDetail()
     this.getTaskHistories()
-    this.startInterval()
   },
 }
 </script>

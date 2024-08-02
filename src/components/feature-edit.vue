@@ -129,16 +129,24 @@
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Integer' || data.type == 'Long'">
-      <el-input
+      <el-autocomplete
+        style="width: 400px"
         v-if="backshow"
         size="small"
-        style="width: 400px"
         :disabled="!isEdit"
         v-model="data.value"
         @input="notifyData"
+        :fetch-suggestions="querySearch"
         @pointerdown.stop.native
         :placeholder="data.description"
-      ></el-input>
+        @select="handleSelect"
+      >
+        <el-button
+          slot="append"
+          @click="diaplayString(data.value)"
+          icon="el-icon-full-screen"
+        ></el-button
+      ></el-autocomplete>
       <el-input-number
         size="small"
         v-else
@@ -160,16 +168,24 @@
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Boolean'">
-      <el-input
+      <el-autocomplete
+        style="width: 400px"
         v-if="backshow"
         size="small"
-        style="width: 400px"
         :disabled="!isEdit"
         v-model="data.value"
         @input="notifyData"
+        :fetch-suggestions="querySearch"
         @pointerdown.stop.native
         :placeholder="data.description"
-      ></el-input>
+        @select="handleSelect"
+      >
+        <el-button
+          slot="append"
+          @click="diaplayString(data.value)"
+          icon="el-icon-full-screen"
+        ></el-button
+      ></el-autocomplete>
       <el-switch
         size="small"
         :disabled="!isEdit"
@@ -190,16 +206,24 @@
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Float'">
-      <el-input
+      <el-autocomplete
+        style="width: 400px"
         v-if="backshow"
         size="small"
-        style="width: 400px"
         :disabled="!isEdit"
         v-model="data.value"
         @input="notifyData"
+        :fetch-suggestions="querySearch"
         @pointerdown.stop.native
         :placeholder="data.description"
-      ></el-input>
+        @select="handleSelect"
+      >
+        <el-button
+          slot="append"
+          @click="diaplayString(data.value)"
+          icon="el-icon-full-screen"
+        ></el-button
+      ></el-autocomplete>
       <el-input-number
         size="small"
         :precision="2"
@@ -222,16 +246,24 @@
 
     <!-- Integer数据类型展示开始 -->
     <div v-else-if="data.type == 'Double'">
-      <el-input
+      <el-autocomplete
+        style="width: 400px"
         v-if="backshow"
         size="small"
-        style="width: 400px"
         :disabled="!isEdit"
         v-model="data.value"
         @input="notifyData"
+        :fetch-suggestions="querySearch"
         @pointerdown.stop.native
         :placeholder="data.description"
-      ></el-input>
+        @select="handleSelect"
+      >
+        <el-button
+          slot="append"
+          @click="diaplayString(data.value)"
+          icon="el-icon-full-screen"
+        ></el-button
+      ></el-autocomplete>
       <el-input-number
         size="small"
         :precision="2"
@@ -253,21 +285,23 @@
     <!-- Integer数据类型展示结束 -->
 
     <!-- 默认数据类型展示开始 -->
-    <el-input
+    <el-autocomplete
       v-else
       size="small"
       :disabled="!isEdit"
       v-model="data.value"
       @input="notifyData"
+      :fetch-suggestions="querySearch"
       @pointerdown.stop.native
       :placeholder="data.description"
+      @select="handleSelect"
     >
       <el-button
         slot="append"
         @click="diaplayString(data.value)"
         icon="el-icon-full-screen"
       ></el-button
-    ></el-input>
+    ></el-autocomplete>
     <!-- 默认数据类型展示结束 -->
 
     <el-dialog
@@ -289,6 +323,7 @@ export default {
     feature: Object,
     isEdit: Boolean,
     point: String,
+    case: String,
   },
   components: {
     FeatureEdit,
@@ -311,9 +346,54 @@ export default {
       jsonStr: '',
       showDetail: false,
       backshow: false,
+      contextList: [],
+      originString: '',
     }
   },
   methods: {
+    isValidPlaceholder(str) {
+      // 检查是否以 `${` 开始
+      if (!str.startsWith('${')) {
+        return false
+      }
+      // 获取 `${` 之后的字符串
+      const remaining = str.slice(2)
+      // 检查是否包含 `}`
+      if (!remaining.includes('}')) {
+        return true
+      }
+      // 提取 `${` 和 `}` 之间的部分
+      const betweenBraces = remaining.split('}')[0]
+      // 检查 `${` 和 `}` 之间是否为空或只包含空格
+      return betweenBraces.trim().length === 0
+    },
+    querySearch(queryString, cb) {
+      console.log(queryString)
+      this.originString = queryString
+      if (queryString && this.isValidPlaceholder(queryString)) {
+        let filterText = queryString.replace('${', '')
+
+        console.log('clear test ', filterText)
+        var restaurants = this.contextList
+        var results = filterText
+          ? restaurants.filter(this.createFilter(filterText))
+          : restaurants
+        cb(results)
+      } else {
+        cb([])
+      }
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (
+          restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) ===
+          0
+        )
+      }
+    },
+    handleSelect(item) {
+      this.data.value = '${' + item.value + '}'
+    },
     closeEditor() {
       this.data.value = this.$refs.editer.getValue()
     },
@@ -491,6 +571,13 @@ export default {
     },
   },
   created() {
+    let array = this.$store.state.caseContext[this.case]
+    if (array) {
+      array.forEach((e) => {
+        this.contextList.push({ value: e })
+      })
+    }
+
     this.pointId = this.point
     this.data = this.feature
     this.exchangeDataValue()

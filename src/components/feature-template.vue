@@ -23,6 +23,7 @@
             <FeatureEdit
               :point="executePoint.pointId"
               :feature="item"
+              :case="caseId"
               :isEdit="isEdit"
               @refreshData="refreshValue"
             />
@@ -57,6 +58,7 @@ export default {
     data: Object,
     isEdit: Boolean,
     type: String,
+    case: String,
   },
   components: {
     FeatureEdit,
@@ -75,6 +77,7 @@ export default {
     return {
       executePoint: {},
       writeType: '',
+      caseId: '',
     }
   },
   methods: {
@@ -102,6 +105,7 @@ export default {
     },
   },
   created() {
+    this.caseId = this.case
     this.executePoint = this.data
     this.writeType = this.type
   },

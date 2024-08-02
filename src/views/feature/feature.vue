@@ -683,6 +683,16 @@ export default {
         let array = res.data
         array.push({ paramType: 'String' })
         this.configData = array
+        let contextKeys = []
+        array.forEach((e) => {
+          if (e && e.paramKey) {
+            contextKeys.push(e.paramKey)
+          }
+        })
+        this.$store.commit('UPDATE_CASE_CONTEXT', {
+          key: this.caseId,
+          value: contextKeys,
+        })
       })
     },
     startEditParam(row) {
@@ -865,6 +875,7 @@ export default {
   },
   created() {
     this.caseId = this.$route.query.caseId
+    this.getTestCaseConfigs()
     this.getCaseDetail()
     this.requestCaseFeatures(this.caseId)
   },
