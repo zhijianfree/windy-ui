@@ -27,19 +27,21 @@
           >提交</el-button
         >
       </div>
-      <el-divider></el-divider>
     </div>
     <el-row>
       <el-col :span="14">
         <el-form :model="demandForm" size="mini" label-width="80px">
-          <el-form-item label="需求标识">
+          <el-form-item label="需求ID">
             <span
               >{{ demandForm.demandId }}
-              <el-tooltip effect="dark" content="复制" placement="right-start">
+              <el-tooltip
+                effect="dark"
+                content="复制需求ID"
+                placement="right-start"
+              >
                 <i
                   class="copy-icon el-icon-document-copy"
                   :data-clipboard-text="demandForm.demandId"
-                  @click="copyValue"
                 />
               </el-tooltip>
             </span>
@@ -82,7 +84,7 @@
           <div class="history" v-for="(item, index) in comments" :key="index">
             <div class="user-div">
               <span><i class="el-icon-s-custom" /></span> {{ item.userName }}
-              {{ item.createTime }}
+              {{ item.createTime | dateFormat }}
             </div>
             <div class="history-content">
               {{ item.comment }}
@@ -147,14 +149,15 @@
           <el-form-item label="需求状态">
             <el-select
               v-model="demandForm.status"
+              :disabled="!isEdit"
               @change="statusChange"
               placeholder="请选择状态"
             >
               <el-option
                 v-for="(item, index) in statusOptions"
                 :key="index"
-                :label="item.name"
-                :value="item.status"
+                :label="item.statusName"
+                :value="item.value"
               >
               </el-option>
             </el-select>
@@ -177,7 +180,8 @@ export default {
   },
   watch: {
     demand: {
-      handler() {
+      handler(val) {
+        this.demandId = val
         this.init()
       },
     },
@@ -197,7 +201,6 @@ export default {
       comments: [],
     }
   },
-  watch: {},
   methods: {
     submitInfo() {
       DemandApi.updateDemand(this.demandForm).then((res) => {
@@ -209,7 +212,7 @@ export default {
         }
       })
     },
-    copyValue() {
+    initCopy() {
       let _this = this
       let clipboard = new Clipboard('.copy-icon')
 
@@ -222,13 +225,12 @@ export default {
     },
     getDemandDetail() {
       DemandApi.getDemandDetail(this.demandId).then((res) => {
-        console.log(res)
         this.demandForm = res.data
         this.completeDate = new Date(this.demandForm.expectTime)
       })
     },
     getstatusList() {
-      DemandApi.getStatusList(1).then((res) => {
+      DemandApi.getDemandStatuses().then((res) => {
         this.statusOptions = res.data
       })
     },
@@ -267,11 +269,17 @@ export default {
     },
     init() {
       this.getDemandDetail()
-      this.getstatusList()
       this.getCommentsList()
+      this.getstatusList()
     },
   },
-  created() {},
+  created() {
+    this.demandId = this.demand
+    this.init()
+  },
+  mounted() {
+    this.initCopy()
+  },
 }
 </script>
 <style scoped>
@@ -305,13 +313,16 @@ export default {
 }
 .title-line {
   margin: 10px;
+  position: relative;
+  z-index: 1000;
 }
 .btn-list {
-  float: right;
-  margin-top: -10px;
+  position: absolute;
+  right: 10px;
+  top: -20px;
 }
 .comment-list {
   max-height: 300px;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 </style>

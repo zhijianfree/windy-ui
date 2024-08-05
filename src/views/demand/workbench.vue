@@ -75,44 +75,54 @@
         <el-tab-pane label="需求" name="demand">
           <span slot="label"><i class="el-icon-s-opportunity"></i> 需求</span>
           <div class="content-detail">
-            <div class="bug-div" v-for="(item, index) in bugList" :key="index">
+            <div
+              class="bug-div"
+              v-for="(item, index) in demandData"
+              :key="index"
+            >
               <div>
-                <div class="demand-title">
-                  <textview
-                    text="需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title需求title"
-                    :len="100"
-                  >
-                  </textview>
+                <div class="demand-title" @click="showDemand(item)">
+                  <textview :text="item.demandName" :len="100"> </textview>
                 </div>
                 <div class="demand-desc">
                   <textview
                     :len="200"
                     :showpop="false"
-                    text="需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述需求描述"
+                    :text="item.demandContent"
                   >
                   </textview>
                 </div>
               </div>
               <div class="bug-bottom">
-                <span class="bug-level">P3</span>
+                <span class="bug-level p1" v-if="item.level == 1"
+                  >P{{ item.level }}</span
+                >
+                <span class="bug-level p2" v-else-if="(item.level = 2)"
+                  >P{{ item.level }}</span
+                >
+                <span class="bug-level p3" v-else>P{{ item.level }}</span>
                 <span><i class="el-icon-user-solid" /> 古月澜</span>
                 <span
-                  ><i class="el-icon-camera-solid bug-icon" /> [hakjsdhk3821321]
-                  <i class="el-icon-document-copy"
+                  ><span>需求ID:</span> [{{ item.demandId }}]
+                  <i
+                    :data-clipboard-text="item.demandId"
+                    class="el-icon-document-copy copy-icon"
                 /></span>
               </div>
-              <div class="time-div">提出时间: 07-08</div>
+              <div class="time-div">
+                截止时间: {{ item.expectTime | dayFormat }}
+              </div>
             </div>
           </div>
           <div class="pagination">
             <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-              :current-page.sync="currentPage"
+              @size-change="handleSizeChange($event, 'demand')"
+              @current-change="handleCurrentChange($event, 'demand')"
+              :current-page.sync="demandPage"
               :page-sizes="[10, 20, 50]"
-              :page-size="10"
+              :page-size="demandSize"
               layout="sizes, prev, pager, next"
-              :total="total"
+              :total="demandTotal"
             >
             </el-pagination>
           </div>
@@ -164,14 +174,21 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+    <el-dialog title="需求详情" :visible.sync="showDemandDetail" width="90%">
+      <detail :demand="demandId"></detail>
+    </el-dialog>
   </div>
 </template>
 <script>
+import Clipboard from 'clipboard'
 import img from '../../../public/logo.svg'
 import textview from '../../components/text-view.vue'
+import demandApi from '../../http/DemandApi'
+import detail from './detail.vue'
 export default {
   components: {
     textview,
+    detail,
   },
   data() {
     return {
@@ -207,18 +224,57 @@ export default {
       ],
       total: 30,
       currentPage: 1,
+      demandTotal: 0,
+      demandPage: 1,
+      demandSize: 10,
+      demandData: [],
+      showDemandDetail: false,
+      demandId: '',
     }
   },
   methods: {
+    showDemand(row) {
+      this.demandId = row.demandId
+      this.showDemandDetail = true
+    },
     handleClick(tab) {
       console.log(tab)
     },
-    handleSizeChange(size) {
-      console.log(size)
+    handleSizeChange(size, type) {
+      if (type == 'demand') {
+        this.demandSize = size
+        this.getDemands()
+      }
     },
-    handleCurrentChange(page) {
-      console.log(page)
+    handleCurrentChange(page, type) {
+      if (type == 'demand') {
+        this.demandPage = page
+        this.getDemands()
+      }
     },
+    getDemands() {
+      demandApi.getUserDemands(this.demandPage, this.demandSize).then((res) => {
+        this.demandTotal = res.data.total
+        this.demandData = res.data.data
+      })
+    },
+    initCopy() {
+      let _this = this
+      let clipboard = new Clipboard('.copy-icon')
+
+      clipboard.on('success', function () {
+        _this.$message.success('复制成功')
+      })
+      clipboard.on('error', function () {
+        _this.$message.error('复制失败')
+      })
+    },
+  },
+  created() {
+    this.getDemands()
+  },
+  mounted() {
+    this.initCopy()
   },
 }
 </script>
@@ -256,6 +312,15 @@ export default {
 
 .ui-item {
   text-align: center;
+}
+.p1 {
+  background-color: #f56c6c;
+}
+.p2 {
+  background-color: #409eff;
+}
+.p3 {
+  background-color: #67c23a;
 }
 
 .ui-value {
@@ -298,7 +363,6 @@ export default {
 }
 .bug-div:hover {
   background-color: #f2f6fc;
-  cursor: pointer;
 }
 
 .bug-row {
@@ -322,7 +386,6 @@ export default {
   color: #fff;
   justify-content: center;
   align-items: center;
-  background-color: #409eff;
 }
 .bug-bottom {
   margin-top: 10px;
@@ -339,7 +402,13 @@ export default {
   margin-top: 10px;
 }
 .demand-title {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #606266;
+  cursor: pointer;
+}
+.demand-title:hover {
+  color: #409eff;
 }
 .demand-desc {
   font-size: 12px;

@@ -2,16 +2,16 @@
   <span>
     <span v-if="showText.length == len">{{ showText }}</span>
     <span v-else>
-      <el-popover
+      <el-tooltip
         v-if="showpop"
+        class="item"
+        effect="dark"
         :open-delay="200"
-        :close-delay="300"
-        placement="top-start"
-        trigger="hover"
         :content="fullText"
+        placement="top-start"
       >
-        <span slot="reference">{{ showText }}</span>
-      </el-popover>
+        <span>{{ showText }}</span>
+      </el-tooltip>
       <span v-else>{{ showText }}</span>
     </span>
   </span>

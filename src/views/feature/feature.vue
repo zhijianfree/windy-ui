@@ -456,7 +456,6 @@ export default {
   },
   methods: {
     dragNodeEvent(node) {
-      console.log('all', this.caseFeatures)
       let array = []
       this.loadItemFromTree(this.caseFeatures, array)
 
