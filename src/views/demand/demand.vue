@@ -44,7 +44,11 @@
         </el-table-column>
         <el-table-column prop="proposer" label="提出人" width="180">
         </el-table-column>
-        <el-table-column prop="status" label="需求状态"> </el-table-column>
+        <el-table-column prop="status" label="需求状态">
+          <template slot-scope="scope">
+            {{ exchangeStatusName(scope.row.status) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="expectTime" label="期待结束时间">
           <template slot-scope="scope">
             <i class="el-icon-date" /> {{ scope.row.expectTime | dayFormat }}
@@ -204,12 +208,10 @@
 </template>
 <script>
 import demandApi from '../../http/DemandApi'
-import Template from '../feature/template.vue'
 import detail from './detail.vue'
 export default {
   components: {
     detail,
-    Template,
   },
   data() {
     return {
@@ -259,6 +261,15 @@ export default {
     }
   },
   methods: {
+    exchangeStatusName(status) {
+      let statusName = '-'
+      this.statusList.forEach((e) => {
+        if (e.value == status) {
+          statusName = e.statusName
+        }
+      })
+      return statusName
+    },
     queryDemands() {
       this.getDemandList()
     },
@@ -316,13 +327,12 @@ export default {
       demandApi.getDemandStatuses().then((res) => {
         this.statusList = res.data
       })
-    }
+    },
   },
   created() {
     this.getDemandList()
     this.getstatusList()
   },
-
 }
 </script>
 <style scoped>
