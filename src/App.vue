@@ -12,6 +12,24 @@
         :router="true"
         active-text-color="#ffd04b"
       >
+        <el-submenu index="/workbench">
+          <template slot="title">
+            <i class="el-icon-s-marketing"></i>
+            <span slot="title">工作台</span>
+          </template>
+          <el-menu-item index="/workbench">
+            <i class="el-icon-s-platform"></i>
+            个人工作台</el-menu-item
+          >
+          <el-menu-item index="/demand">
+            <i class="el-icon-s-shop"></i>
+            需求</el-menu-item
+          >
+          <el-menu-item index="/bug">
+            <i class="el-icon-aim"></i>
+            缺陷</el-menu-item
+          >
+        </el-submenu>
         <el-submenu index="/">
           <template slot="title">
             <i class="el-icon-s-help"></i>
