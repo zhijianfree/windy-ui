@@ -5,6 +5,9 @@ import TestE2E from '../views/feature/test-e2e.vue'
 import Feature from '../views/feature/feature.vue'
 import Template from '../views/feature/template.vue'
 import Task from '../views/feature/task-manage.vue'
+import Demand from '../views/demand/demand.vue'
+import Bug from '../views/demand/bug.vue'
+import Workbench from '../views/demand/workbench.vue'
 import RecordDetail from '../views/feature/record-detail.vue'
 import Service from '../views/service/service.vue'
 import ServiceApi from '../views/service/api.vue'
@@ -27,6 +30,21 @@ const routes = [
     path: '/e2e',
     name: 'TestE2E',
     component: TestE2E,
+  },
+  {
+    path: '/demand',
+    name: 'Demand',
+    component: Demand,
+  },
+  {
+    path: '/bug',
+    name: 'Bug',
+    component: Bug,
+  },
+  {
+    path: '/workbench',
+    name: 'Workbench',
+    component: Workbench,
   },
   {
     path: '/feature',
