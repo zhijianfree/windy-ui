@@ -119,7 +119,6 @@ export default {
       currentSize: 10,
       total: 0,
       isEdit: false,
-      bugId: '',
       bugRule: {
         bugName: [
           { required: true, message: '请输入缺陷名称', trigger: 'blur' },

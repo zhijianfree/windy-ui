@@ -311,6 +311,7 @@ export default {
       taskData: [],
       isEditTask: false,
       taskRule: {},
+      taskStatus:[]
     }
   },
   methods: {
@@ -438,6 +439,7 @@ export default {
       })
 
       workTask.getTaskStatuses().then((res) => {
+        this.taskStatus = res.data
         this.getTasks()
       })
     },

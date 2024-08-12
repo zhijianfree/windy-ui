@@ -166,6 +166,7 @@
               type="primary"
               icon="el-icon-video-play"
               size="mini"
+              v-clickOnce
               :disabled="currentPipeline.executeType != 1"
               @click="startPipeline"
               >运行</el-button
