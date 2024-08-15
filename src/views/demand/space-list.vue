@@ -1,0 +1,166 @@
+<template>
+  <div class="content">
+    <el-button size="mini" icon="el-icon-plus" type="primary" @click="showSpace"
+      >新增空间</el-button
+    >
+    <el-table :data="tableData" size="mini">
+      <el-table-column prop="spaceName" label="空间名称" width="200">
+        <template slot-scope="scope">
+          <textview :len="20" :text="scope.row.spaceName"></textview>
+          <!-- {{ scope.row.spaceName }} -->
+        </template>
+      </el-table-column>
+      <el-table-column prop="description" label="描述"> </el-table-column>
+      <el-table-column prop="createTime" label="创建时间" width="150">
+        <template slot-scope="scope">
+          {{ scope.row.createTime | dateFormat }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150">
+        <template slot-scope="scope">
+          <el-button
+            @click="startEdit(scope.row)"
+            type="text"
+            size="small"
+            icon="el-icon-edit"
+            >编辑</el-button
+          >
+          <el-button
+            @click="switchSpace(scope.row)"
+            type="text"
+            size="small"
+            icon="el-icon-sort"
+            >切换空间</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog
+      :title="spaceTitle"
+      :visible.sync="showSpaceDialog"
+      width="40%"
+      :append-to-body="true"
+      :before-close="handleClose"
+    >
+      <el-form
+        :model="spaceForm"
+        ref="spaceForm"
+        :rules="SpaceRules"
+        label-width="80px"
+        size="mini"
+      >
+        <el-form-item label="空间名称" prop="spaceName">
+          <el-input
+            v-model="spaceForm.spaceName"
+            placeholder="请输入空间名称"
+          />
+        </el-form-item>
+        <el-form-item label="空间描述" prop="description">
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 4, maxRows: 10 }"
+            v-model="spaceForm.description"
+            placeholder="请输入空间名称"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="handleClose" size="mini">取 消</el-button>
+        <el-button type="primary" size="mini" @click="submitForm('spaceForm')"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import textview from '../../components/text-view.vue'
+import spaceApi from '../../http/Space'
+export default {
+  components: { textview },
+  data() {
+    return {
+      tableData: [{}],
+      showSpaceDialog: false,
+      spaceForm: {},
+      spaceTitle: '',
+      edit: false,
+      SpaceRules: {
+        spaceName: [
+          { required: true, message: '请输入空间名称', trigger: 'blur' },
+          { min: 2, message: '缺陷名称最少2个字符', trigger: 'blur' },
+        ],
+        description: [
+          { required: true, message: '请输入空间描述', trigger: 'change' },
+        ],
+      },
+    }
+  },
+  methods: {
+    switchSpace(row) {
+      this.$emit('switchSpace', row)
+    },
+    showSpace() {
+      this.spaceTitle = '创建空间'
+      this.showSpaceDialog = true
+      this.edit = false
+    },
+    startEdit(row) {
+      this.spaceTitle = '编辑空间'
+      this.showSpaceDialog = true
+      this.edit = true
+      this.spaceForm = row
+    },
+    handleClose() {
+      this.showSpaceDialog = false
+      this.spaceForm = {}
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+
+        if (this.edit) {
+          spaceApi
+            .updateSpace(this.spaceForm.spaceId, this.spaceForm)
+            .then((res) => {
+              if (res.data) {
+                this.$message.success('修改空间成功')
+                this.handleClose()
+                this.getSpaceList()
+              } else {
+                this.$message.error('修改空间失败')
+              }
+            })
+          return
+        }
+
+        spaceApi.createSpace(this.spaceForm).then((res) => {
+          if (res.data) {
+            this.$message.success('创建空间成功')
+            this.handleClose()
+            this.getSpaceList()
+          } else {
+            this.$message.error('创建空间失败')
+          }
+        })
+      })
+    },
+    getSpaceList() {
+      spaceApi.getSpaceList().then((res) => {
+        this.tableData = res.data
+      })
+    },
+  },
+  created() {
+    this.getSpaceList()
+  },
+}
+</script>
+<style lang="less" scoped>
+.content {
+  padding: 10px;
+}
+</style>

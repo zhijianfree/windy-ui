@@ -21,13 +21,9 @@
             <i class="el-icon-s-platform"></i>
             个人工作台</el-menu-item
           >
-          <el-menu-item index="/demand">
+          <el-menu-item index="/space">
             <i class="el-icon-s-shop"></i>
-            需求</el-menu-item
-          >
-          <el-menu-item index="/bug">
-            <i class="el-icon-aim"></i>
-            缺陷</el-menu-item
+            空间</el-menu-item
           >
         </el-submenu>
         <el-submenu index="/">
@@ -128,11 +124,15 @@ export default {
 body {
   padding: 0px;
   margin: 0px;
+  color: #303133;
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 }
 html,
-body,
+body {
+  margin: 0;
+  height: 100%;
+}
 #app,
 .el-container {
   height: 100%;

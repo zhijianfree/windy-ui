@@ -102,11 +102,24 @@
           ></el-input>
         </el-form-item>
         <el-form-item label="关联需求/bug" prop="relationId">
-          <el-input
+          <el-autocomplete
+            style="width: 100%"
             v-model="changeForm.relationId"
-            placeholder="请输入关联的需求或bugId"
-            autocomplete="off"
-          ></el-input>
+            :fetch-suggestions="querySearchAsync"
+            placeholder="请输入内容"
+            @select="handleSelect"
+          >
+            <template slot-scope="{ item }">
+              <div class="query-type demand" v-if="item.relationType == 1">
+                需求
+              </div>
+              <div class="query-type bug" v-else-if="item.relationType == 2">
+                缺陷
+              </div>
+              <div class="query-type work" v-else>任务</div>
+              <span>{{ item.value }}</span>
+            </template>
+          </el-autocomplete>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -133,6 +146,7 @@ export default {
       changeForm: {
         branchType: 'custom',
       },
+      selectItem: null,
       dialogFormVisible: false,
       loading: false,
       editBranch: false,
@@ -147,6 +161,20 @@ export default {
     }
   },
   methods: {
+    querySearchAsync(text, cb) {
+      requestApi.relationList(text).then((res) => {
+        console.log('res', res)
+        let array = []
+        res.data.forEach((e) => {
+          e.value = e.name
+          array.push(e)
+        })
+        cb(array)
+      })
+    },
+    handleSelect(item) {
+      this.selectItem = item
+    },
     getServices() {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
@@ -196,6 +224,7 @@ export default {
         if (!valid) {
           return false
         }
+        this.changeForm.relationId = this.selectItem.relatedId
         this.changeForm.serviceId = this.service
         requestApi.saveCodeChange(this.changeForm).then(() => {
           this.$message({
@@ -240,5 +269,28 @@ export default {
 }
 .title-line {
   margin: 10px;
+}
+.query-type {
+  margin-top: 10px;
+  margin-right: 10px;
+  display: inline-block;
+  height: 20px;
+  padding: 0 5px;
+  line-height: 20px;
+  font-size: 12px;
+  color: #fff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.demand {
+  background-color: #409eff;
+}
+.bug {
+  background-color: #f56c6c;
+}
+.work {
+  background-color: #909399;
 }
 </style>

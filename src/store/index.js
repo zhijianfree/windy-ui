@@ -6,6 +6,8 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     caseContext: {},
+    spaceId: '',
+    iterationId: '',
   },
   mutations: {
     UPDATE_CASE_CONTEXT(state, item) {
@@ -13,6 +15,12 @@ export default new Vuex.Store({
         state.caseContext = {}
       }
       state.caseContext[item.key] = item.value
+    },
+    UPDATE_SPACE(state, item) {
+      state.spaceId = item
+    },
+    UPDATE_ITERATION(state, item) {
+      state.iterationId = item
     },
   },
   actions: {},

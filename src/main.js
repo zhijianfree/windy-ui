@@ -7,7 +7,7 @@ import utils from './lib/utils'
 import VuePipeline from 'vue-pipeline'
 import './lib/filter'
 import Contextmenu from 'vue-contextmenujs'
-import 'monaco-editor/min/vs/editor/editor.main.css'
+// import 'monaco-editor/min/vs/editor/editor.main.css'
 import store from './store/index'
 
 Vue.use(Contextmenu)
@@ -17,8 +17,8 @@ Vue.use(VuePipeline)
 
 Vue.config.productionTip = false
 Vue.directive('clickOnce', {
-  inserted(el, binding) {
-    el.addEventListener('click', (e) => {
+  inserted(el) {
+    el.addEventListener('click', () => {
       el.classList.add('is-disabled')
       el.disabled = true
       setTimeout(() => {

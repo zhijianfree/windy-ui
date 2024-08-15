@@ -5,8 +5,7 @@ import TestE2E from '../views/feature/test-e2e.vue'
 import Feature from '../views/feature/feature.vue'
 import Template from '../views/feature/template.vue'
 import Task from '../views/feature/task-manage.vue'
-import Demand from '../views/demand/demand.vue'
-import Bug from '../views/demand/bug.vue'
+import Space from '../views/demand/space.vue'
 import Workbench from '../views/demand/workbench.vue'
 import RecordDetail from '../views/feature/record-detail.vue'
 import Service from '../views/service/service.vue'
@@ -22,6 +21,11 @@ Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/space',
+    name: 'Space',
+    component: Space,
+  },
+  {
     path: '/case',
     name: 'TestCase',
     component: TestCase,
@@ -30,16 +34,6 @@ const routes = [
     path: '/e2e',
     name: 'TestE2E',
     component: TestE2E,
-  },
-  {
-    path: '/demand',
-    name: 'Demand',
-    component: Demand,
-  },
-  {
-    path: '/bug',
-    name: 'Bug',
-    component: Bug,
   },
   {
     path: '/workbench',

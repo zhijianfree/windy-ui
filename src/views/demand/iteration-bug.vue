@@ -1,6 +1,6 @@
 <template>
   <div class="content">
-    <div style="width: 100%">
+    <div>
       <el-form :inline="true" v-model="queryForm" size="mini">
         <el-form-item label="缺陷名称">
           <el-input
@@ -39,9 +39,11 @@
       </div>
     </div>
     <div class="table-list">
-      <el-table :data="tableData" height="500" style="width: 100%">
-        <el-table-column prop="bugName" label="缺陷名称"> </el-table-column>
-        <el-table-column prop="acceptor" label="负责人"> </el-table-column>
+      <el-table :data="tableData" height="600" style="width: 100%">
+        <el-table-column prop="bugName" label="缺陷名称" width="600">
+        </el-table-column>
+        <el-table-column prop="acceptor" label="负责人" width="180">
+        </el-table-column>
         <el-table-column prop="status" label="缺陷状态">
           <template slot-scope="scope">
             {{ exchangeStatusName(scope.row.status) }}
@@ -80,15 +82,12 @@
       :close-on-click-modal="false"
       width="80%"
     >
-      <div>
-        <bugDetail :edit="isEdit" :bug="bugId" @cancel="closeBug"></bugDetail>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button size="mini" @click="closeBug">取 消</el-button>
-        <el-button type="primary" @click="submitBug('bugForm')" size="mini"
-          >确 定</el-button
-        >
-      </div>
+      <bugDetail
+        :edit="isEdit"
+        :iteration="iterationId"
+        :bug="bugId"
+        @cancel="closeBug"
+      ></bugDetail>
     </el-dialog>
   </div>
 </template>
@@ -96,8 +95,9 @@
 import bugApi from '../../http/BugApi'
 import bugDetail from './bug-detail.vue'
 export default {
+  name: 'iteration-bug',
   props: {
-    space: {
+    iteration: {
       default: '',
       type: String,
     },
@@ -106,17 +106,17 @@ export default {
     bugDetail,
   },
   watch: {
-    space: {
+    iteration: {
       handler(val) {
-        this.spaceId = val
+        this.iterationId = val
         this.getBugList()
-        console.log('bug里i iiiii')
       },
     },
   },
   data() {
     return {
       spaceId: '',
+      iterationId: '',
       tableData: [],
       queryForm: {
         name: '',
@@ -161,13 +161,11 @@ export default {
       this.bugId = row.bugId
       // this.bugForm = row
       this.isEdit = true
-      this.bugTitle = '缺陷详情'
     },
     createBug() {
       this.showBugDialog = true
       this.isEdit = false
       this.bugId = ''
-      this.bugTitle = '创建详情'
     },
     handlePageChange(page) {
       this.currentPage = page
@@ -183,38 +181,9 @@ export default {
       this.getBugList()
       this.$refs.bugForm.resetFields()
     },
-    submitBug(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (!valid) {
-          return false
-        }
-        console.log('edit', this.isEdit)
-        if (this.isEdit) {
-          bugApi.updateBug(this.bugForm).then((res) => {
-            if (res.data) {
-              this.$message.success('修改缺陷成功')
-              this.getBugList()
-              this.closeBug()
-            } else {
-              this.$message.error('修改缺陷失败')
-            }
-          })
-          return
-        }
-        bugApi.createBug(this.bugForm).then((res) => {
-          if (res.data) {
-            this.$message.success('创建缺陷成功')
-            this.getBugList()
-            this.closeBug()
-          } else {
-            this.$message.error('创建缺陷失败')
-          }
-        })
-      })
-    },
     getBugList() {
-      if (!this.spaceId) {
-        this.spaceId = ''
+      if (!this.spaceId || !this.iterationId) {
+        return
       }
       bugApi
         .getBugList(
@@ -223,7 +192,7 @@ export default {
           this.queryForm.name,
           this.queryForm.status,
           this.spaceId,
-          ''
+          this.iterationId
         )
         .then((res) => {
           console.log(res)
@@ -239,6 +208,8 @@ export default {
   },
   created() {
     this.spaceId = this.$store.state.spaceId
+    this.iterationId = this.iteration
+    console.log('获取到iteration ', this.iteration)
     this.getBugList()
     this.getstatusList()
   },
@@ -246,6 +217,7 @@ export default {
 </script>
 <style scoped>
 .content {
+  margin-left: 10px;
   position: relative;
   width: 100%;
 }

@@ -1,16 +1,21 @@
 <template>
   <div>
-    <div
+    <!-- <div
       ref="container"
       style="height: 300px; width: 100%"
       class="monaco-editor"
-    ></div>
+    ></div> -->
+    <codemirror v-model="content" :options="options"></codemirror>
   </div>
 </template>
 
 <script>
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js'
+import { codemirror } from 'vue-codemirror'
+import '../lib/cm-setting'
 export default {
+  components: {
+    codemirror,
+  },
   props: {
     // 编辑器中呈现的内容
     codes: {
@@ -18,7 +23,7 @@ export default {
     },
     language: {
       type: String,
-      default: 'json',
+      default: 'application/json',
     },
     readonly: {
       type: Boolean,
@@ -33,7 +38,6 @@ export default {
       handler(val) {
         if (val) {
           this.content = val
-          this.setDataValue(val)
         }
       },
     },
@@ -44,7 +48,7 @@ export default {
     },
     readonly: {
       handler(val) {
-        this.monacoEditor.updateOptions({ readOnly: val })
+        this.options.readOnly = val
       },
     },
   },
@@ -54,84 +58,25 @@ export default {
       readOnly: true,
       content: '',
       hoverProvider: null,
+      options: {
+        line: true,
+        theme: 'lesser-dark', // 主题
+        tabSize: 4, // 制表符的宽度
+        indentUnit: 2, // 一个块应该缩进多少个空格（无论这在编辑语言中意味着什么）。默认值为 2。
+        firstLineNumber: 1, // 从哪个数字开始计算行数。默认值为 1。
+        readOnly: this.readonly, // 只读
+        autorefresh: true,
+        smartIndent: true, // 上下文缩进
+        lineNumbers: true, // 是否显示行号
+        styleActiveLine: true, // 高亮选中行
+        viewportMargin: Infinity, //处理高度自适应时搭配使用
+        showCursorWhenSelecting: true, // 当选择处于活动状态时是否应绘制游标
+        mode: this.language,
+      },
     }
   },
-  methods: {
-    getValue() {
-      return this.monacoEditor.getValue()
-    },
-    initEditer() {
-      this.monacoEditor = monaco.editor.create(this.$refs.container, {
-        value: this.content,
-        language: this.type,
-        theme: 'vs-dark',
-        readOnly: this.readOnly,
-        automaticLayout: true, // 自动布局
-        lineNumbers: 'on', // 显示行号
-        fontFamily: "Consolas, 'Courier New', monospace", // 字体设置
-        fontSize: 14, // 字体大小
-        tabSize: 2, // 制表符大小
-        wordWrap: 'on', // 自动换行
-        find: true,
-        scrollBeyondLastLine: false, // 是否允许滚动超过最后一行
-        minimap: {
-          enabled: true, // 是否显示缩略图
-        },
-      })
-      // if (this.monacoEditor.languages.typescript) {
-      //   this.monacoEditor.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-      //     {
-      //       noSemanticValidation: false,
-      //       noSyntaxValidation: false,
-      //     }
-      //   )
-
-      //   this.monacoEditor.languages.typescript.javascriptDefaults.setCompilerOptions(
-      //     {
-      //       target: monaco.languages.typescript.ScriptTarget.ES5,
-      //       allowNonTsExtensions: true,
-      //       noLib: false,
-      //     }
-      //   )
-      // }
-
-      this.monacoEditor.onDidChangeModelContent(() => {
-        this.content = this.monacoEditor.getValue()
-      })
-      window.addEventListener('resize', () => {
-        this.monacoEditor.layout()
-      })
-      // 使用 nextTick 确保编辑器完全初始化后设置值
-      this.$nextTick(() => {
-        this.setDataValue(this.content)
-      })
-    },
-    setDataValue(data) {
-      if (!data || data == '') {
-        return
-      }
-      if (this.monacoEditor) {
-        const currentPosition = this.monacoEditor.getPosition()
-        const selection = this.monacoEditor.getSelection()
-
-        this.monacoEditor.setValue(data || '')
-
-        // 恢复光标位置
-        if (currentPosition) {
-          this.monacoEditor.setPosition(currentPosition)
-        }
-        if (selection) {
-          this.monacoEditor.setSelection(selection)
-        }
-        this.monacoEditor.focus()
-      }
-    },
-  },
-  mounted() {
-    this.readOnly = this.readonly
-    this.type = this.language
-    this.initEditer()
-  },
+  methods: {},
+  mounted() {},
 }
 </script>
 

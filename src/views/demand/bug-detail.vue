@@ -116,11 +116,14 @@ export default {
   props: {
     edit: Boolean,
     bug: String,
+    iteration: {
+      type: String,
+      default: '',
+    },
   },
   watch: {
     edit: {
       handler(val) {
-        console.log('eeessss', val)
         this.isEdit = val
       },
       deep: true,
@@ -135,9 +138,18 @@ export default {
       deep: true,
       immediate: true,
     },
+    iteration: {
+      handler(val) {
+        this.iterationId = val
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   data() {
     return {
+      spaceId: '',
+      iterationId: '',
       bugForm: {},
       statusList: [],
       isEdit: false,
@@ -184,6 +196,8 @@ export default {
           return false
         }
 
+        this.bugForm.spaceId = this.spaceId
+        this.bugForm.iterationId = this.iterationId
         if (this.edit) {
           bugApi.updateBug(this.bugForm).then((res) => {
             if (res.data) {
@@ -207,6 +221,7 @@ export default {
     },
   },
   created() {
+    this.spaceId = this.$store.state.spaceId
     this.isEdit = this.edit
     this.getstatusList()
   },

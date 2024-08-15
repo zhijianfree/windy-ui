@@ -13,9 +13,22 @@ export default {
         })
     })
   },
-  getBugList(page, size, name, status) {
+  getBugList(page, size, name, status, spaceId, iterationId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/bugs?page=${page}&size=${size}&name=${name}&status=${status}`
+      let url = `/v1/devops/bugs?page=${page}&size=${size}&name=${name}&status=${status}&spaceId=${spaceId}&iterationId=${iterationId}`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getIterationBugs(iterationId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/iterations/${iterationId}/bugs`
       http
         .get(url)
         .then((res) => {

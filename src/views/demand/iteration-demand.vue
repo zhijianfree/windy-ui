@@ -39,7 +39,7 @@
       </div>
     </div>
     <div class="table-list">
-      <el-table :data="tableData" height="500" style="width: 100%">
+      <el-table :data="tableData" height="600" style="width: 100%">
         <el-table-column prop="demandName" label="需求名称"> </el-table-column>
         <el-table-column prop="proposer" label="提出人" width="180">
         </el-table-column>
@@ -196,7 +196,11 @@
         </div>
       </div>
     </el-dialog>
-    <el-dialog title="需求详情" :visible.sync="showDemandDetail" width="90%">
+    <el-dialog
+      :title="demandTitle"
+      :visible.sync="showDemandDetail"
+      width="90%"
+    >
       <detail :demand="demandDetail.demandId"></detail>
     </el-dialog>
   </div>
@@ -205,8 +209,9 @@
 import demandApi from '../../http/DemandApi'
 import detail from './detail.vue'
 export default {
+  name: 'iteration-demand',
   props: {
-    space: {
+    iteration: {
       default: '',
       type: String,
     },
@@ -215,8 +220,8 @@ export default {
     detail,
   },
   watch: {
-    space(val) {
-      this.spaceId = val
+    iteration(val) {
+      this.iterationId = val
       this.getDemandList()
       console.log('demanddddddddd', val)
     },
@@ -224,6 +229,7 @@ export default {
   data() {
     return {
       spaceId: '',
+      iterationId: '',
       tableData: [],
       queryForm: {
         name: '',
@@ -307,6 +313,8 @@ export default {
         if (!valid) {
           return false
         }
+        this.demandForm.spaceId = this.spaceId
+        this.demandForm.iterationId = this.iterationId
         demandApi.createDemand(this.demandForm).then((res) => {
           if (res.data) {
             this.$message.success('创建需求成功')
@@ -319,8 +327,9 @@ export default {
       })
     },
     getDemandList() {
-      if (!this.spaceId) {
-        this.spaceId = ''
+      console.log('开始请求需求', this.iterationId)
+      if (!this.spaceId || !this.iterationId) {
+        return
       }
       demandApi
         .getDemandList(
@@ -329,7 +338,7 @@ export default {
           this.queryForm.name,
           this.queryForm.status,
           this.spaceId,
-          ''
+          this.iterationId
         )
         .then((res) => {
           console.log(res)
@@ -345,6 +354,7 @@ export default {
   },
   created() {
     this.spaceId = this.$store.state.spaceId
+    this.iterationId = this.iteration
     this.getDemandList()
     this.getstatusList()
   },
@@ -352,7 +362,7 @@ export default {
 </script>
 <style scoped>
 .content {
-  /* padding: 10px; */
+  margin-left: 10px;
   position: relative;
   width: 100%;
 }
