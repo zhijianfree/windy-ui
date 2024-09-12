@@ -165,6 +165,40 @@
                             <span slot="label">
                               <i class="el-icon-s-custom" /> 成员
                             </span>
+                            <div>
+                              <el-tag
+                                type="primary"
+                                class="tag-item"
+                                size="mini"
+                                @close="deleteMember(item.userId)"
+                                v-for="(item, index) in members"
+                                :key="index"
+                                :closable="members.length > 1"
+                                >{{ item.userName }}</el-tag
+                              >
+                            </div>
+                            <div class="add-member">
+                              <el-popover
+                                placement="right"
+                                v-model="showPop"
+                                width="400"
+                                trigger="click"
+                              >
+                                <el-autocomplete
+                                  v-model="selectedUser"
+                                  :fetch-suggestions="querySearchAsync"
+                                  placeholder="请输入用户名称"
+                                  @select="handleSelect"
+                                ></el-autocomplete>
+                                <el-button
+                                  slot="reference"
+                                  type="text"
+                                  size="mini"
+                                  icon="el-icon-plus"
+                                  >新增</el-button
+                                >
+                              </el-popover>
+                            </div>
                           </el-descriptions-item>
                         </el-descriptions>
                       </div>
@@ -316,6 +350,7 @@
       title="创建迭代"
       :visible.sync="showIteration"
       width="40%"
+      :close-on-click-modal="false"
       :before-close="closeIteration"
     >
       <el-form
@@ -379,6 +414,7 @@ import TextView from '../../components/text-view.vue'
 import CommentApi from '../../http/Comment'
 import DemandApi from '../../http/DemandApi'
 import BugApi from '../../http/BugApi'
+import userApi from '../../http/User'
 export default {
   props: {
     id: String,
@@ -417,6 +453,7 @@ export default {
       isCollapse: false,
       activeName: 'review',
       tagList: [],
+      members: [],
       steps: [
         {
           date: '07/31',
@@ -456,9 +493,48 @@ export default {
           completed: false,
         },
       ],
+      selectedUser: '',
     }
   },
   methods: {
+    querySearchAsync(queryString, cb) {
+      userApi.queryUserByName(queryString).then((res) => {
+        let array = []
+        res.data.forEach((e) => {
+          e.value = e.userName
+          array.push(e)
+        })
+        cb(array)
+      })
+    },
+    handleSelect(item) {
+      iterationApi
+        .addMembers({
+          resourceId: this.iterationInfo.iterationId,
+          userId: item.userId,
+        })
+        .then((res) => {
+          if (res.data) {
+            this.selectedUser = ''
+            this.showPop = !this.showPop
+            this.getserviceMember(this.iterationInfo.iterationId)
+          }
+        })
+    },
+    getserviceMember(iterationId) {
+      iterationApi.getMembers(iterationId).then((res) => {
+        this.members = res.data
+      })
+    },
+    deleteMember(userId) {
+      iterationApi
+        .deleteMembers(this.iterationInfo.iterationId, userId)
+        .then((res) => {
+          if (res.data) {
+            this.getserviceMember(this.iterationInfo.iterationId)
+          }
+        })
+    },
     cardCommand(command) {
       this.getDemandTags()
       this.cardData = {
@@ -471,7 +547,7 @@ export default {
           data: [],
         },
         complete: {
-          name: '处理中',
+          name: '已完成',
           data: [],
         },
       }
@@ -514,6 +590,7 @@ export default {
       iterationApi.getIterationStatistic(row.iterationId).then((res) => {
         this.statistic = res.data
       })
+      this.getserviceMember(row.iterationId)
     },
     selectCommand(event, row) {
       console.log(event, row)
@@ -550,6 +627,11 @@ export default {
         console.log(this.iterationForm)
         if (!valid) {
           return false
+        }
+
+        if (!this.spaceId) {
+          this.$message.warning('未选择空间，创建迭代失败')
+          return
         }
 
         this.iterationForm.startTime = this.iterationForm.selectedDate[0]
@@ -689,6 +771,7 @@ export default {
     },
   },
   created() {
+    this.spaceId = this.$store.state.spaceId
     this.getDemandTags()
     this.getIterationList()
   },
@@ -823,6 +906,15 @@ export default {
   line-height: 10px;
   border-radius: 10px;
   margin-right: 20px;
+}
+.tag-item {
+  margin-left: 10px;
+}
+.add-member {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 13px;
+  cursor: pointer;
 }
 .tag-line {
   display: inline-block;

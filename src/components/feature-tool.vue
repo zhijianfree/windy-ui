@@ -24,11 +24,20 @@
         :readonly="!isEdit"
       ></monaco>
     </div>
+    <div v-if="executePoint.executeType == 7">
+      <FeatureAsync
+        :data="executePoint"
+        :isEdit="isEdit"
+        @refreshData="refreshValue"
+      >
+      </FeatureAsync>
+    </div>
   </div>
 </template>
 <script>
 import FeatureFor from '@/components/feature-for'
 import FeatureIF from '@/components/feature-if'
+import FeatureAsync from '@/components/feature-async'
 import monaco from '@/components/MonacoEditor.vue'
 export default {
   props: {
@@ -39,6 +48,7 @@ export default {
     FeatureFor,
     FeatureIF,
     monaco,
+    FeatureAsync,
   },
   watch: {
     data(val) {

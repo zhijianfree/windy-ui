@@ -36,7 +36,7 @@
                 </span>
                 <i
                   v-if="isEdit"
-                  @click="deleteExecutePoint(index, executePoint.pointId)"
+                  @click="deleteExecutePoint(index)"
                   class="el-icon-delete delete-point"
                 />
               </template>
@@ -134,6 +134,8 @@ export default {
         type: 'warning',
       }).then(() => {
         this.points.splice(index, 1)
+        this.refreshValue()
+        this.uuid = this.$utils.randomString(20)
       })
     },
   },
@@ -146,7 +148,7 @@ export default {
     this.points = []
     if (this.data.executePoints) {
       this.data.executePoints.forEach((point) => {
-        point.executorUnit.randomId = new Date().valueOf()
+        point.executorUnit.randomId = this.$utils.randomString(20)
         let item = point.executorUnit
         item.writeType = '1'
         item.compareDefine = point.compareDefine
@@ -175,5 +177,9 @@ export default {
   margin: 1px;
   border: 1px dashed #dcdfe6;
   padding: 5px;
+}
+.delete-point {
+  font-size: 16px;
+  margin-left: 20px;
 }
 </style>

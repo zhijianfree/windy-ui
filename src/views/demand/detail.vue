@@ -95,21 +95,13 @@
       <el-col :span="8">
         <el-form :model="demandForm" label-width="120px" size="mini">
           <el-form-item label="提出人">
-            <span>{{ demandForm.proposer }}</span>
-          </el-form-item>
-          <el-form-item label="接受方">
-            <el-input
-              :disabled="!isEdit"
-              v-model="demandForm.acceptTeam"
-              placeholder="接受方"
-            ></el-input>
+            <span>{{ demandForm.proposerName }}</span>
           </el-form-item>
           <el-form-item label="接受人">
-            <el-input
-              :disabled="!isEdit"
-              v-model="demandForm.acceptor"
-              placeholder="接受人"
-            ></el-input>
+            <userSearch
+              :user="demandForm.acceptorName"
+              @chooseUser="selectUser"
+            ></userSearch>
           </el-form-item>
           <el-form-item label="截止时间" disabled>
             <el-date-picker
@@ -172,11 +164,15 @@
 import Clipboard from 'clipboard'
 import DemandApi from '../../http/DemandApi'
 import CommentApi from '../../http/Comment'
+import userSearch from '../../components/user-serch.vue'
 export default {
   props: {
     demand: {
       type: String,
     },
+  },
+  components: {
+    userSearch,
   },
   watch: {
     demand: {
@@ -202,6 +198,9 @@ export default {
     }
   },
   methods: {
+    selectUser(item) {
+      this.demandForm.acceptor = item.userId
+    },
     submitInfo() {
       DemandApi.updateDemand(this.demandForm).then((res) => {
         if (res.data) {
@@ -224,6 +223,9 @@ export default {
       })
     },
     getDemandDetail() {
+      if (!this.demandId) {
+        return
+      }
       DemandApi.getDemandDetail(this.demandId).then((res) => {
         this.demandForm = res.data
         this.completeDate = new Date(this.demandForm.expectTime)
@@ -295,6 +297,7 @@ export default {
 }
 .user-div {
   font-size: 13px;
+  color: #000;
 }
 .history-content {
   padding: 10px 20px;

@@ -105,7 +105,7 @@
             >
             </el-input>
           </el-form-item>
-          <el-form-item label="附件">
+          <!-- <el-form-item label="附件">
             <el-upload
               class="upload-demo"
               action="https://jsonplaceholder.typicode.com/posts/"
@@ -115,7 +115,7 @@
             >
               <el-button size="mini" type="primary">上传附件</el-button>
             </el-upload>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="需求价值" prop="customerValue">
             <el-select
               v-model="demandForm.customerValue"
@@ -139,17 +139,8 @@
               <el-option label="P3" :value="3"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="提出人">
-            <el-input
-              v-model="demandForm.proposer"
-              placeholder="提出人"
-            ></el-input>
-          </el-form-item>
           <el-form-item label="接受人">
-            <el-input
-              v-model="demandForm.acceptor"
-              placeholder="接受人"
-            ></el-input>
+            <userSearch @chooseUser="selectUser"></userSearch>
           </el-form-item>
           <el-form-item label="期待完成时间" prop="expectTime">
             <el-date-picker
@@ -208,6 +199,7 @@
 <script>
 import demandApi from '../../http/DemandApi'
 import detail from './detail.vue'
+import userSearch from '../../components/user-serch.vue'
 export default {
   name: 'iteration-demand',
   props: {
@@ -218,12 +210,12 @@ export default {
   },
   components: {
     detail,
+    userSearch,
   },
   watch: {
     iteration(val) {
       this.iterationId = val
       this.getDemandList()
-      console.log('demanddddddddd', val)
     },
   },
   data() {
@@ -276,6 +268,9 @@ export default {
     }
   },
   methods: {
+    selectUser(data) {
+      this.demandForm.acceptor = data.userId
+    },
     exchangeStatusName(status) {
       let statusName = '-'
       this.statusList.forEach((e) => {

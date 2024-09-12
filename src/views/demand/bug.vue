@@ -189,6 +189,7 @@ export default {
           return false
         }
         console.log('edit', this.isEdit)
+        this.bugForm.spaceId = this.spaceId
         if (this.isEdit) {
           bugApi.updateBug(this.bugForm).then((res) => {
             if (res.data) {
@@ -214,7 +215,7 @@ export default {
     },
     getBugList() {
       if (!this.spaceId) {
-        this.spaceId = ''
+        return
       }
       bugApi
         .getBugList(

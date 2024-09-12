@@ -120,7 +120,8 @@
                           <FeatureTemplate
                             v-if="
                               executePoint.executeType == 1 ||
-                              executePoint.executeType == 4
+                              executePoint.executeType == 4 ||
+                              executePoint.executeType == 5
                             "
                             :case="caseId"
                             :data="executePoint"
@@ -517,7 +518,7 @@ export default {
           relatedId: e.relatedId,
         }
 
-        if (e.executeType == 2 || e.executeType == 3) {
+        if (e.executeType == 2 || e.executeType == 3 || e.executeType == 7) {
           item.executePoints = e.executePoints
         } else {
           item.params = e.params
@@ -594,6 +595,7 @@ export default {
       this.uuid = this.$utils.randomString(20)
     },
     refreshValue(update) {
+      console.log('refreshValue', update)
       //删除添加到if或者for中的执行点
       let removeArray = []
       if (update.data.executePoints) {

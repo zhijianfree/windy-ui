@@ -327,6 +327,11 @@ export default {
     this.getRecordDetail()
     this.getTaskHistories()
   },
+  beforeDestroy() {
+    if (this.queryInterval) {
+      clearInterval(this.queryInterval)
+    }
+  },
 }
 </script>
 <style scoped>

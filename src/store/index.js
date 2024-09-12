@@ -8,6 +8,7 @@ export default new Vuex.Store({
     caseContext: {},
     spaceId: '',
     iterationId: '',
+    intervalIds: [],
   },
   mutations: {
     UPDATE_CASE_CONTEXT(state, item) {

@@ -78,7 +78,17 @@
       :modal-append-to-body="false"
     >
       <div class="drawer-content">
-        <div class="drawer-title">详情列表</div>
+        <div class="drawer-title">
+          详情列表
+          <el-button
+            class="refresh-btn"
+            type="primary"
+            @click="refreshHistory"
+            icon="el-icon-refresh"
+            size="mini"
+            circle
+          ></el-button>
+        </div>
         <el-tabs v-model="activeName">
           <el-tab-pane name="preset">
             <div slot="label">
@@ -153,6 +163,7 @@ export default {
       presetError: 0,
       executeError: 0,
       cleanError: 0,
+      selectHistoryId: '',
     }
   },
   methods: {
@@ -170,6 +181,9 @@ export default {
       this.getFeatureHistory(this.featureId)
     },
     filterRecord() {
+      this.presetList = []
+      this.executeList = []
+      this.cleanList = []
       this.resultList.forEach((e) => {
         if (1 == e.testStage) {
           this.presetList.push(e)
@@ -190,6 +204,9 @@ export default {
           }
         }
       })
+    },
+    refreshHistory() {
+      this.getExecuteRecords(this.selectHistoryId)
     },
     getFeatureHistory(featureId) {
       this.historyData = []
@@ -219,6 +236,7 @@ export default {
     showRecord(row) {
       this.getExecuteRecords(row.historyId)
       this.showDrawer = true
+      this.selectHistoryId = row.historyId
     },
     deleteHistory(row) {
       featureApi.deleteHistory(row.historyId).then(() => {
@@ -265,5 +283,9 @@ export default {
 }
 .tab-label {
   margin-top: 10px;
+}
+.refresh-btn {
+  float: right;
+  margin-right: 10px;
 }
 </style>

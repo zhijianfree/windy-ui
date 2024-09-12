@@ -79,7 +79,7 @@
       @close="closeDialog"
       width="70%"
     >
-      <el-alert
+      <!-- <el-alert
         type="warning"
         center
         show-icon
@@ -90,10 +90,11 @@
           创建服务需先配置环境信息
           <el-link type="primary" @click="goEnv">前往配置>></el-link></template
         >
-      </el-alert>
+        notConfigGit
+      </el-alert> -->
       <el-form
         :model="serviceForm"
-        :disabled="!isEdit && notConfigGit"
+        :disabled="!isEdit"
         :rules="rules"
         ref="serviceForm"
         size="mini"
@@ -122,134 +123,242 @@
         <el-form-item label="优先级" prop="gitUrl">
           <el-rate v-model="serviceForm.priority"></el-rate>
         </el-form-item>
-        <h3>Kubernetes配置</h3>
-        <el-tabs v-model="activeName" type="border-card" class="k8s-config">
-          <el-tab-pane label="基础配置" name="first">
-            <el-form-item label="环境变量">
-              <el-row
-                v-for="(env, index) in envList"
-                :key="index"
-                class="param-line"
+        <el-form-item label="成员列表">
+          <el-tag
+            type="primary"
+            class="tag-item"
+            @close="deleteMember(item.userId)"
+            v-for="(item, index) in members"
+            :key="index"
+            :closable="members.length > 1"
+            >{{ item.userName }}</el-tag
+          >
+          <div class="add-member">
+            <el-popover
+              placement="right"
+              v-model="showPop"
+              width="400"
+              trigger="click"
+            >
+              <el-autocomplete
+                v-model="selectedUser"
+                :fetch-suggestions="querySearchAsync"
+                placeholder="请输入用户名称"
+                @select="handleSelect"
+              ></el-autocomplete>
+              <el-button
+                slot="reference"
+                type="text"
+                size="mini"
+                icon="el-icon-plus"
+                >新增</el-button
               >
-                <el-col :span="6">
-                  <el-input v-model="env.name" placeholder="环境变量名称" />
-                </el-col>
-                <el-col :span="2">-</el-col>
-                <el-col :span="6">
-                  <el-input v-model="env.value" placeholder="环境变量值" />
-                </el-col>
-                <el-col :span="4">
-                  <el-switch
-                    v-model="env.isRelated"
-                    active-text="系统变量"
-                  ></el-switch>
-                </el-col>
-                <el-col :span="4" class="op-box">
-                  <i
-                    class="el-icon-remove op-icon del"
-                    @click="delEnv(index)"
-                  />
-                  <i
-                    class="el-icon-circle-plus op-icon add"
-                    @click="addEnv"
-                    v-if="index == envList.length - 1"
-                  />
-                </el-col>
-              </el-row>
-            </el-form-item>
-            <el-form-item label="文件挂载">
-              <el-row
-                v-for="(volume, index) in volumeList"
-                :key="index"
-                class="param-line"
+            </el-popover>
+          </div>
+        </el-form-item>
+        <el-collapse accordion>
+          <el-collapse-item>
+            <template slot="title">
+              Git配置
+              <el-tooltip
+                content="此处可不配置。在系统变量中统一配置"
+                placement="top"
               >
-                <el-col :span="6">
-                  <el-input
-                    v-model="volume.hostVolume"
-                    placeholder="主机路径"
-                  />
-                </el-col>
-                <el-col :span="2">-</el-col>
-                <el-col :span="6">
-                  <el-input v-model="volume.volume" placeholder="容器路径" />
-                </el-col>
-                <el-col :span="2">-</el-col>
-                <el-col :span="4">
-                  <el-input v-model="volume.name" placeholder="名称" />
-                </el-col>
-                <el-col :span="4" class="op-box">
-                  <i
-                    class="el-icon-remove op-icon del"
-                    @click="delVolume(index)"
-                  />
-                  <i
-                    class="el-icon-circle-plus op-icon add"
-                    @click="addVolume"
-                  />
-                </el-col>
-              </el-row>
-            </el-form-item>
-            <el-form-item label="端口映射">
-              <el-row
-                v-for="(port, index) in portList"
-                :key="index"
-                class="param-line"
+                <i class="header-icon el-icon-info"></i>
+              </el-tooltip>
+            </template>
+            <el-alert
+              style="margin: 10px"
+              title="此处可不配置。在系统变量中统一配置"
+              type="info"
+              show-icon
+            >
+              <template slot="title">
+                此处可不配置。在系统变量中统一配置
+                <el-link type="primary" @click="goEnv"
+                  >前往配置>></el-link
+                ></template
               >
-                <el-col :span="6">
-                  <el-input v-model="port.port" placeholder="容器端口" />
-                </el-col>
-                <el-col :span="2">-</el-col>
-                <el-col :span="6">
-                  <el-input v-model="port.hostPort" placeholder="宿主机端口" />
-                </el-col>
-                <el-col :span="2">-</el-col>
-                <el-col :span="4">
-                  <el-select v-model="port.protocol" placeholder="协议类型">
-                    <el-option label="TCP" value="TCP"> </el-option>
-                    <el-option label="UDP" value="UDP"> </el-option>
-                  </el-select>
-                </el-col>
-                <el-col :span="4" class="op-box">
-                  <i
-                    class="el-icon-remove op-icon del"
-                    @click="delPort(index)"
-                  />
-                  <i class="el-icon-circle-plus op-icon add" @click="addPort" />
-                </el-col>
-              </el-row>
-            </el-form-item>
-          </el-tab-pane>
-          <el-tab-pane label="高级配置" name="second">
-            <el-form-item label="更新策略">
-              <el-select v-model="strategy" placeholder="选择更新策略">
-                <el-option label="暂停更新" value="Recreate"> </el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="节点调度">
-              <el-radio-group v-model="selectWay">
-                <el-radio label="name">根据【节点名称】选择节点</el-radio>
-                <el-radio label="label" disabled
-                  >根据【标签选择器】选择节点</el-radio
-                >
-                <el-radio label="rule">根据【节点亲和性】选择节点</el-radio>
+            </el-alert>
+            <el-form-item label="类型" prop="gitType">
+              <el-radio-group v-model="gitForm.gitType" @change="changeGit">
+                <el-radio label="Gitea">Gitea</el-radio>
+                <el-radio label="Gitlab">Gitlab</el-radio>
+                <el-radio label="Github">Github</el-radio>
               </el-radio-group>
-              <div>
-                请选择标签:
-                <el-link type="primary" @click="chooseNode"
-                  ><i class="el-icon-thumb">选择标签</i>
-                </el-link>
-                <span v-if="selectNode" class="chosed-tag"
-                  >已选择标签：<el-tag
-                    @close="selectNode = null"
-                    size="mini"
-                    closable
-                    >{{ selectNode }}</el-tag
-                  ></span
-                >
-              </div>
             </el-form-item>
-          </el-tab-pane>
-        </el-tabs>
+            <el-form-item label="地址" prop="gitDomain">
+              <el-input
+                type="text"
+                v-model="gitForm.gitDomain"
+                placeholder="请输入git访问地址"
+              />
+            </el-form-item>
+            <el-form-item
+              label="拥有者"
+              prop="owner"
+              v-if="gitForm.gitType != 'Gitlab'"
+            >
+              <el-input
+                type="text"
+                v-model="gitForm.owner"
+                placeholder="请输入git拥有者"
+              />
+            </el-form-item>
+            <el-form-item label="访问token" prop="accessToken">
+              <el-input
+                type="text"
+                v-model="gitForm.accessToken"
+                placeholder="请输入git访问token"
+              />
+            </el-form-item>
+          </el-collapse-item>
+          <el-collapse-item>
+            <template slot="title">
+              Kubernetes配置
+              <el-tooltip content="配置服务在k8s中部署信息" placement="top">
+                <i class="header-icon el-icon-info"></i>
+              </el-tooltip>
+            </template>
+            <el-tabs v-model="activeName" type="border-card" class="k8s-config">
+              <el-tab-pane label="基础配置" name="first">
+                <el-form-item label="环境变量">
+                  <el-row
+                    v-for="(env, index) in envList"
+                    :key="index"
+                    class="param-line"
+                  >
+                    <el-col :span="6">
+                      <el-input v-model="env.name" placeholder="环境变量名称" />
+                    </el-col>
+                    <el-col :span="2">-</el-col>
+                    <el-col :span="6">
+                      <el-input v-model="env.value" placeholder="环境变量值" />
+                    </el-col>
+                    <el-col :span="4">
+                      <el-switch
+                        v-model="env.isRelated"
+                        active-text="系统变量"
+                      ></el-switch>
+                    </el-col>
+                    <el-col :span="4" class="op-box">
+                      <i
+                        class="el-icon-remove op-icon del"
+                        @click="delEnv(index)"
+                      />
+                      <i
+                        class="el-icon-circle-plus op-icon add"
+                        @click="addEnv"
+                        v-if="index == envList.length - 1"
+                      />
+                    </el-col>
+                  </el-row>
+                </el-form-item>
+                <el-form-item label="文件挂载">
+                  <el-row
+                    v-for="(volume, index) in volumeList"
+                    :key="index"
+                    class="param-line"
+                  >
+                    <el-col :span="6">
+                      <el-input
+                        v-model="volume.hostVolume"
+                        placeholder="主机路径"
+                      />
+                    </el-col>
+                    <el-col :span="2">-</el-col>
+                    <el-col :span="6">
+                      <el-input
+                        v-model="volume.volume"
+                        placeholder="容器路径"
+                      />
+                    </el-col>
+                    <el-col :span="2">-</el-col>
+                    <el-col :span="4">
+                      <el-input v-model="volume.name" placeholder="名称" />
+                    </el-col>
+                    <el-col :span="4" class="op-box">
+                      <i
+                        class="el-icon-remove op-icon del"
+                        @click="delVolume(index)"
+                      />
+                      <i
+                        class="el-icon-circle-plus op-icon add"
+                        @click="addVolume"
+                      />
+                    </el-col>
+                  </el-row>
+                </el-form-item>
+                <el-form-item label="端口映射">
+                  <el-row
+                    v-for="(port, index) in portList"
+                    :key="index"
+                    class="param-line"
+                  >
+                    <el-col :span="6">
+                      <el-input v-model="port.port" placeholder="容器端口" />
+                    </el-col>
+                    <el-col :span="2">-</el-col>
+                    <el-col :span="6">
+                      <el-input
+                        v-model="port.hostPort"
+                        placeholder="宿主机端口"
+                      />
+                    </el-col>
+                    <el-col :span="2">-</el-col>
+                    <el-col :span="4">
+                      <el-select v-model="port.protocol" placeholder="协议类型">
+                        <el-option label="TCP" value="TCP"> </el-option>
+                        <el-option label="UDP" value="UDP"> </el-option>
+                      </el-select>
+                    </el-col>
+                    <el-col :span="4" class="op-box">
+                      <i
+                        class="el-icon-remove op-icon del"
+                        @click="delPort(index)"
+                      />
+                      <i
+                        class="el-icon-circle-plus op-icon add"
+                        @click="addPort"
+                      />
+                    </el-col>
+                  </el-row>
+                </el-form-item>
+              </el-tab-pane>
+              <el-tab-pane label="高级配置" name="second">
+                <el-form-item label="更新策略">
+                  <el-select v-model="strategy" placeholder="选择更新策略">
+                    <el-option label="暂停更新" value="Recreate"> </el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="节点调度">
+                  <el-radio-group v-model="selectWay">
+                    <el-radio label="name">根据【节点名称】选择节点</el-radio>
+                    <el-radio label="label" disabled
+                      >根据【标签选择器】选择节点</el-radio
+                    >
+                    <el-radio label="rule">根据【节点亲和性】选择节点</el-radio>
+                  </el-radio-group>
+                  <div>
+                    请选择标签:
+                    <el-link type="primary" @click="chooseNode"
+                      ><i class="el-icon-thumb">选择标签</i>
+                    </el-link>
+                    <span v-if="selectNode" class="chosed-tag"
+                      >已选择标签：<el-tag
+                        @close="selectNode = null"
+                        size="mini"
+                        closable
+                        >{{ selectNode }}</el-tag
+                      ></span
+                    >
+                  </div>
+                </el-form-item>
+              </el-tab-pane>
+            </el-tabs>
+          </el-collapse-item>
+        </el-collapse>
+
         <el-form-item>
           <el-button type="primary" @click="submit('serviceForm')"
             >确认</el-button
@@ -287,6 +396,7 @@
 import serviceApi from '../../http/Service'
 import envApi from '../../http/Environment'
 import systemApi from '../../http/System'
+import userApi from '../../http/User'
 export default {
   data() {
     return {
@@ -321,9 +431,54 @@ export default {
       selectWay: '',
       selectNode: '',
       strategy: '',
+      members: [],
+      selectedUser: null,
+      showPop: false,
+      gitForm: {},
     }
   },
   methods: {
+    changeGit(type) {
+      if (type == 'Gitlab') {
+        this.gitForm.owner = 'oauth2'
+      }
+      if (type != 'Gitlab' && this.systemForm.owner == 'oauth2') {
+        this.gitForm.owner = ''
+      }
+    },
+    deleteMember(userId) {
+      serviceApi
+        .removeMember(this.serviceForm.serviceId, userId)
+        .then((res) => {
+          if (res.data) {
+            this.getserviceMember(this.serviceForm.serviceId)
+          }
+        })
+    },
+    querySearchAsync(queryString, cb) {
+      userApi.queryUserByName(queryString).then((res) => {
+        let array = []
+        res.data.forEach((e) => {
+          e.value = e.userName
+          array.push(e)
+        })
+        cb(array)
+      })
+    },
+    handleSelect(item) {
+      serviceApi
+        .addServiceMembers({
+          resourceId: this.serviceForm.serviceId,
+          userId: item.userId,
+        })
+        .then((res) => {
+          if (res.data) {
+            this.selectedUser = ''
+            this.showPop = !this.showPop
+            this.getserviceMember(this.serviceForm.serviceId)
+          }
+        })
+    },
     clickNode(row) {
       this.selectNode = row.nodeName
       this.showChooseNode = false
@@ -332,7 +487,6 @@ export default {
     },
     chooseEnv(envId) {
       envApi.getNodeList(envId).then((res) => {
-        console.log(res)
         this.nodeList = res.data
       })
     },
@@ -377,12 +531,20 @@ export default {
     addVolume() {
       this.volumeList.push({})
     },
+    getserviceMember(serviceId) {
+      serviceApi.getServiceMembers(serviceId).then((res) => {
+        this.members = res.data
+      })
+    },
     startEdit(row) {
+      this.getserviceMember(row.serviceId)
       this.dialogTitle = '修改服务'
       this.isEdit = true
+      this.showPop = false
       this.showServiceDialog = true
       this.serviceForm = JSON.parse(JSON.stringify(row))
-      let config = row.containerParams
+      let config = row.serviceConfig
+      this.gitForm = config.gitAccessInfo
       if (!config) {
         return
       }
@@ -432,6 +594,7 @@ export default {
       this.isEdit = false
       this.showServiceDialog = false
       this.serviceForm = {}
+      this.selectedUser = ''
     },
     pageChange(page) {
       this.getServices(page)
@@ -452,8 +615,12 @@ export default {
         if (!valid) {
           return false
         }
-
+        let git = {}
+        if (this.isConfigGit()) {
+          git = this.gitForm
+        }
         let config = {
+          gitAccessInfo: git,
           envParams: this.envList,
           ports: this.portList,
           volumes: this.volumeList,
@@ -465,7 +632,7 @@ export default {
             type: this.strategy,
           },
         }
-        this.serviceForm.containerParams = config
+        this.serviceForm.serviceConfig = config
         if (this.isEdit) {
           serviceApi.updateService(this.serviceForm).then(() => {
             this.$message.success('修改成功！')
@@ -480,6 +647,16 @@ export default {
           this.getServices(1)
         })
       })
+    },
+    isConfigGit() {
+      if (
+        this.gitForm.gitDomain &&
+        this.gitForm.accessToken &&
+        this.gitForm.gitType
+      ) {
+        return true
+      }
+      return false
     },
     getGitEnv() {
       systemApi.requestGitConfig().then((res) => {
@@ -537,5 +714,14 @@ export default {
 }
 .k8s-config {
   margin-bottom: 20px;
+}
+.add-member {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tag-item {
+  margin-left: 10px;
 }
 </style>

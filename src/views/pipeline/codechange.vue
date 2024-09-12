@@ -96,7 +96,7 @@
         <el-form-item label="变更分支" prop="changeBranch">
           <el-input
             v-model="changeForm.changeBranch"
-            :disabled="editBranch"
+            :disabled="disableBranch"
             placeholder="请输入分支名"
             autocomplete="off"
           ></el-input>
@@ -106,7 +106,7 @@
             style="width: 100%"
             v-model="changeForm.relationId"
             :fetch-suggestions="querySearchAsync"
-            placeholder="请输入内容"
+            placeholder="请输入关联的需求、缺陷、任务名称"
             @select="handleSelect"
           >
             <template slot-scope="{ item }">
@@ -149,7 +149,7 @@ export default {
       selectItem: null,
       dialogFormVisible: false,
       loading: false,
-      editBranch: false,
+      disableBranch: false,
       rule: {
         changeName: [
           { required: true, message: '请输入变更描述', trigger: 'blur' },
@@ -190,6 +190,7 @@ export default {
       this.getCodeChangeList()
     },
     selectBranchType(value) {
+      console.log(value, value == 'default')
       if (value == 'default') {
         let branchName = 'develop_'
         var today = new Date()
@@ -197,12 +198,13 @@ export default {
         var MM = String(today.getMonth() + 1).padStart(2, '0')
         var yyyy = today.getFullYear()
         branchName += yyyy + MM + DD + '_' + this.$utils.randomString(6)
-        this.editBranch = true
         this.changeForm.changeBranch = branchName
+        this.disableBranch = true
       } else {
+        this.disableBranch = false
         this.changeForm.changeBranch = ''
-        this.editBranch = false
       }
+      this.$forceUpdate()
     },
     removeChange(item) {
       this.$confirm('确认删除？').then(() => {
@@ -224,7 +226,8 @@ export default {
         if (!valid) {
           return false
         }
-        this.changeForm.relationId = this.selectItem.relatedId
+        this.changeForm.relationId = this.selectItem.relationId
+        this.changeForm.relationType = this.selectItem.relationType
         this.changeForm.serviceId = this.service
         requestApi.saveCodeChange(this.changeForm).then(() => {
           this.$message({

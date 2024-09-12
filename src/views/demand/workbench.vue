@@ -2,26 +2,60 @@
   <div>
     <div class="header-container">
       <img class="image-logo" :src="imageUrl" alt="windy" />
-      <el-input
-        v-model="searchText"
-        size="mini"
-        placeholder="输入缺陷、需求、工作像名称搜索"
+      <el-autocomplete
         class="custom-input"
-      />
+        size="mini"
+        clearable
+        v-model="queryName"
+        :fetch-suggestions="querySearchAsync"
+        placeholder="请输入关联的需求、缺陷、任务名称"
+        @select="selectData"
+      >
+        <template slot-scope="{ item }">
+          <div class="query-type demand" v-if="item.relationType == 1">
+            需求
+          </div>
+          <div class="query-type bug" v-else-if="item.relationType == 2">
+            缺陷
+          </div>
+          <div class="query-type work" v-else>任务</div>
+          <span>{{ item.value }}</span>
+        </template>
+      </el-autocomplete>
       <!-- 任务总览开始 -->
       <div class="ui-container">
-        <div class="ui-item">
-          <div class="ui-value">1</div>
-          <div class="ui-label">缺陷数</div>
-        </div>
-        <div class="ui-item">
-          <div class="ui-value ui-success">1</div>
-          <div class="ui-label">需求数</div>
-        </div>
-        <div class="ui-item">
-          <div class="ui-value ui-error">1</div>
-          <div class="ui-label">工作项</div>
-        </div>
+        <el-tooltip
+          effect="dark"
+          content="未完成缺陷数"
+          placement="right-start"
+        >
+          <div class="ui-item" @click="showTab('bug')">
+            <div class="ui-value">{{ bugTotal }}</div>
+            <div class="ui-label">缺陷数</div>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip
+          effect="dark"
+          content="未完成需求数"
+          placement="right-start"
+        >
+          <div class="ui-item" @click="showTab('demand')">
+            <div class="ui-value">{{ demandTotal }}</div>
+            <div class="ui-label">需求数</div>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip
+          effect="dark"
+          content="未完成任务数"
+          placement="right-start"
+        >
+          <div class="ui-item" @click="showTab('work')">
+            <div class="ui-value">{{ taskTotal }}</div>
+            <div class="ui-label">工作项</div>
+          </div>
+        </el-tooltip>
       </div>
       <!-- 任务总览结束 -->
     </div>
@@ -29,17 +63,22 @@
       <el-tabs type="border-card" v-model="activeName">
         <!-- 缺陷列表开始 -->
         <el-tab-pane label="缺陷" name="bug">
-          <span slot="label"><i class="el-icon-question"></i> 缺陷</span>
+          <span slot="label"><i class="el-icon-aim"></i> 缺陷</span>
           <div class="content-detail">
             <div class="bug-div" v-for="(item, index) in bugData" :key="index">
-              <el-row class="bug-row">
+              <el-row class="bug-row" :gutter="30">
                 <el-col :span="1">
-                  <el-tag type="success" size="small">{{
-                    bugStatusName(item.status)
-                  }}</el-tag>
+                  <el-tag
+                    :type="item.status == 1 ? 'info' : 'primary'"
+                    size="small"
+                    >{{ exchnageBugStatus(item.status).statusName }}</el-tag
+                  >
                 </el-col>
-                <el-col :span="23" class="bug-description title">
-                  <div @click="showBugDetail(item)">
+                <el-col :span="23">
+                  <div
+                    class="bug-description title"
+                    @click="showBugDetail(item)"
+                  >
                     <textview :text="item.bugName" :len="100"> </textview>
                   </div>
                 </el-col>
@@ -81,7 +120,7 @@
 
         <!-- 需求列表开始 -->
         <el-tab-pane label="需求" name="demand">
-          <span slot="label"><i class="el-icon-s-opportunity"></i> 需求</span>
+          <span slot="label"><i class="el-icon-s-shop"></i> 需求</span>
           <div class="content-detail">
             <div
               class="bug-div"
@@ -153,7 +192,7 @@
             <div class="bug-div" v-for="(item, index) in taskData" :key="index">
               <div>
                 <div class="title">
-                  <div @click="showEdit(item)">
+                  <div @click="showEditWork(item)">
                     <textview :text="item.taskName" :len="100"> </textview>
                   </div>
                 </div>
@@ -183,6 +222,9 @@
               </div>
               <div class="time-div">
                 开始时间: {{ item.createTime | dateFormat }}
+                <div class="delete-icon" @click="deleteWork(item)">
+                  <i class="el-icon-delete-solid" /> 删除
+                </div>
               </div>
             </div>
           </div>
@@ -202,13 +244,22 @@
         <!-- 工作项列表结束 -->
       </el-tabs>
     </div>
-    <el-dialog title="需求详情" :visible.sync="showDemandDetail" width="90%">
+    <el-dialog
+      title="需求详情"
+      :visible.sync="showDemandDetail"
+      width="90%"
+      @close="closeDemand"
+    >
       <detail :demand="demandId"></detail>
     </el-dialog>
     <el-dialog title="缺陷详情" :visible.sync="showBugDialog" width="90%">
       <bugDetail :bug="bugId" :edit="true" @cancel="closeBug"></bugDetail>
     </el-dialog>
-    <el-dialog title="创建任务" :visible.sync="showTaskDialog">
+    <el-dialog
+      :title="workTitle"
+      :visible.sync="showTaskDialog"
+      @close="closeTask"
+    >
       <div>
         <el-form
           :model="taskForm"
@@ -223,6 +274,17 @@
               placeholder="请输入任务名称"
             />
           </el-form-item>
+          <el-form-item label="任务状态" v-if="isEditTask">
+            <el-select v-model="taskForm.status" placeholder="请选择">
+              <el-option
+                v-for="item in taskStatus"
+                :key="item.value"
+                :label="item.statusName"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
           <el-form-item label="任务描述">
             <el-input
               type="textarea"
@@ -232,17 +294,25 @@
             >
             </el-input>
           </el-form-item>
-          <el-form-item label="关联类型">
-            <el-radio-group v-model="relatedType">
-              <el-radio :label="1">需求</el-radio>
-              <el-radio :label="2">缺陷</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item :label="`关联${relatedType == 1 ? '需求' : '缺陷'}ID`">
-            <el-input
-              v-model="taskForm.relatedId"
-              placeholder="请输入关联的ID"
-            />
+          <el-form-item label="关联ID">
+            <el-autocomplete
+              style="width: 100%"
+              v-model="selectItem.name"
+              :fetch-suggestions="querySearchAsync"
+              placeholder="请输入关联的需求、缺陷、任务名称"
+              @select="handleSelect"
+            >
+              <template slot-scope="{ item }">
+                <div class="query-type demand" v-if="item.relationType == 1">
+                  需求
+                </div>
+                <div class="query-type bug" v-else-if="item.relationType == 2">
+                  缺陷
+                </div>
+                <div class="query-type work" v-else>任务</div>
+                <span>{{ item.value }}</span>
+              </template>
+            </el-autocomplete>
           </el-form-item>
           <el-form-item label="完成时间" prop="expectTime">
             <el-date-picker
@@ -257,7 +327,7 @@
         </el-form>
       </div>
       <div slot="footer">
-        <el-button size="mini" type="info">取消</el-button>
+        <el-button size="mini" type="info" @click="closeTask">取消</el-button>
         <el-button size="mini" type="primary" @click="submitTask('taskForm')"
           >确认</el-button
         >
@@ -274,6 +344,7 @@ import bugApi from '../../http/BugApi'
 import workTask from '../../http/WorkTask'
 import detail from './detail.vue'
 import bugDetail from './bug-detail.vue'
+import requestApi from '../../http/CodeChange'
 export default {
   components: {
     textview,
@@ -284,7 +355,7 @@ export default {
     return {
       imageUrl: img,
       searchText: '',
-      activeName: 'work',
+      activeName: 'bug',
       total: 30,
       currentPage: 1,
       demandTotal: 0,
@@ -311,12 +382,83 @@ export default {
       taskData: [],
       isEditTask: false,
       taskRule: {},
-      taskStatus:[]
+      taskStatus: [],
+      workTitle: '',
+      selectItem: {},
+      allData: [],
+      queryName: '',
     }
   },
   methods: {
-    showEdit(row) {
-      console.log('kkkkkkk')
+    deleteWork(item) {
+      workTask.deleteTask(item.taskId).then((res) => {
+        if (res.data) {
+          this.$message.success('删除成功')
+          this.getTasks()
+        } else {
+          this.$message.error('删除失败')
+        }
+      })
+    },
+    showTab(tabName) {
+      this.activeName = tabName
+    },
+    querySearchAsync(queryString, cb) {
+      var results = queryString
+        ? this.allData.filter(this.createFilter(queryString))
+        : this.allData
+      cb(results)
+    },
+    createFilter(queryString) {
+      return (item) => {
+        return (
+          item.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0 ||
+          item.relationId.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+        )
+      }
+    },
+    getAllData(cb) {
+      requestApi.relationList('').then((res) => {
+        this.allData = []
+        res.data.forEach((e) => {
+          e.value = e.name
+          this.allData.push(e)
+        })
+        if (cb) {
+          cb()
+        }
+      })
+    },
+    selectData(item) {
+      console.log('selectData', item)
+      if (item.relationType == 1) {
+        this.demandId = item.relationId
+        this.showDemandDetail = true
+      }
+
+      if (item.relationType == 2) {
+        this.showBugDialog = true
+        this.bugId = item.relationId
+      }
+
+      if (item.relationType == 3) {
+        workTask.getTaskDetail(item.relationId).then((res) => {
+          this.showEditWork(res.data)
+        })
+      }
+    },
+    handleSelect(item) {
+      this.selectItem = item
+    },
+    showEditWork(row) {
+      this.getAllData(() => {
+        this.allData.forEach((e) => {
+          if (e.relationId == row.relatedId) {
+            this.selectItem = e
+          }
+        })
+      })
+      this.workTitle = '编辑任务'
       this.showTaskDialog = true
       this.isEditTask = true
       this.taskForm = JSON.parse(JSON.stringify(row))
@@ -326,6 +468,8 @@ export default {
         if (!valid) {
           return false
         }
+        this.taskForm.relatedId = this.selectItem.relationId
+        this.taskForm.relatedType = this.selectItem.relationType
         if (this.isEditTask) {
           workTask.updateTask(this.taskForm).then((res) => {
             if (res.data) {
@@ -339,7 +483,6 @@ export default {
           return
         }
         workTask.createTask(this.taskForm).then((res) => {
-          console.log('ddd', res)
           if (res.data) {
             this.$message.success('添加任务成功')
             this.getTasks()
@@ -351,28 +494,36 @@ export default {
       })
     },
     closeTask() {
+      this.selectItem = {}
       this.taskForm = {}
       this.showTaskDialog = false
+      this.getTasks()
     },
     showTaskView() {
+      this.workTitle = '创建任务'
       this.showTaskDialog = true
       this.isEditTask = false
+      this.getAllData()
     },
     closeBug() {
       this.showBugDialog = false
+      this.getBugs()
+    },
+    closeDemand() {
+      this.getDemands()
     },
     showBugDetail(row) {
       this.showBugDialog = true
       this.bugId = row.bugId
     },
-    bugStatusName(status) {
-      let statusName = '-'
+    exchnageBugStatus(status) {
+      let data = {}
       this.bugStatus.forEach((e) => {
         if (e.value == status) {
-          statusName = e.statusName
+          data = e
         }
       })
-      return statusName
+      return data
     },
     demandStatusName(status) {
       let statusName = '-'
@@ -457,13 +608,14 @@ export default {
   },
   created() {
     this.getStatusList()
+    this.getAllData()
   },
   mounted() {
     this.initCopy()
   },
 }
 </script>
-<style scoped>
+<style lang="less" scoped>
 .image-logo {
   width: 60px;
   height: 60px;
@@ -497,6 +649,11 @@ export default {
 
 .ui-item {
   text-align: center;
+  cursor: pointer;
+
+  &:hover {
+    color: #409eff;
+  }
 }
 .p1 {
   background-color: #f56c6c;
@@ -532,22 +689,41 @@ export default {
   height: 500px;
   overflow-y: scroll;
 }
-.time-div {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  font-size: 13px;
-  color: #909399;
-}
+
 .bug-div {
   position: relative;
   color: #303133;
   font-size: 13px !important;
   border-bottom: 1px solid #e4e7ed;
   padding: 15px;
-}
-.bug-div:hover {
-  background-color: #f2f6fc;
+  transition: background-color 0.3s;
+
+  .time-div {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 13px;
+    color: #909399;
+
+    .delete-icon {
+      margin: 20px;
+      font-size: 13px;
+      display: none;
+
+      &:hover {
+        color: #f56c6c;
+      }
+    }
+  }
+
+  &:hover {
+    background-color: rgb(244, 244, 245);
+    cursor: pointer;
+
+    .delete-icon {
+      display: block;
+    }
+  }
 }
 
 .bug-description {
@@ -587,6 +763,7 @@ export default {
   color: #606266;
   cursor: pointer;
   z-index: 1000;
+  padding-left: 10px;
 }
 .title:hover {
   color: #409eff;
@@ -603,10 +780,34 @@ export default {
   margin: 10px;
   margin-bottom: 20px;
 }
+
+.query-type {
+  margin-top: 10px;
+  margin-right: 10px;
+  display: inline-block;
+  height: 20px;
+  padding: 0 5px;
+  line-height: 20px;
+  font-size: 12px;
+  color: #fff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.demand {
+  background-color: #409eff;
+}
+.bug {
+  background-color: #f56c6c;
+}
+.work {
+  background-color: #909399;
+}
 </style>
 <style>
 .custom-input {
-  width: 300px;
+  width: 400px;
   box-sizing: border-box; /* 确保 padding 不会影响元素的总尺寸 */
 }
 </style>

@@ -54,12 +54,11 @@
                   <div
                     v-for="(item, index) in publishList"
                     :key="index"
+                    @click="selectPipeline(item)"
                     class="pipeline-item"
                     :class="{ 'selected-line': item.selected }"
                   >
-                    <span @click="selectPipeline(item)">{{
-                      item.pipelineName
-                    }}</span>
+                    <span>{{ item.pipelineName }}</span>
                     <div style="float: right">
                       <el-dropdown @command="operateLine($event, item)">
                         <span class="el-dropdown-link">
@@ -81,12 +80,11 @@
                   <div
                     v-for="(item, index) in buildList"
                     :key="index"
+                    @click="selectPipeline(item)"
                     class="pipeline-item"
                     :class="{ 'selected-line': item.selected }"
                   >
-                    <span @click="selectPipeline(item)">{{
-                      item.pipelineName
-                    }}</span>
+                    <span>{{ item.pipelineName }}</span>
                     <div style="float: right">
                       <el-dropdown @command="operateLine($event, item)">
                         <span class="el-dropdown-link">
@@ -110,11 +108,10 @@
                     v-for="(item, index) in customList"
                     :key="index"
                     class="pipeline-item"
+                    @click="selectPipeline(item)"
                     :class="{ 'selected-line': item.selected }"
                   >
-                    <span @click="selectPipeline(item)">{{
-                      item.pipelineName
-                    }}</span>
+                    <span>{{ item.pipelineName }}</span>
                     <div style="float: right">
                       <el-dropdown @command="operateLine($event, item)">
                         <span class="el-dropdown-link">
@@ -199,7 +196,7 @@
               icon="el-icon-upload"
               size="mini"
               v-if="currentPipeline.pipelineType != 1"
-              @click="publish"
+              @click="showPushMessageDialog"
               >推送发布</el-button
             >
           </div>
@@ -254,6 +251,11 @@
             <h4 class="republis-info">待发布分支</h4>
             <el-table :data="publishData" style="width: 100%">
               <el-table-column prop="branch" label="分支"> </el-table-column>
+              <el-table-column prop="message" label="发布内容">
+                <template slot-scope="scope">
+                  <textView :text="scope.row.message" :len="20"></textView>
+                </template>
+              </el-table-column>
               <el-table-column prop="status" label="状态">
                 <template slot-scope="scope">
                   {{ scope.row.status | publisFormat }}
@@ -383,6 +385,75 @@
       </span>
     </el-dialog>
     <!-- 审批结束 -->
+    <!-- 发布弹框开始 -->
+    <el-dialog
+      title="发布确认"
+      :visible.sync="showPublishDialog"
+      width="50%"
+      :before-close="publishDialogClose"
+    >
+      <el-form
+        :model="publishForm"
+        ref="publishForm"
+        :rules="publishRule"
+        size="mini"
+        label-width="120px"
+      >
+        <el-form-item label="发布Tag" prop="tagName">
+          <el-input
+            v-model="publishForm.tagName"
+            placeholder="请输入发布的tag名称"
+          />
+        </el-form-item>
+      </el-form>
+      <el-table :data="publishData" style="width: 100%" size="mini">
+        <el-table-column prop="branch" label="分支" width="200px">
+        </el-table-column>
+        <el-table-column prop="message" label="发布内容">
+          <template slot-scope="scope">
+            <textView :text="scope.row.message" :len="50"></textView>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <span slot="footer">
+        <el-button size="mini" type="primary" @click="startRun('publishForm')"
+          >开始流水线</el-button
+        >
+      </span>
+    </el-dialog>
+    <!-- 发布弹框结束 -->
+    <!-- 推送发布消息开始 -->
+    <el-dialog
+      title="分支发布"
+      :visible.sync="showPushMessage"
+      width="40%"
+      :before-close="closePublishMsg"
+    >
+      <el-form
+        :model="publishMsgForm"
+        ref="publishMsgForm"
+        :rules="publishRule"
+        size="mini"
+        label-width="80px"
+      >
+        <el-form-item label="发布内容" prop="message">
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 10, maxRows: 20 }"
+            v-model="publishMsgForm.message"
+            placeholder="请输入发布分支的变更内容"
+          />
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer">
+        <el-button size="mini" type="primary" @click="publish('publishMsgForm')"
+          >推送发布分支</el-button
+        >
+      </span>
+    </el-dialog>
+    <!-- 推送发布消息结束 -->
   </div>
 </template>
 <script>
@@ -397,8 +468,9 @@ import actionApi from '../../http/PipelineAction'
 import utils from '../../lib/pipeline'
 import nodeApi from '../../http/NodeBind'
 import gitBindApi from '../../http/GitBind'
+import textView from '../../components/text-view.vue'
 export default {
-  components: { bind, PipelineConfig },
+  components: { bind, PipelineConfig, textView },
   data() {
     return {
       nodes: [],
@@ -431,9 +503,54 @@ export default {
       bindGit: false,
       recordList: [],
       taskRecordId: '',
+      publishForm: {},
+      publishRule: {
+        tagName: [
+          { required: true, message: '请输入tag名称', trigger: 'blur' },
+        ],
+        message: [
+          { required: true, message: '请输入分支发布内容', trigger: 'blur' },
+          { max: 256, message: '描述内容最长256', trigger: 'blur' },
+        ],
+      },
+      showPublishDialog: false,
+      showPushMessage: false,
+      publishMsgForm: {},
+      loopQuery: null,
     }
   },
   methods: {
+    closePublishMsg() {
+      this.showPushMessage = false
+      this.publishMsgForm = {}
+    },
+    startRun(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          console.log(this.currentPipeline)
+          let config = this.currentPipeline.context
+          if (!config) {
+            config = {}
+          }
+
+          config.paramList = [{ tagName: this.publishForm.tagName }]
+          let item = {
+            pipelineId: this.currentPipeline.pipelineId,
+            pipelineConfig: JSON.stringify(config),
+          }
+          console.log(item)
+          pipelineApi
+            .updatePipeline(this.serviceId, item.pipelineId, item)
+            .then((res) => {
+              if (res.data) {
+                this.startPipeline()
+              } else {
+                this.$message.error('添加tag失败，运行流水线失败')
+              }
+            })
+        }
+      })
+    },
     closeNodeLog() {
       this.recordList = []
       this.taskRecordId = ''
@@ -455,6 +572,10 @@ export default {
           break
       }
       return label
+    },
+    publishDialogClose() {
+      this.showPublishDialog = false
+      this.publishForm = {}
     },
     approvalClose() {
       this.approvalNode = {}
@@ -484,16 +605,27 @@ export default {
         this.publishData = res.data
       })
     },
-    publish() {
-      let data = {
-        pipelineId: this.currentPipeline.pipelineId,
-        serviceId: this.serviceId,
-      }
-      publishApi.createPublish(data).then((res) => {
-        if (res.data) {
-          this.$message.success('推送发布成功，请去发布流水线查看')
-        } else {
-          this.$message.error('推送发布失败')
+    showPushMessageDialog() {
+      console.log('sssss')
+      this.showPushMessage = true
+      this.publishMsgForm = {}
+    },
+    publish(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          let data = {
+            pipelineId: this.currentPipeline.pipelineId,
+            serviceId: this.serviceId,
+            message: this.publishMsgForm.message,
+          }
+          publishApi.createPublish(data).then((res) => {
+            if (res.data) {
+              this.$message.success('推送发布成功，请去发布流水线查看')
+              this.closePublishMsg()
+            } else {
+              this.$message.error('推送发布失败')
+            }
+          })
         }
       })
     },
@@ -519,6 +651,7 @@ export default {
             this.currentPipeline.pipelineName = res.data.pipelineName
             this.currentPipeline.pipelineType = res.data.pipelineType
             this.currentPipeline.pipelineId = res.data.pipelineId
+            this.currentPipeline.context = JSON.parse(res.data.pipelineConfig)
             this.uuid++
           })
       }
@@ -634,10 +767,10 @@ export default {
       let array = window.location.href.split('//')
       let domain = array[1].split('/')[0]
       console.log(
-        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`
+        `${array[0]}//${domain}/#/record/detail?recordId=${this.taskRecordId}`
       )
       window.open(
-        `${array[0]}//${domain}/record/detail?recordId=${this.taskRecordId}`,
+        `${array[0]}//${domain}/#/record/detail?recordId=${this.taskRecordId}`,
         '_blank'
       )
     },
@@ -705,7 +838,7 @@ export default {
         return
       }
 
-      if (!isPublish && !this.bindGit) {
+      if (this.currentPipeline.pipelineType != 1 && !this.bindGit) {
         let notify = this.$message.warning({
           dangerouslyUseHTMLString: true,
           message:
@@ -716,7 +849,11 @@ export default {
         notify.$el.querySelector('span').onclick = () => {
           that.showGitConfig = !that.showGitConfig
         }
+        return
+      }
 
+      if (this.currentPipeline.pipelineType == 1 && !this.publishForm.tagName) {
+        this.showPublishDialog = true
         return
       }
 
@@ -728,6 +865,7 @@ export default {
         this.$message.success('开始运行流水线')
         this.getLatestHistory(this.currentPipeline.pipelineId)
         this.isRunning = true
+        this.showPublishDialog = false
         this.currentPipeline.pipelineConfig.forEach((e) => {
           e.status = 'success'
         })
@@ -785,6 +923,7 @@ export default {
         this.currentPipeline.pipelineType = res.data.pipelineType
         this.currentPipeline.executeType = res.data.executeType
         this.currentPipeline.pipelineId = item.pipelineId
+        this.currentPipeline.context = JSON.parse(res.data.pipelineConfig)
         this.pipelineId = item.pipelineId
         this.uuid++
 
@@ -888,7 +1027,7 @@ export default {
       })
     },
     loopQueryStatus() {
-      setInterval(() => {
+      let loopQuery = setInterval(() => {
         if (!this.history.historyId) {
           return
         }
@@ -919,6 +1058,7 @@ export default {
           this.isRunning = true
         })
       }, 3000)
+      this.loopQuery = loopQuery
     },
     cancelCreatePipeline() {
       this.pipelineDialog = false
@@ -942,6 +1082,9 @@ export default {
     this.getConfigNodes()
     this.getDefaultService()
     this.loopQueryStatus()
+  },
+  beforeDestroy() {
+    clearInterval(this.loopQuery)
   },
 }
 </script>
@@ -1051,5 +1194,9 @@ ul {
 }
 .republis-info {
   margin: 10px;
+}
+.banch-name {
+  color: #409eff;
+  font-size: 900;
 }
 </style>

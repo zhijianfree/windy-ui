@@ -1,5 +1,44 @@
 import http from '../lib/http'
 export default {
+  deleteMembers(iterationId, userId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops//iterations/${iterationId}/members/${userId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  addMembers(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/iterations/${data.resourceId}/members`
+      http
+        .post(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getMembers(iterationId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops//iterations/${iterationId}/members`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getIterationList() {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/iterations`

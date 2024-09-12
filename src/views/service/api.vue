@@ -52,8 +52,8 @@
                         <el-dropdown-item command="delete"
                           >删除</el-dropdown-item
                         >
-                        <el-dropdown-item command="generate"
-                          >生成Maven</el-dropdown-item
+                        <el-dropdown-item command="generate" v-clickOnce
+                          >生成二方包</el-dropdown-item
                         >
                         <el-dropdown-item command="import"
                           >API导入</el-dropdown-item
@@ -1367,6 +1367,11 @@ export default {
   },
   created() {
     this.getServices()
+  },
+  beforeDestroy() {
+    if (this.logInterval) {
+      clearInterval(this.logInterval)
+    }
   },
 }
 </script>

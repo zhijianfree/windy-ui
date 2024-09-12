@@ -1,26 +1,45 @@
-import axios from "axios";
-import { Message } from "element-ui";
+import axios from 'axios'
+import { Message } from 'element-ui'
+import cookies from 'js-cookie'
+
+axios.interceptors.request.use(
+  (config) => {
+    let token = cookies.get('token')
+    if (token) {
+      config.headers['Authorization'] = 'Bearer ' + token
+    }
+    return config
+  },
+  (error) => {
+    Promise.reject(error)
+  }
+)
 
 axios.interceptors.response.use(
   (res) => {
-    return res;
+    return res
   },
   (error) => {
+    if (error.response.data.code == 'Auth.000001') {
+      cookies.remove('token')
+      window.location.href = window.location.origin + '/#/login'
+      return
+    }
     if (error.response.data.code) {
       Message.error(
         `[${error.response.data.code}] ${error.response.data.message}`
-      );
+      )
     } else {
-      Message.error(`访问服务器失败`);
+      Message.error(`访问服务器失败`)
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
-let base = "";
-if (process.env.NODE_ENV != "production") {
-  base = "/api";
+let base = ''
+if (process.env.NODE_ENV != 'production') {
+  base = '/api'
 }
 export default {
   get(url) {
@@ -29,15 +48,15 @@ export default {
         .get(base + url)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   delete(url) {
     return new Promise((resolve, reject) => {
@@ -45,35 +64,35 @@ export default {
         .delete(base + url)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   postFile(url, form) {
     return new Promise((resolve, reject) => {
       axios
         .post(base + url, form, {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         })
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   post(url, data) {
     return new Promise((resolve, reject) => {
@@ -81,15 +100,15 @@ export default {
         .post(base + url, data)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
   put(url, data) {
     return new Promise((resolve, reject) => {
@@ -97,14 +116,14 @@ export default {
         .put(base + url, data)
         .then((res) => {
           if (res.status == 200) {
-            resolve(res.data);
+            resolve(res.data)
           } else {
-            reject(res.data);
+            reject(res.data)
           }
         })
         .catch((e) => {
-          reject(e);
-        });
-    });
+          reject(e)
+        })
+    })
   },
-};
+}

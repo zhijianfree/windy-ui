@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <span class="text-content">
     <span v-if="showText.length <= len">{{ showText }}</span>
     <span v-else>
       <el-tooltip
@@ -32,7 +32,6 @@ export default {
   watch: {
     text: {
       handler(val) {
-        console.log('ddddd', val)
         if (!val) {
           return
         }
@@ -55,3 +54,8 @@ export default {
   },
 }
 </script>
+<style lang="less" scoped>
+.text-content{
+  cursor: pointer;
+}
+</style>

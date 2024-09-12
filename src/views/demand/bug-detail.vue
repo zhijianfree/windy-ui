@@ -16,10 +16,10 @@
         ></el-input>
       </el-form-item>
       <el-form-item label="负责人">
-        <el-input
-          v-model="bugForm.acceptor"
-          placeholder="请输入负责人"
-        ></el-input>
+        <userSearch
+          :user="bugForm.acceptorName"
+          @chooseUser="selectUser"
+        ></userSearch>
       </el-form-item>
       <el-form-item label="缺陷状态" v-if="edit">
         <el-select v-model="bugForm.status" placeholder="请选择缺陷状态">
@@ -112,7 +112,11 @@
 </template>
 <script>
 import bugApi from '../../http/BugApi'
+import userSearch from '../../components/user-serch.vue'
 export default {
+  components: {
+    userSearch,
+  },
   props: {
     edit: Boolean,
     bug: String,
@@ -171,6 +175,9 @@ export default {
     }
   },
   methods: {
+    selectUser(item) {
+      this.bugForm.acceptor = item.userId
+    },
     getBug() {
       if (this.edit) {
         bugApi.getBugDetail(this.bug).then((res) => {

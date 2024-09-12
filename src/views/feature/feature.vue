@@ -336,12 +336,13 @@
           size="small"
           default-expand-all
           row-key="configId"
+          @row-dblclick="(row) => startEditParam(row)"
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         >
           <el-table-column prop="paramKey" label="参数" width="250">
             <template slot-scope="scope">
               <span v-if="!scope.row.isEdit">{{ scope.row.paramKey }}</span>
-              <el-input v-model="scope.row.paramKey" v-else />
+              <el-input v-model="scope.row.paramKey" v-else size="mini" />
             </template>
           </el-table-column>
           <el-table-column prop="paramType" label="参数类型" width="180">
@@ -355,6 +356,7 @@
               <el-select
                 v-if="scope.row.isEdit"
                 v-model="scope.row.paramType"
+                size="mini"
                 placeholder="请选择参数类型"
               >
                 <el-option
@@ -370,7 +372,11 @@
           <el-table-column prop="value" label="参数值">
             <template slot-scope="scope">
               <span v-if="!scope.row.isEdit">{{ scope.row.value }}</span>
-              <el-input v-model="scope.row.value" v-if="scope.row.isEdit" />
+              <el-input
+                v-model="scope.row.value"
+                v-if="scope.row.isEdit"
+                size="mini"
+              />
             </template>
           </el-table-column>
           <el-table-column label="操作">
@@ -837,7 +843,6 @@ export default {
       }
     },
     treeNodeClick(data) {
-      console.log('ddddd', data)
       this.activeName = 'desc'
       this.infoForm = data
       this.dynamicTags = []

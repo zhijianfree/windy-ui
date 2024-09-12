@@ -45,7 +45,7 @@ Vue.filter('statusFormat', function (status) {
     case 4:
       return 'primary'
     case 5:
-      return 'wrning'
+      return 'warning'
     case 6:
       return 'info'
   }

@@ -7,7 +7,6 @@ import utils from './lib/utils'
 import VuePipeline from 'vue-pipeline'
 import './lib/filter'
 import Contextmenu from 'vue-contextmenujs'
-// import 'monaco-editor/min/vs/editor/editor.main.css'
 import store from './store/index'
 
 Vue.use(Contextmenu)
