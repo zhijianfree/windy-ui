@@ -93,24 +93,16 @@
                 >
               </div>
               <div>
-                <el-table :data="groupRoles" size="mini" height="300px">
-                  <el-table-column type="expand">
-                    <template slot-scope="props">
-                      <h4>功能列表:</h4>
-                      <el-checkbox-group v-model="checkList">
-                        <el-checkbox
-                          v-for="(api, num) in props.row.resources"
-                          :key="num"
-                          :label="api.name"
-                          :checked="true"
-                          disabled
-                        ></el-checkbox>
-                      </el-checkbox-group>
-                    </template>
-                  </el-table-column>
+                <el-table
+                  :data="groupRoles"
+                  size="mini"
+                  height="300px"
+                >
                   <el-table-column prop="roleId" label="角色ID">
                   </el-table-column>
                   <el-table-column prop="roleName" label="角色名称">
+                  </el-table-column>
+                  <el-table-column prop="description" label="角色描述">
                   </el-table-column>
                   <el-table-column prop="createTime" label="创建时间">
                     <template slot-scope="scope">
@@ -129,6 +121,22 @@
                 >
                 </el-pagination>
               </div>
+            </el-tab-pane>
+            <el-tab-pane label="资源列表">
+              <el-collapse v-model="activeRoleNames" @change="loadRoleResources" accordion>
+                <el-collapse-item v-for="(item,index) in groupRoles" :key="index" :title="item.roleName" :name="item.roleId">
+                  <h4>功能列表:</h4>
+                    <el-checkbox-group v-model="checkList">
+                      <el-checkbox
+                        v-for="(api, num) in item.resources"
+                        :key="num"
+                        :label="api.resourceName"
+                        :checked="true"
+                        disabled
+                      ></el-checkbox>
+                    </el-checkbox-group>
+                </el-collapse-item>
+              </el-collapse>
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -171,6 +179,11 @@
         </el-form-item>
         <el-form-item label="用户昵称">
           <el-input v-model="userForm.nickName" placeholder="请输入用户昵称" />
+        </el-form-item>
+        <el-form-item label="重置密码">
+          <el-button type="primary" icon="el-icon-refresh" @click="resetPassword"
+              >重置密码</el-button
+            >
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitUser">确认</el-button>
@@ -230,6 +243,7 @@
 import userApi from '../../http/User'
 import groupApi from '../../http/Group'
 import roleApi from '../../http/Role'
+import resourceApi from '../../http/Resource'
 export default {
   data() {
     return {
@@ -255,9 +269,19 @@ export default {
       groupUserSize: 10,
       groupUserTotal: 0,
       roleIds: [],
+      activeRoleNames: []
     }
   },
   methods: {
+    resetPassword(){
+      userApi.resetPassword({userId: this.userForm.userId}).then(res =>{
+        if(res.data){
+            this.$message.success("重置密码成功")
+          }else{
+            this.$message.error("重置密码失败")
+          }
+      })
+    },
     groupClose() {
       this.groupForm = {}
       this.showDialog = false
@@ -423,6 +447,7 @@ export default {
       })
     },
     clickTab(tab) {
+      this.activeRoleNames = []
       if (tab.name == 'user') {
         this.getGroupUsers()
       }
@@ -441,6 +466,21 @@ export default {
         res.data.data.forEach((e) => {
           this.roleIds.push(e.roleId)
         })
+      })
+    },
+    loadRoleResources(roleId) {
+      console.log('wwwwwww')
+      resourceApi.getRoleResources(roleId).then((res) => {
+        console.log(this.groupRoles)
+        let array = [] 
+        this.groupRoles.forEach(e =>{
+          if(e.roleId == roleId){
+            e.resources = res.data
+          }
+          array.push(e)
+        })
+
+        this.groupRoles = array
       })
     },
     getGroupUsers() {

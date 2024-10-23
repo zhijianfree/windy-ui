@@ -328,7 +328,7 @@
       </div>
 
       <el-row v-for="(item, num) in variableList" :key="num" class="param-line">
-        <el-col :span="3">
+        <el-col :span="4">
           <el-input
             size="mini"
             v-model="item.paramKey"
@@ -353,18 +353,7 @@
         <el-col :span="1">
           <div class="header-line">-</div>
         </el-col>
-        <el-col :span="3">
-          <el-input
-            size="mini"
-            v-model="item.description"
-            placeholder="请输入参数描述"
-          ></el-input>
-        </el-col>
-
-        <el-col :span="1">
-          <div class="header-line">-</div>
-        </el-col>
-        <el-col :span="3">
+        <el-col :span="6">
           <el-input
             size="mini"
             v-model="item.initValue"
@@ -460,6 +449,7 @@ export default {
         { label: 'Integer', value: 'Integer' },
         { label: 'Float', value: 'Float' },
         { label: 'Double', value: 'Double' },
+        { label: 'Boolean', value: 'Boolean' },
       ],
       positionList: [
         { label: 'Body', value: 'Body' },
@@ -634,6 +624,7 @@ export default {
       return data.apiName.indexOf(value) !== -1
     },
     selectService() {
+      this.$store.commit('UPDATE_SERVICE_ID', this.serviceId)
       this.currentPage = 1
       this.getTemplatePage()
     },
@@ -641,7 +632,9 @@ export default {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
         this.serviceList = res.data
-        this.serviceId = this.serviceList[0].serviceId
+        if (!this.serviceId) {
+          this.serviceId = this.serviceList[0].serviceId
+        }
         this.selectService()
       })
     },
@@ -774,6 +767,7 @@ export default {
     },
   },
   created() {
+    this.serviceId = this.$store.state.serviceId
     this.getServices()
   },
 }

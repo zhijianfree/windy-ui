@@ -142,7 +142,6 @@ export default {
       if (array == null || array == undefined || array.length == 0) {
         return true
       }
-
       return false
     },
   },

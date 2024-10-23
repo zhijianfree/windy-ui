@@ -26,6 +26,19 @@ export default {
         })
     })
   },
+  deleteSpace(spaceId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/spaces/${spaceId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   createSpace(space) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/spaces`

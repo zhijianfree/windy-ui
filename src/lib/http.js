@@ -15,14 +15,30 @@ axios.interceptors.request.use(
   }
 )
 
+let isRedirecting = false
 axios.interceptors.response.use(
   (res) => {
     return res
   },
   (error) => {
     if (error.response.data.code == 'Auth.000001') {
+      if (isRedirecting) {
+        return
+      }
+      isRedirecting = true
       cookies.remove('token')
-      window.location.href = window.location.origin + '/#/login'
+      let path = window.location.hash.replace('#/', '')
+      var gitWinLocHref = function () {
+        var location = window.location.href.split('/')
+        var basePath = location[0] + '//' + location[2]
+        return basePath
+      }
+      if (window.location.href.indexOf('/feature') != -1) {
+        //如果正在用例编辑那么就保存当前页面，在新的标签页进行登录
+        window.open(gitWinLocHref() + '/#/login?redirect=' + path, '_blank')
+        return
+      }
+      window.location.href = gitWinLocHref() + '/#/login?redirect=' + path
       return
     }
     if (error.response.data.code) {
@@ -32,7 +48,6 @@ axios.interceptors.response.use(
     } else {
       Message.error(`访问服务器失败`)
     }
-
     return Promise.reject(error)
   }
 )
@@ -47,7 +62,7 @@ export default {
       axios
         .get(base + url)
         .then((res) => {
-          if (res.status == 200) {
+          if (res.status && res.status == 200) {
             resolve(res.data)
           } else {
             reject(res.data)
@@ -63,7 +78,7 @@ export default {
       axios
         .delete(base + url)
         .then((res) => {
-          if (res.status == 200) {
+          if (res && res.status == 200) {
             resolve(res.data)
           } else {
             reject(res.data)
@@ -83,7 +98,7 @@ export default {
           },
         })
         .then((res) => {
-          if (res.status == 200) {
+          if (res && res.status == 200) {
             resolve(res.data)
           } else {
             reject(res.data)
@@ -99,7 +114,7 @@ export default {
       axios
         .post(base + url, data)
         .then((res) => {
-          if (res.status == 200) {
+          if (res && res.status == 200) {
             resolve(res.data)
           } else {
             reject(res.data)
@@ -115,7 +130,7 @@ export default {
       axios
         .put(base + url, data)
         .then((res) => {
-          if (res.status == 200) {
+          if (res && res.status == 200) {
             resolve(res.data)
           } else {
             reject(res.data)

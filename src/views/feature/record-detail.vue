@@ -41,9 +41,9 @@
           ref="tree"
         >
           <span slot-scope="{ node, data }">
-            <span class="custom-tree-node" :style="{ color: data.status }">{{
-              node.label
-            }}</span>
+            <span class="custom-tree-node" :style="{ color: data.status }">
+              <span v-if="data.skip">[已禁用]</span>{{ node.label }}</span
+            >
           </span>
         </el-tree>
       </el-col>
@@ -281,6 +281,9 @@ export default {
           } else {
             this.successCount++
           }
+        }
+        if (e.skip) {
+          e.status = '#C0C4CC'
         }
 
         if (e.children && e.children.length > 0) {

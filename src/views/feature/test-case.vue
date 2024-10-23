@@ -98,7 +98,7 @@
         :model="caseForm"
         ref="caseForm"
         :rules="rule"
-        size="small"
+        size="mini"
         label-width="120px"
       >
         <el-form-item label="测试集名称" prop="testCaseName">
@@ -112,17 +112,6 @@
             v-model="caseForm.description"
             placeholder="请输入测试集描述"
           ></el-input>
-        </el-form-item>
-        <el-form-item label="选择服务" prop="serviceId">
-          <el-select v-model="caseForm.serviceId" placeholder="请选择">
-            <el-option
-              v-for="item in serviceList"
-              :key="item.serviceId"
-              :label="item.serviceName"
-              :value="item.serviceId"
-            >
-            </el-option>
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submit('caseForm')">确认</el-button>
@@ -369,7 +358,7 @@ export default {
         if (!valid) {
           return false
         }
-
+        this.caseForm.serviceId = this.service
         testCaseApi.createTestCase(this.caseForm).then((res) => {
           this.closeDialog()
           if (res.data) {
@@ -388,11 +377,14 @@ export default {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
         this.serviceList = res.data
-        this.service = this.serviceList[0].serviceId
+        if (!this.service) {
+          this.service = this.serviceList[0].serviceId
+        }
         this.selectService()
       })
     },
     selectService() {
+      this.$store.commit('UPDATE_SERVICE_ID', this.service)
       this.getTestCaseList(1)
     },
     pageChange(page) {
@@ -427,6 +419,7 @@ export default {
     },
   },
   created() {
+    this.service = this.$store.state.serviceId
     this.getServices()
   },
 }

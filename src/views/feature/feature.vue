@@ -87,7 +87,12 @@
                     'el-icon-folder-opened': data.featureType == 2,
                   }"
                 />
-                {{ data.featureName }}</span
+
+                <span></span>
+                <span :class="{ 'disable-feature': data.status == 2 }">
+                  <span v-if="data.status == 2">[已禁用]</span>
+                  {{ data.featureName }}</span
+                ></span
               >
               <span style="float: right">
                 <el-dropdown @command="(val) => clickCommand(val, data)">
@@ -110,6 +115,18 @@
                     >
                     <el-dropdown-item command="copyFeature"
                       ><i class="el-icon-document-copy" />复制</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      command="disable"
+                      v-if="data.status == 1 && data.featureType == 1"
+                      ><i
+                        class="el-icon-warning-outline"
+                      />禁用</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      command="open"
+                      v-if="data.status == 2 && data.featureType == 1"
+                      ><i class="el-icon-circle-check" />开启</el-dropdown-item
                     >
                     <el-dropdown-item
                       command="pasteFeature"
@@ -534,7 +551,11 @@ export default {
     startEditCase() {
       this.showCaseDialog = true
     },
-    dragNodeEvent(node) {
+    dragNodeEvent(node, endNode, position, event) {
+      console.log('event', node, endNode, position, event)
+      if (position == 'inner') {
+        node.data.parentId = endNode.data.featureId
+      }
       console.log('all', this.caseFeatures)
       let array = []
       this.loadItemFromTree(this.caseFeatures, array)
@@ -572,6 +593,54 @@ export default {
       })
     },
     clickCommand(command, data) {
+      if (command == 'open') {
+        featureApi
+          .updateFeature({
+            featureId: data.featureId,
+            status: 1,
+          })
+          .then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: '成功',
+                message: '用例开启成功!',
+                type: 'success',
+              })
+              this.expendList = [data.featureId]
+              this.requestCaseFeatures(this.caseId)
+            } else {
+              this.$notify({
+                title: '失败',
+                message: '用例开启失败',
+                type: 'danger',
+              })
+            }
+          })
+      }
+      if (command == 'disable') {
+        featureApi
+          .updateFeature({
+            featureId: data.featureId,
+            status: 2,
+          })
+          .then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: '成功',
+                message: '用例禁用成功!',
+                type: 'success',
+              })
+              this.expendList = [data.featureId]
+              this.requestCaseFeatures(this.caseId)
+            } else {
+              this.$notify({
+                title: '失败',
+                message: '用例禁用失败',
+                type: 'danger',
+              })
+            }
+          })
+      }
       if (command == 'newItem') {
         this.startAddFeature()
         this.createData.type = 1
@@ -629,7 +698,6 @@ export default {
         } else {
           featureIds.push(data.featureId)
         }
-        console.log('copy', featureIds)
         localStorage.setItem(
           'copyFeature',
           JSON.stringify({
@@ -879,6 +947,8 @@ export default {
     },
   },
   created() {
+    console.log(window.location)
+    console.log(this.$route)
     this.caseId = this.$route.query.caseId
     this.getTestCaseConfigs()
     this.getCaseDetail()
@@ -1033,5 +1103,8 @@ export default {
 .edit-name-icon {
   margin-right: 10px;
   cursor: pointer;
+}
+.disable-feature {
+  color: #c0c4cc;
 }
 </style>

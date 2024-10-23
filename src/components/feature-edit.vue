@@ -82,7 +82,7 @@
             :point="pointId"
             :feature="obj"
             :isEdit="isEdit"
-            @refreshData="refreshObjectValue($event)"
+            @refreshData="refreshObjectValue"
           />
         </el-col>
       </el-row>
@@ -310,7 +310,7 @@
       @close="closeEditor"
       width="60%"
     >
-      <monaco ref="editer" :codes="jsonStr" :readonly="false"></monaco>
+      <monaco ref="editer" :codes="jsonStr" :readonly="!isEdit"></monaco>
     </el-dialog>
   </div>
 </template>
@@ -425,8 +425,15 @@ export default {
       this.refreshList()
     },
     refreshObjectValue(event) {
-      this.data.value[event.item.paramKey] = event.item.value
-      this.notifyData()
+      console.log('start obj', event, this.data)
+      if (this.data.initData.range) {
+        this.data.initData.range.forEach((e) => {
+          if (e.paramKey == event.item.paramKey) {
+            e.value = event.item.value
+          }
+        })
+        this.notifyData()
+      }
     },
     refreshList() {
       let array = []
@@ -437,6 +444,7 @@ export default {
       this.notifyData()
     },
     refreshArrayValue(event, index) {
+      console.log('start', event)
       this.data.value[index][event.item.paramKey] = event.item.value
       this.notifyData()
     },
@@ -445,7 +453,7 @@ export default {
       this.jsonStr = str
     },
     notifyData() {
-      let data = this.data
+      let data = JSON.parse(JSON.stringify(this.data))
       if (this.data.type == 'Map') {
         let item = {}
         this.paramList.forEach((e) => {
@@ -455,6 +463,7 @@ export default {
         data.paramKey = this.data.paramKey
       }
 
+      console.log('update', data)
       this.$emit('refreshData', {
         item: data,
         pointId: this.pointId,
@@ -503,6 +512,7 @@ export default {
       })
     },
     exchangeDataValue() {
+      console.log('init exchangeDataValue', this.data)
       if (!this.data.value && this.data.type == 'Boolean') {
         this.data.value = false
       }
@@ -521,7 +531,6 @@ export default {
           this.paramList.push({ content: e })
         })
       }
-
       if (
         this.data.value &&
         this.data.initData &&
@@ -580,6 +589,7 @@ export default {
 
     this.pointId = this.point
     this.data = this.feature
+    console.log('create ', JSON.parse(JSON.stringify(this.data)))
     this.exchangeDataValue()
   },
 }

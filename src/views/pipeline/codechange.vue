@@ -34,7 +34,7 @@
       </div>
       <div class="change-list">
         <div>
-          <el-table :data="changeList" stripe style="width: 100%">
+          <el-table :data="changeList" size="mini" stripe style="width: 100%">
             <el-table-column prop="changeName" label="变更"> </el-table-column>
             <el-table-column prop="changeBranch" label="分支">
             </el-table-column>
@@ -179,7 +179,9 @@ export default {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
         this.serviceList = res.data
-        this.service = this.serviceList[0].serviceId
+        if (!this.service) {
+          this.service = this.serviceList[0].serviceId
+        }
         this.getCodeChangeList()
       })
     },
@@ -187,6 +189,7 @@ export default {
       this.dialogFormVisible = true
     },
     selectService() {
+      this.$store.commit('UPDATE_SERVICE_ID', this.service)
       this.getCodeChangeList()
     },
     selectBranchType(value) {
@@ -249,6 +252,7 @@ export default {
     },
   },
   created() {
+    this.service = this.$store.state.serviceId
     this.getServices()
   },
 }

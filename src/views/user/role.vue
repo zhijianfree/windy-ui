@@ -1,10 +1,10 @@
 <template>
   <div class="content">
     <el-button type="primary" size="mini" @click="addRole">新增角色</el-button>
-    <el-table :data="roleTable" size="mini" height="300px">
-      <el-table-column prop="roleId" label="用户Id"> </el-table-column>
-      <el-table-column prop="roleName" label="用户名称"> </el-table-column>
-      <el-table-column prop="description" label="用户名称"> </el-table-column>
+    <el-table :data="roleTable" size="mini" height="500px">
+      <el-table-column prop="roleId" label="角色Id"> </el-table-column>
+      <el-table-column prop="roleName" label="角色名称"> </el-table-column>
+      <el-table-column prop="description" label="角色描述"> </el-table-column>
       <el-table-column prop="gmtCreated" label="创建时间">
         <template slot-scope="scope">
           {{ scope.row.createTime | dateFormat }}

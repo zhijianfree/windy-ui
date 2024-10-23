@@ -5,20 +5,28 @@
       <el-aside v-bind:style="{ width: detailWidth + 'px' }" id="resize">
         <div class="top-op">
           <el-row>
-            <el-col :span="20"
+            <el-col :span="8"
               ><div class="create-line" @click="showIterationDialog">
                 <i class="el-icon-plus" /> 创建
               </div></el-col
             >
-            <el-col :span="4"
-              ><div class="op-div"><i class="el-icon-search" /></div
+            <el-col :span="16"
+              ><div class="query-div">
+                <el-input
+                  size="mini"
+                  clearable
+                  v-model="filterName"
+                  placeholder="过滤迭代名称"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-search"></i
+                ></el-input></div
             ></el-col>
           </el-row>
         </div>
         <el-scrollbar>
           <div
             class="iteration-div"
-            v-for="(item, index) in iterationList"
+            v-for="(item, index) in iterations"
             :key="index"
             @click="clickIteration(item)"
           >
@@ -47,6 +55,7 @@
                 </span>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                  <el-dropdown-item command="delete">删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </div>
@@ -76,9 +85,7 @@
           description="请在左侧选择迭代"
         ></el-empty>
         <div v-else class="main-content">
-          <div class="content-title">
-            {{ iterationInfo.name }}
-          </div>
+          <div class="content-title">迭代名称: {{ iterationInfo.name }}</div>
           <el-tabs v-model="activeName" @tab-click="handleClick">
             <!-- 预览开始 -->
             <el-tab-pane label="概览" name="review">
@@ -104,21 +111,21 @@
 
                 <div class="step-line">
                   <div>里程碑</div>
-                  <el-steps :active="0" align-center>
+                  <el-steps :active="5" align-center>
                     <el-step title="需求评审">
-                      <div slot="description">08-08</div>
+                      <!-- <div slot="description">08-08</div> -->
                     </el-step>
                     <el-step title="技术评审">
-                      <div slot="description">08-08</div>
+                      <!-- <div slot="description">08-08</div> -->
                     </el-step>
                     <el-step title="开发研发">
-                      <div slot="description">08-08</div>
+                      <!-- <div slot="description">08-08</div> -->
                     </el-step>
                     <el-step title="提测">
-                      <div slot="description">08-08</div>
+                      <!-- <div slot="description">08-08</div> -->
                     </el-step>
                     <el-step title="发布">
-                      <div slot="description">08-08</div>
+                      <!-- <div slot="description">08-08</div> -->
                     </el-step>
                   </el-steps>
                 </div>
@@ -407,8 +414,8 @@
   </div>
 </template>
 <script>
-import iterationDemand from '../demand/iteration-demand.vue'
-import iterationBug from '../demand/iteration-bug.vue'
+import iterationDemand from '../demand/demand.vue'
+import iterationBug from '../demand/bug.vue'
 import iterationApi from '../../http/Iteration'
 import TextView from '../../components/text-view.vue'
 import CommentApi from '../../http/Comment'
@@ -417,12 +424,25 @@ import BugApi from '../../http/BugApi'
 import userApi from '../../http/User'
 export default {
   props: {
-    id: String,
+    space: {
+      type: String,
+      default: '',
+    },
   },
   components: {
     iterationDemand,
     iterationBug,
     TextView,
+  },
+  watch: {
+    space: {
+      handler(val) {
+        console.log('space', val)
+        this.spaceId = val
+        this.getIterationList()
+      },
+      immediate: true,
+    },
   },
   data() {
     return {
@@ -494,7 +514,15 @@ export default {
         },
       ],
       selectedUser: '',
+      filterName: '',
     }
+  },
+  computed: {
+    iterations() {
+      return this.iterationList.filter((item) => {
+        return item.name.toLowerCase().includes(this.filterName.toLowerCase())
+      })
+    },
   },
   methods: {
     querySearchAsync(queryString, cb) {
@@ -600,6 +628,24 @@ export default {
         this.showIteration = true
         this.isEditIteration = true
       }
+      if (event == 'delete') {
+        iterationApi.deleteIteration(row.iterationId).then((res) => {
+          if (res.data) {
+            this.$notify({
+              title: '成功',
+              message: '删除迭代成功',
+              type: 'success',
+            })
+            this.getIterationList()
+          } else {
+            this.$notify({
+              title: '失败',
+              message: '删除迭代失败',
+              type: 'danger',
+            })
+          }
+        })
+      }
     },
     matchStatus(status) {
       if (!status) {
@@ -618,7 +664,7 @@ export default {
       return {}
     },
     getIterationList() {
-      iterationApi.getIterationList().then((res) => {
+      iterationApi.getIterationList(this.spaceId).then((res) => {
         this.iterationList = res.data
       })
     },
@@ -771,9 +817,7 @@ export default {
     },
   },
   created() {
-    this.spaceId = this.$store.state.spaceId
     this.getDemandTags()
-    this.getIterationList()
   },
 }
 </script>
@@ -1141,6 +1185,12 @@ export default {
         box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
       }
     }
+  }
+}
+
+.query-div {
+  i {
+    cursor: pointer;
   }
 }
 </style>

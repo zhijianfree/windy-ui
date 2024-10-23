@@ -9,6 +9,8 @@ export default new Vuex.Store({
     spaceId: '',
     iterationId: '',
     intervalIds: [],
+    serviceId: '',
+    rbacList: [],
   },
   mutations: {
     UPDATE_CASE_CONTEXT(state, item) {
@@ -22,6 +24,12 @@ export default new Vuex.Store({
     },
     UPDATE_ITERATION(state, item) {
       state.iterationId = item
+    },
+    UPDATE_SERVICE_ID(state, item) {
+      state.serviceId = item
+    },
+    UPDATE_RBAC_LIST(state, item) {
+      state.rbacList = item
     },
   },
   actions: {},

@@ -349,17 +349,24 @@ export default {
       return flag
     },
     templateGroup() {
-      return this.serviceGroup.filter((data) => {
-        if (!this.filterName) {
+      let array = this.serviceGroup.filter((data) => {
+        if (!data.filterList) {
+          data.filterList = JSON.parse(JSON.stringify(data.list))
+        }
+        if (!this.filterName || this.filterName == '') {
+          data.list = data.filterList
           return true
         }
 
-        let temp = data.list.filter((item) => {
+        let temp = data.filterList.filter((item) => {
           return item.name.toLowerCase().includes(this.filterName.toLowerCase())
         })
+
         data.list = temp
         return temp.length > 0
       })
+      console.log('aaaa', array)
+      return array
     },
     templateList() {
       return this.featureItemList.filter(
@@ -701,7 +708,7 @@ export default {
         featureApi.getAllTemplates().then((res) => {
           let array = res.data
           array.forEach((e) => {
-            e.isTool = e.templateType != 1 && e.templateType != 5
+            e.isTool = e.templateType != 1
             e.executeType = e.templateType
             e.service = e.service ? e.service : ''
           })
@@ -713,7 +720,7 @@ export default {
       featureApi.getServiceTemplates(this.serviceId).then((res) => {
         let array = res.data
         array.forEach((e) => {
-          e.isTool = e.templateType != 1 && e.templateType != 5
+          e.isTool = e.templateType != 1
           e.executeType = e.templateType
           e.service = e.service ? e.service : ''
         })

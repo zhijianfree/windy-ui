@@ -52,6 +52,19 @@ export default {
         })
     })
   },
+  deleteBug(bugId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/bugs/${bugId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getBugStatuses() {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/bug/statuses`

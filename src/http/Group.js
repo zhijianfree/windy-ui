@@ -78,4 +78,17 @@ export default {
         })
     })
   },
+  getGroupUserTree() {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/group/user/tree`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
 }

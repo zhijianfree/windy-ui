@@ -1,8 +1,21 @@
 import http from '../lib/http'
 export default {
-  getResources() {
+  getUserMenuList() {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/resources`
+      let url = `/v1/devops/auth/menus`
+      http
+        .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  getResources(page, size) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/resources?page=${page}&size=${size}`
       http
         .get(url)
         .then((res) => {

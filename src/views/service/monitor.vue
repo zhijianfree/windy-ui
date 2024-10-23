@@ -106,40 +106,47 @@
   </div>
 </template>
 <script>
-import systemApi from "../../http/System";
+import systemApi from '../../http/System'
 export default {
   data() {
     return {
       clientData: [],
       masterData: [],
-    };
+    }
   },
   methods: {
     refresh() {
-      this.getMonitor();
+      this.getMonitor()
     },
     getMonitor() {
-      this.clientData = [];
-      this.masterData = [];
       systemApi.getMonitor().then((res) => {
-        res.data.clients.forEach((e) => {
-          let item = e.physics;
-          item.size = e.waitQuerySize;
-          this.clientData.push(item);
-        });
-
-        res.data.masters.forEach((e) => {
-          let item = e.physics;
-          item.size = e.taskCount;
-          this.masterData.push(item);
-        });
-      });
+        this.clientData = []
+        if (res.data.clients) {
+          res.data.clients.forEach((e) => {
+            if (e) {
+              let item = e.physics
+              item.size = e.waitQuerySize
+              this.clientData.push(item)
+            }
+          })
+        }
+        this.masterData = []
+        if (res.data.masters) {
+          res.data.masters.forEach((e) => {
+            if (e) {
+              let item = e.physics
+              item.size = e.taskCount
+              this.masterData.push(item)
+            }
+          })
+        }
+      })
     },
   },
   created() {
-    this.getMonitor();
+    this.getMonitor()
   },
-};
+}
 </script>
 <style scoped>
 .content {

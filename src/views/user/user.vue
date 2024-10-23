@@ -30,13 +30,33 @@
           </el-form-item>
           <el-form-item label="所属组织">暂无</el-form-item>
           <el-form-item
-            ><el-button type="primary" icon="el-icon-refresh"
-              >重置密码</el-button
+            ><el-button type="primary" icon="el-icon-refresh" @click="startUpdate"
+              >修改密码</el-button
             >
           </el-form-item>
         </el-form>
       </el-tab-pane>
     </el-tabs>
+    <el-dialog title="修改用户" width="40%" :visible.sync="showUpdateDialog" @close="closeUpdte">
+    <el-form :model="updateForm" size="mini" ref="updateForm" :rules="updateRules" label-width="80px">
+      <el-form-item label="用户" >
+        {{ userForm.userName }}
+      </el-form-item>
+      <el-form-item label="用户昵称" >
+        {{ userForm.nickName }}
+      </el-form-item>
+      <el-form-item label="旧密码" >
+        <el-input v-model="updateForm.oldPassword" show-password autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="新密码" >
+        <el-input v-model="updateForm.newPassword" show-password autocomplete="off"></el-input>
+      </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button size="mini" @click="closeUpdte">取 消</el-button>
+      <el-button size="mini" type="primary" @click="submit('updateForm')">确 定</el-button>
+    </div>
+  </el-dialog>
   </div>
 </template>
 <script>
@@ -47,6 +67,18 @@ export default {
       userForm: {},
       isEdit: false,
       oldName: '',
+      updateForm:{},
+      showUpdateDialog:false,
+      updateRules:{
+        oldPassword: [
+          { required: true, message: '请输入旧密码', trigger: 'blur' },
+          { min: 6, message: '密码最少6位', trigger: 'blur' },
+        ],
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, message: '密码最少6位', trigger: 'blur' },
+        ],
+      }
     }
   },
   computed: {
@@ -58,6 +90,30 @@ export default {
     },
   },
   methods: {
+    startUpdate(){
+      this.updateForm = {}
+      this.showUpdateDialog = true
+    },
+    submit(formName){
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
+        }
+        this.updateForm.userId = this.userForm.userId
+        userApi.updatePassword(this.updateForm).then(res =>{
+          if(res.data){
+            this.$message.success("修改密码成功")
+            this.closeUpdte()
+          }else{
+            this.$message.error("修改密码失败")
+          }
+        })
+      })
+    },
+    closeUpdte(){
+      this.updateForm = {}
+      this.showUpdateDialog = false
+    },
     startEdit() {
       this.isEdit = true
       this.oldName = this.userForm.nickName

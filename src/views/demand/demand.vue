@@ -1,6 +1,6 @@
 <template>
   <div class="content">
-    <div>
+    <div class="query-line">
       <el-form :inline="true" v-model="queryForm" size="mini">
         <el-form-item label="需求名称">
           <el-input
@@ -34,14 +34,14 @@
           type="primary"
           @click="createDemand"
           size="mini"
-          >新建需求</el-button
+          >创建需求</el-button
         >
       </div>
     </div>
     <div class="table-list">
-      <el-table :data="tableData" height="500" style="width: 100%">
+      <el-table :data="tableData" height="500" size="mini" style="width: 100%">
         <el-table-column prop="demandName" label="需求名称"> </el-table-column>
-        <el-table-column prop="proposer" label="提出人" width="180">
+        <el-table-column prop="proposerName" label="提出人" width="180">
         </el-table-column>
         <el-table-column prop="status" label="需求状态">
           <template slot-scope="scope">
@@ -59,10 +59,13 @@
             <el-button type="text" @click="viewDemand(scope.row)" size="small"
               >查看</el-button
             >
+            <el-button type="text" @click="deleteDemand(scope.row)" size="small"
+              >删除</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
-      <div class="pagination">
+      <div class="bottm-page">
         <el-pagination
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
@@ -82,105 +85,116 @@
     >
       <div style="height: 100%">
         <el-form
-          :model="demandForm"
-          ref="demandForm"
+          :model="demandFormModel"
+          ref="demandFormModel"
           size="mini"
           label-width="120px"
-          :rules="demandRule"
+          :rules="demandModelRules"
         >
-          <el-form-item label="需求标题" prop="demandName">
-            <el-input
-              type="textarea"
-              :autosize="{ minRows: 2, maxRows: 10 }"
-              placeholder="请输入需求标题"
-              v-model="demandForm.demandName"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="需求描述" prop="demandContent">
-            <el-input
-              type="textarea"
-              :autosize="{ minRows: 12, maxRows: 30 }"
-              placeholder="请输入需求的详细描述"
-              v-model="demandForm.demandContent"
-            >
-            </el-input>
-          </el-form-item>
-          <!-- <el-form-item label="附件">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="需求标题" prop="demandName">
+                <el-input
+                  type="textarea"
+                  :autosize="{ minRows: 2, maxRows: 10 }"
+                  placeholder="请输入需求标题"
+                  v-model="demandFormModel.demandName"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="需求描述" prop="demandContent">
+                <el-input
+                  type="textarea"
+                  :autosize="{ minRows: 12, maxRows: 30 }"
+                  placeholder="请输入需求的详细描述"
+                  v-model="demandFormModel.demandContent"
+                >
+                </el-input>
+              </el-form-item>
+              <!-- <el-form-item label="附件">
             <el-upload
               class="upload-demo"
               action="https://jsonplaceholder.typicode.com/posts/"
               multiple
               :limit="3"
-              :file-list="demandForm.fileList"
+              :file-list="demandFormModel.fileList"
             >
               <el-button size="mini" type="primary">上传附件</el-button>
             </el-upload>
           </el-form-item> -->
-          <el-form-item label="需求价值" prop="customerValue">
-            <el-select
-              v-model="demandForm.customerValue"
-              placeholder="请选择需求价值"
-            >
-              <el-option
-                v-for="(item, index) in abilityList"
-                :key="index"
-                :label="item"
-                :value="item"
-              ></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="需求优先级" prop="level">
-            <el-select
-              v-model="demandForm.level"
-              placeholder="请选择需求优先级"
-            >
-              <el-option label="P1" :value="1"></el-option>
-              <el-option label="P2" :value="2"></el-option>
-              <el-option label="P3" :value="3"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="接受人">
-            <userSearch @chooseUser="selectUser"></userSearch>
-          </el-form-item>
-          <el-form-item label="期待完成时间" prop="expectTime">
-            <el-date-picker
-              v-model="demandForm.expectTime"
-              align="right"
-              type="date"
-              value-format="timestamp"
-              placeholder="选择日期"
-            >
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="工作量(人/日)" prop="workload">
-            <el-input
-              v-model="demandForm.workload"
-              placeholder="请输入工作量"
-            ></el-input>
-          </el-form-item>
-          <el-form-item label="标签">
-            <el-select
-              v-model="demandForm.tag"
-              filterable
-              allow-create
-              default-first-option
-              placeholder="请选择标签"
-            >
-              <el-option
-                v-for="(item, index) in tagList"
-                :key="index"
-                :label="item.text"
-                :value="item.value"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="需求价值" prop="customerValue">
+                <el-select
+                  v-model="demandFormModel.customerValue"
+                  placeholder="请选择需求价值"
+                >
+                  <el-option
+                    v-for="(item, index) in abilityList"
+                    :key="index"
+                    :label="item"
+                    :value="item"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="需求优先级" prop="level">
+                <el-select
+                  v-model="demandFormModel.level"
+                  placeholder="请选择需求优先级"
+                >
+                  <el-option label="P1" :value="1"></el-option>
+                  <el-option label="P2" :value="2"></el-option>
+                  <el-option label="P3" :value="3"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="接受人" prop="acceptor">
+                <userSearch
+                  :users="demandFormModel.acceptorUser"
+                  :single="true"
+                  @clearUser="clearUser"
+                  @chooseUser="selectUser"
+                ></userSearch>
+              </el-form-item>
+              <el-form-item label="期待完成时间" prop="expectTime">
+                <el-date-picker
+                  v-model="demandFormModel.expectTime"
+                  align="right"
+                  type="date"
+                  value-format="timestamp"
+                  placeholder="选择日期"
+                >
+                </el-date-picker>
+              </el-form-item>
+              <el-form-item label="工作量(人/日)" prop="workload">
+                <el-input
+                  v-model="demandFormModel.workload"
+                  placeholder="请输入工作量"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="标签">
+                <el-select
+                  v-model="demandFormModel.tag"
+                  filterable
+                  allow-create
+                  default-first-option
+                  placeholder="请选择标签"
+                >
+                  <el-option
+                    v-for="(item, index) in tagList"
+                    :key="index"
+                    :label="item.text"
+                    :value="item.value"
+                  >
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
           <el-button size="mini" @click="closeDemand">取 消</el-button>
           <el-button
             type="primary"
-            @click="submitDemand('demandForm')"
+            @click="submitDemand('demandFormModel')"
             size="mini"
             >确 定</el-button
           >
@@ -195,10 +209,14 @@
 <script>
 import demandApi from '../../http/DemandApi'
 import detail from './detail.vue'
-import userSearch from '../../components/user-serch.vue'
+import userSearch from '../../components/user-search.vue'
 export default {
   props: {
     space: {
+      default: '',
+      type: String,
+    },
+    iteration: {
       default: '',
       type: String,
     },
@@ -208,8 +226,16 @@ export default {
     userSearch,
   },
   watch: {
-    space(val) {
-      this.spaceId = val
+    space: {
+      handler(val) {
+        if (val) {
+          this.spaceId = val
+          this.getDemandList()
+        }
+      },
+    },
+    iteration(val) {
+      this.iterationId = val
       this.getDemandList()
     },
   },
@@ -222,7 +248,7 @@ export default {
         status: '',
       },
       statusList: [],
-      demandForm: {},
+      demandFormModel: {},
       demandId: '',
       showDemandDialog: false,
       showDemandDetail: false,
@@ -237,7 +263,10 @@ export default {
       currentSize: 10,
       total: 0,
       demandDetail: {},
-      demandRule: {
+      demandModelRules: {
+        acceptor: [
+          { required: true, validator: this.validAcceptor, trigger: 'change' },
+        ],
         demandName: [
           { required: true, message: '请输入需求名称', trigger: 'blur' },
           { min: 10, message: '需求名称最少10个字符', trigger: 'blur' },
@@ -262,8 +291,31 @@ export default {
     }
   },
   methods: {
-    selectUser(data) {
-      this.demandForm.acceptor = data.userId
+    validAcceptor(rule, value, callback) {
+      if (
+        !this.demandFormModel.acceptor ||
+        !this.demandFormModel.acceptorName
+      ) {
+        callback(new Error('请选择需求负责人'))
+      } else {
+        callback()
+      }
+    },
+    selectUser(userList) {
+      console.log('dddsssss', userList)
+      this.demandFormModel.acceptor = userList[0].userId
+      this.demandFormModel.acceptorName = userList[0].name
+      this.demandFormModel.acceptorUser = userList
+      this.$nextTick(() => {
+        this.$refs.demandFormModel.validate() // 确保数据更新后再校验
+      })
+    },
+    clearUser() {
+      this.demandFormModel.acceptor = ''
+      this.demandFormModel.acceptorName = ''
+      this.$nextTick(() => {
+        this.$refs.demandFormModel.validate() // 确保数据更新后再校验
+      })
     },
     exchangeStatusName(status) {
       let statusName = '-'
@@ -281,6 +333,24 @@ export default {
       this.showDemandDetail = true
       this.demandDetail = row
     },
+    deleteDemand(row) {
+      demandApi.deleteDemand(row.demandId).then((res) => {
+        if (res.data) {
+          this.$notify({
+            title: '成功',
+            message: '删除需求成功',
+            type: 'success',
+          })
+          this.getDemandList()
+        } else {
+          this.$notify({
+            title: '失败',
+            message: '删除需求失败',
+            type: 'danger',
+          })
+        }
+      })
+    },
     createDemand() {
       this.showDemandDialog = true
     },
@@ -294,16 +364,19 @@ export default {
     },
     closeDemand() {
       this.showDemandDialog = false
-      this.demandForm = {}
-      this.$refs.demandForm.resetFields()
+      this.demandFormModel = {}
+      this.$refs.demandFormModel.resetFields()
     },
     submitDemand(formName) {
       this.$refs[formName].validate((valid) => {
         if (!valid) {
           return false
         }
-        this.demandForm.spaceId = this.spaceId
-        demandApi.createDemand(this.demandForm).then((res) => {
+        this.demandFormModel.spaceId = this.spaceId
+        if (this.iterationId) {
+          this.demandFormModel.iterationId = this.iterationId
+        }
+        demandApi.createDemand(this.demandFormModel).then((res) => {
           if (res.data) {
             this.$message.success('创建需求成功')
             this.getDemandList()
@@ -316,6 +389,7 @@ export default {
     },
     getDemandList() {
       if (!this.spaceId) {
+        console.log('dddddd-----', this.spaceId, 'ooooo')
         return
       }
       demandApi
@@ -325,7 +399,7 @@ export default {
           this.queryForm.name,
           this.queryForm.status,
           this.spaceId,
-          ''
+          this.iterationId ? this.iterationId : ''
         )
         .then((res) => {
           console.log(res)
@@ -341,6 +415,7 @@ export default {
   },
   created() {
     this.spaceId = this.$store.state.spaceId
+    this.iterationId = this.iteration
     this.getDemandList()
     this.getstatusList()
   },
@@ -356,5 +431,11 @@ export default {
   position: absolute;
   right: 30px;
   top: 0px;
+}
+.bottm-page {
+  margin-top: 10px;
+}
+.query-line {
+  margin-left: 5px;
 }
 </style>

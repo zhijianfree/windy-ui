@@ -5,7 +5,11 @@
       style="height: 300px; width: 100%"
       class="monaco-editor"
     ></div> -->
-    <codemirror v-model="content" :options="options"></codemirror>
+    <codemirror
+      ref="codemirror"
+      v-model="content"
+      :options="options"
+    ></codemirror>
   </div>
 </template>
 
@@ -48,14 +52,17 @@ export default {
     },
     readonly: {
       handler(val) {
+        console.log('controll', val)
         this.options.readOnly = val
+        this.$nextTick(() => {
+          this.refreshEditor()
+        })
       },
     },
   },
   data() {
     return {
       monacoEditor: null,
-      readOnly: true,
       content: '',
       hoverProvider: null,
       options: {
@@ -75,8 +82,43 @@ export default {
       },
     }
   },
-  methods: {},
-  mounted() {},
+  methods: {
+    getValue() {
+      console.log(this.content)
+      return this.content
+    },
+    // handleVisibilityChange() {
+    //   if (document.visibilityState === 'visible') {
+    //     this.refreshEditor()
+    //   }
+    // },
+    // handleFocus() {
+    //   // 窗口获取焦点时刷新编辑器并重新设置焦点
+    //   if (this.$refs.codemirror) {
+    //     this.refreshEditor()
+    //   }
+    // },
+    refreshEditor() {
+      this.$nextTick(() => {
+        if (this.$refs.codemirror) {
+          this.$refs.codemirror.codemirror.focus()
+          this.$refs.codemirror.codemirror.refresh()
+        }
+      })
+    },
+  },
+  // mounted() {
+  //   // window.addEventListener('focus', this.handleFocus)
+  //   // document.addEventListener('visibilitychange', this.handleVisibilityChange)
+  // },
+  // beforeDestroy() {
+  //   // 移除事件监听器
+  //   window.removeEventListener('focus', this.handleFocus)
+  //   document.removeEventListener(
+  //     'visibilitychange',
+  //     this.handleVisibilityChange
+  //   )
+  // },
 }
 </script>
 

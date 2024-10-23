@@ -1,6 +1,13 @@
 <template>
   <div>
     <el-divider content-position="left">动作触发配置</el-divider>
+    <el-form-item label="POST请求方式">
+      <el-radio-group v-model="dataForm.bodyType">
+        <el-radio label="json">json</el-radio>
+        <el-radio label="form-data">form-data</el-radio>
+        <el-radio label="x-www-form-urlencoded">x-www-form-urlencoded</el-radio>
+      </el-radio-group>
+    </el-form-item>
     <el-form-item label="动作触发地址">
       <el-input
         placeholder="请输入执行点名称"
@@ -8,7 +15,6 @@
         @input="notifyParam"
       />
     </el-form-item>
-
     <el-form-item label="参数列表">
       <el-row
         v-for="(item, index) in paramList"
@@ -19,6 +25,7 @@
           <el-input
             placeholder="输入参数名"
             v-model="item.name"
+            size="mini"
             @input="notifyParam"
           />
         </el-col>
@@ -31,9 +38,22 @@
           />
         </el-col>
         <el-col :span="1" class="separate-line">-</el-col>
+        <el-col :span="4">
+          <el-select size="mini" v-model="item.position" placeholder="参数位置">
+            <el-option
+              v-for="item in positionList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="1" class="separate-line">-</el-col>
         <el-col :span="5">
           <el-input
             placeholder="输入默认值"
+            size="mini"
             v-model="item.value"
             @input="notifyParam"
           />
@@ -46,11 +66,86 @@
     <el-form-item label="状态查询地址">
       <el-input
         placeholder="请输入状态查询地址"
+        size="mini"
         v-model="dataForm.queryUrl"
         @input="notifyParam"
       />
     </el-form-item>
+    <el-form-item>
+      <template slot="label">
+        循环查询条件
+        <el-tooltip placement="top">
+          <div slot="content">
+            配置循环查询条件可一直轮训执行结果<br />直到轮训条件不满足时退出查询
+          </div>
+          <i class="el-icon-question tip" />
+        </el-tooltip>
+      </template>
+      <el-row>
+        <el-col :span="4">
+          <el-input
+            size="mini"
+            placeholder="比较Key"
+            v-model="loopQuery.compareKey"
+            @input="notifyParam"
+          />
+        </el-col>
+        <el-col :span="1" class="separate-line">-</el-col>
+        <el-col :span="4">
+          <el-select
+            size="mini"
+            v-model="loopQuery.valueType"
+            placeholder="选择数据类型"
+            @change="notifyParam"
+          >
+            <el-option
+              v-for="item in typeList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="1" class="separate-line">-</el-col>
+        <el-col :span="4">
+          <el-select
+            size="mini"
+            v-model="loopQuery.operator"
+            placeholder="选择运算服符"
+            @change="notifyParam"
+          >
+            <el-option
+              v-for="item in operators"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="1" class="separate-line">-</el-col>
+        <el-col :span="4">
+          <el-input
+            size="mini"
+            placeholder="设置期望值"
+            v-model="loopQuery.value"
+            @input="notifyParam"
+          />
+        </el-col>
+      </el-row>
+    </el-form-item>
     <el-form-item label="结果条件列表">
+      <template slot="label">
+        结果状态判断列表
+        <el-tooltip placement="top">
+          <div slot="content">
+            根据轮训接口返回的结果判断任务是否成功，<br />例如配置:比较Key为result,
+            期待值1 代表接口返回的json格式数据的result字段值为1时任务执行成功
+          </div>
+          <i class="el-icon-question tip" />
+        </el-tooltip>
+      </template>
       <el-row
         v-for="(item, index) in compareList"
         :key="index"
@@ -117,9 +212,12 @@
   </div>
 </template>
 <script>
+import Template from '../../feature/template.vue'
 export default {
   props: {
     form: Object,
+
+    Template,
   },
   watch: {
     form: {
@@ -139,20 +237,27 @@ export default {
   },
   data() {
     return {
+      loopQuery: {},
       dataForm: {},
-      paramList: [{}],
+      paramList: [{ position: 'Body' }],
       compareList: [{ showCompare: true }],
       operators: [
-        { label: 'equals', value: 'equal' },
-        { label: '等于', value: '=' },
+        { label: '等值(字符串、值比较时使用)', value: 'equal' },
         { label: '大于', value: '>' },
         { label: '大于等于', value: '>=' },
+        { label: '等于（数字时使用）', value: '=' },
         { label: '小于', value: '<' },
         { label: '小于等于', value: '<=' },
       ],
       typeList: [
         { label: '数字类型', value: 'Integer' },
         { label: '字符串类型', value: 'String' },
+      ],
+      positionList: [
+        { label: 'Body', value: 'Body' },
+        { label: 'Path', value: 'Path' },
+        { label: 'Query', value: 'Query' },
+        { label: 'Header', value: 'Header' },
       ],
     }
   },
@@ -165,8 +270,17 @@ export default {
         queryUrl: this.dataForm.queryUrl,
       })
     },
+    changeBodyType(value) {
+      if (value == 'none') {
+        this.paramList = []
+      } else {
+        if (this.paramList.length < 1) {
+          this.paramList.push({ position: 'Body' })
+        }
+      }
+    },
     addNewItem() {
-      this.paramList.push({})
+      this.paramList.push({ position: 'Body' })
     },
     addNewCondition() {
       this.compareList.push({ showCompare: true })
@@ -192,6 +306,9 @@ export default {
   cursor: pointer;
 }
 .config-line {
-  margin: 10px 0px;
+  margin: 0 0 10px 0px;
+}
+.tip {
+  cursor: pointer;
 }
 </style>

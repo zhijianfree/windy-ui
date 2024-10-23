@@ -3,9 +3,15 @@
     <el-button type="primary" size="mini" @click="addResource"
       >新增资源</el-button
     >
-    <el-table :data="resourceTable" size="mini" height="300px">
-      <el-table-column prop="resourceId" label="资源ID"> </el-table-column>
+    <el-table :data="resourceTable" size="mini" height="500px">
       <el-table-column prop="resourceName" label="资源名称名称">
+      </el-table-column>
+      <el-table-column prop="resourceType" label="资源类型">
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.resourceType == 1 ? 'primary' : 'success'">{{
+            scope.row.resourceType == 1 ? '接口权限' : '菜单权限'
+          }}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column prop="content" label="资源内容"> </el-table-column>
       <el-table-column prop="operate" label="操作类型"> </el-table-column>
@@ -74,6 +80,14 @@
             <el-option label="更新" value="PUT"> </el-option>
             <el-option label="删除" value="DELETE"> </el-option>
             <el-option label="任意" value="*"> </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="资源类型">
+          <el-select
+            v-model="resourceForm.resourceType"
+            placeholder="请选择资源操作类型"
+            ><el-option label="接口权限" :value="1"> </el-option>
+            <el-option label="菜单权限" :value="2"> </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="资源内容">

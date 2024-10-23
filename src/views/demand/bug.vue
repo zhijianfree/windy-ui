@@ -1,6 +1,6 @@
 <template>
   <div class="content">
-    <div style="width: 100%">
+    <div class="query-line">
       <el-form :inline="true" v-model="queryForm" size="mini">
         <el-form-item label="缺陷名称">
           <el-input
@@ -34,14 +34,18 @@
           type="primary"
           @click="createBug"
           size="mini"
-          >新建缺陷</el-button
+          >创建缺陷</el-button
         >
       </div>
     </div>
     <div class="table-list">
-      <el-table :data="tableData" height="500" style="width: 100%">
-        <el-table-column prop="bugName" label="缺陷名称"> </el-table-column>
-        <el-table-column prop="acceptor" label="负责人"> </el-table-column>
+      <el-table :data="tableData" height="500" size="mini" style="width: 100%">
+        <el-table-column prop="bugName" label="缺陷名称">
+          <template slot-scope="scope">
+            <text-view :text="scope.row.bugName"></text-view>
+          </template>
+        </el-table-column>
+        <el-table-column prop="acceptorName" label="负责人"> </el-table-column>
         <el-table-column prop="status" label="缺陷状态">
           <template slot-scope="scope">
             {{ exchangeStatusName(scope.row.status) }}
@@ -57,6 +61,9 @@
           <template slot-scope="scope">
             <el-button type="text" @click="viewBug(scope.row)" size="small"
               >查看</el-button
+            >
+            <el-button type="text" @click="deleteBug(scope.row)" size="small"
+              >删除</el-button
             >
           </template>
         </el-table-column>
@@ -78,21 +85,22 @@
       :title="bugTitle"
       :visible.sync="showBugDialog"
       :close-on-click-modal="false"
+      :destroy-on-close="true"
       width="80%"
     >
       <div>
-        <bugDetail :edit="isEdit" :bug="bugId" @cancel="closeBug"></bugDetail>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button size="mini" @click="closeBug">取 消</el-button>
-        <el-button type="primary" @click="submitBug('bugForm')" size="mini"
-          >确 定</el-button
-        >
+        <bugDetail
+          :edit="isEdit"
+          :iteration="iterationId"
+          :bug="bugId"
+          @cancel="closeBug"
+        ></bugDetail>
       </div>
     </el-dialog>
   </div>
 </template>
 <script>
+import TextView from '../../components/text-view.vue'
 import bugApi from '../../http/BugApi'
 import bugDetail from './bug-detail.vue'
 export default {
@@ -101,22 +109,33 @@ export default {
       default: '',
       type: String,
     },
+    iteration: {
+      default: '',
+      type: String,
+    },
   },
   components: {
     bugDetail,
+    TextView,
   },
   watch: {
     space: {
       handler(val) {
         this.spaceId = val
         this.getBugList()
-        console.log('bug里i iiiii')
+      },
+    },
+    iteration: {
+      handler(val) {
+        this.iterationId = val
+        this.getBugList()
       },
     },
   },
   data() {
     return {
       spaceId: '',
+      iterationId: '',
       tableData: [],
       queryForm: {
         name: '',
@@ -163,6 +182,24 @@ export default {
       this.isEdit = true
       this.bugTitle = '缺陷详情'
     },
+    deleteBug(row) {
+      bugApi.deleteBug(row.bugId).then((res) => {
+        if (res.data) {
+          this.$notify({
+            title: '成功',
+            message: '删除缺陷成功',
+            type: 'success',
+          })
+          this.getBugList()
+        } else {
+          this.$notify({
+            title: '失败',
+            message: '删除缺陷失败',
+            type: 'danger',
+          })
+        }
+      })
+    },
     createBug() {
       this.showBugDialog = true
       this.isEdit = false
@@ -183,40 +220,7 @@ export default {
       this.getBugList()
       this.$refs.bugForm.resetFields()
     },
-    submitBug(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (!valid) {
-          return false
-        }
-        console.log('edit', this.isEdit)
-        this.bugForm.spaceId = this.spaceId
-        if (this.isEdit) {
-          bugApi.updateBug(this.bugForm).then((res) => {
-            if (res.data) {
-              this.$message.success('修改缺陷成功')
-              this.getBugList()
-              this.closeBug()
-            } else {
-              this.$message.error('修改缺陷失败')
-            }
-          })
-          return
-        }
-        bugApi.createBug(this.bugForm).then((res) => {
-          if (res.data) {
-            this.$message.success('创建缺陷成功')
-            this.getBugList()
-            this.closeBug()
-          } else {
-            this.$message.error('创建缺陷失败')
-          }
-        })
-      })
-    },
     getBugList() {
-      if (!this.spaceId) {
-        return
-      }
       bugApi
         .getBugList(
           this.currentPage,
@@ -224,10 +228,9 @@ export default {
           this.queryForm.name,
           this.queryForm.status,
           this.spaceId,
-          ''
+          this.iterationId ? this.iterationId : ''
         )
         .then((res) => {
-          console.log(res)
           this.tableData = res.data.data
           this.total = res.data.total
         })
@@ -240,6 +243,7 @@ export default {
   },
   created() {
     this.spaceId = this.$store.state.spaceId
+    this.iterationId = this.iteration
     this.getBugList()
     this.getstatusList()
   },
@@ -254,5 +258,8 @@ export default {
   position: absolute;
   right: 30px;
   top: 0px;
+}
+.query-line {
+  margin-left: 5px;
 }
 </style>

@@ -12,7 +12,7 @@
             width="800"
             trigger="click"
           >
-            <spaceList @switchSpace="selecteSpace"></spaceList>
+            <spaceList :space="spaceId" @switchSpace="selecteSpace"></spaceList>
             <div v-if="isCollapse" slot="reference" class="collapse-space">
               {{ simpleSpaceName }}
             </div>
@@ -54,12 +54,12 @@
           </el-menu-item>
         </el-menu>
       </el-aside>
-      <el-main class="right-content" ref="mainContent">
-        <el-scrollbar>
-          <demand v-if="showIndex == 1"></demand>
-          <bug v-else-if="showIndex == 2"></bug>
-          <iteration :id="spaceId" v-else></iteration>
-        </el-scrollbar>
+      <el-main v-bind:style="{ height: asideHeight + 'px' }">
+        <div class="right-content">
+          <demand v-if="showIndex == 1" :space="spaceId"></demand>
+          <bug v-else-if="showIndex == 2" :space="spaceId"></bug>
+          <iteration :space="spaceId" v-else></iteration>
+        </div>
       </el-main>
     </el-container>
   </div>
@@ -105,6 +105,7 @@ export default {
       this.spaceName = space.spaceName
       this.spaceId = space.spaceId
       this.showPop = false
+      this.$store.commit('UPDATE_SPACE', this.spaceId)
     },
     selectMenu(index) {
       this.showIndex = index
@@ -115,16 +116,18 @@ export default {
     },
     getSpaceList() {
       spaceApi.getSpaceList().then((res) => {
-        this.spaceName = res.data[0].spaceName
-        this.spaceId = res.data[0].spaceId
-        this.$store.commit('UPDATE_SPACE', this.spaceId)
+        if (!this.spaceId) {
+          this.spaceName = res.data[0].spaceName
+          this.spaceId = res.data[0].spaceId
+          this.$store.commit('UPDATE_SPACE', this.spaceId)
+        }
       })
     },
     calculateAsideHeight() {
       const documentHeight = document.documentElement.scrollHeight
 
       // 设置侧边栏高度为文档总高度与视口高度的最大值
-      this.asideHeight = Math.max(documentHeight, window.innerHeight)
+      this.asideHeight = Math.max(documentHeight, window.innerHeight) - 50
     },
   },
   created() {
@@ -211,5 +214,8 @@ export default {
 }
 .collapse-icon i:hover {
   color: #fff;
+}
+.right-content {
+  padding: 10px;
 }
 </style>

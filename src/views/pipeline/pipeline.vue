@@ -12,7 +12,7 @@
             placeholder="请输入搜索的服务名"
           >
             <el-option
-              v-for="item in pipelines"
+              v-for="item in serviceList"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -204,7 +204,7 @@
 
           <!-- 流水线运行描述信息开始 -->
           <div class="pipeline-detail">
-            <el-descriptions title="流水线历史" :column="3" size="medium">
+            <el-descriptions title="流水线日志" :column="3" size="medium">
               <el-descriptions-item label="git分支">
                 {{ history.branch }}</el-descriptions-item
               >
@@ -371,18 +371,43 @@
     <el-dialog
       title="卡点审批"
       :visible.sync="showApproval"
-      width="30%"
+      width="40%"
       :before-close="approvalClose"
     >
-      <span>审批是否通过?</span>
-      <span slot="footer">
-        <el-button size="mini" type="danger" @click="cancelApproval"
-          >不通过</el-button
+      <el-form
+        :model="approvalForm"
+        :rules="approvalRules"
+        size="mini"
+        ref="approvalForm"
+        label-width="120px"
+      >
+        <el-form-item label="审批是否通过" prop="status">
+          <el-radio-group v-model="approvalForm.status">
+            <el-radio :label="1">通过</el-radio>
+            <el-radio :label="2">不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          label="审批是否通过"
+          prop="message"
+          v-if="approvalForm.status == 2"
         >
-        <el-button size="mini" type="primary" @click="confirmApproval"
-          >通过</el-button
-        >
-      </span>
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            placeholder="请输入审批不通过原因"
+            v-model="approvalForm.message"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            size="mini"
+            type="primary"
+            @click="approvalPipeline('approvalForm')"
+            >确认</el-button
+          >
+        </el-form-item>
+      </el-form>
     </el-dialog>
     <!-- 审批结束 -->
     <!-- 发布弹框开始 -->
@@ -478,7 +503,7 @@ export default {
       formLabelWidth: '80px',
       loading: false,
       activePipelines: ['1', '2', '3'],
-      pipelines: [],
+      serviceList: [],
       currentPipeline: {
         pipelineConfig: [],
       },
@@ -517,6 +542,19 @@ export default {
       showPushMessage: false,
       publishMsgForm: {},
       loopQuery: null,
+      approvalForm: { status: 1 },
+      approvalRules: {
+        status: [
+          { required: true, message: '请选择审批状态', trigger: 'change' },
+        ],
+        message: [
+          {
+            required: true,
+            message: '请输入审批不通过原因',
+            trigger: 'blur',
+          },
+        ],
+      },
     }
   },
   methods: {
@@ -533,7 +571,7 @@ export default {
             config = {}
           }
 
-          config.paramList = [{ tagName: this.publishForm.tagName }]
+          config.paramList = { tagName: this.publishForm.tagName }
           let item = {
             pipelineId: this.currentPipeline.pipelineId,
             pipelineConfig: JSON.stringify(config),
@@ -578,26 +616,35 @@ export default {
       this.publishForm = {}
     },
     approvalClose() {
+      this.approvalForm = { status: 1 }
       this.approvalNode = {}
       this.showApproval = false
     },
-    cancelApproval() {
-      this.approvalPipeline(2)
-    },
-    confirmApproval() {
-      this.approvalPipeline(1)
-    },
-    approvalPipeline(status) {
-      historyApi
-        .approval(this.history.historyId, this.approvalNode.nodeId, status)
-        .then((res) => {
+    approvalPipeline(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return
+        }
+        let item = {
+          historyId: this.history.historyId,
+          nodeId: this.approvalNode.nodeId,
+          type: this.approvalForm.status,
+          message: this.approvalForm.message,
+        }
+        historyApi.approval(item).then((res) => {
           if (res.data) {
-            this.$message.success('审批通过')
+            this.$notify({
+              title: '流水线审批',
+              message: status == 1 ? '审批通过' : '审批不通过，流水线停止',
+              type: status == 1 ? 'success' : 'warning',
+            })
+            this.approvalClose()
           } else {
             this.$message.error('审批失败，请重试')
+            return
           }
-          this.approvalClose()
         })
+      })
     },
     getServicePublishes() {
       this.publishData = []
@@ -712,6 +759,7 @@ export default {
       }
     },
     selectService() {
+      this.$store.commit('UPDATE_SERVICE_ID', this.serviceId)
       this.getPipelineList()
       this.currentPipeline = { pipelineConfig: [] }
     },
@@ -802,9 +850,9 @@ export default {
     },
     remoteMethod() {
       serviceApi.getServices().then((res) => {
-        this.pipelines = []
+        this.serviceList = []
         res.data.forEach((e) => {
-          this.pipelines.push({
+          this.serviceList.push({
             label: e.serviceName,
             value: e.serviceId,
           })
@@ -1014,15 +1062,16 @@ export default {
     },
     getDefaultService() {
       serviceApi.getServices().then((res) => {
-        this.pipelines = []
+        this.serviceList = []
         res.data.forEach((e) => {
-          this.pipelines.push({
+          this.serviceList.push({
             label: e.serviceName,
             value: e.serviceId,
           })
         })
-
-        this.serviceId = this.pipelines[0].value
+        if (!this.serviceId) {
+          this.serviceId = this.serviceList[0].value
+        }
         this.getPipelineList()
       })
     },
@@ -1079,6 +1128,7 @@ export default {
     },
   },
   created() {
+    this.serviceId = this.$store.state.serviceId
     this.getConfigNodes()
     this.getDefaultService()
     this.loopQueryStatus()

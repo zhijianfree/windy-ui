@@ -391,13 +391,19 @@ export default {
   },
   methods: {
     deleteWork(item) {
-      workTask.deleteTask(item.taskId).then((res) => {
-        if (res.data) {
-          this.$message.success('删除成功')
-          this.getTasks()
-        } else {
-          this.$message.error('删除失败')
-        }
+      this.$confirm('删除工作项, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        workTask.deleteTask(item.taskId).then((res) => {
+          if (res.data) {
+            this.$message.success('删除成功')
+            this.getTasks()
+          } else {
+            this.$message.error('删除失败')
+          }
+        })
       })
     },
     showTab(tabName) {
@@ -507,14 +513,16 @@ export default {
     },
     closeBug() {
       this.showBugDialog = false
+      this.bugId = ''
       this.getBugs()
     },
     closeDemand() {
+      this.demandId = ''
       this.getDemands()
     },
     showBugDetail(row) {
-      this.showBugDialog = true
       this.bugId = row.bugId
+      this.showBugDialog = true
     },
     exchnageBugStatus(status) {
       let data = {}

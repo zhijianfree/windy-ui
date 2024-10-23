@@ -39,9 +39,9 @@ export default {
         })
     })
   },
-  getIterationList() {
+  getIterationList(spaceId) {
     return new Promise((resolve, reject) => {
-      let url = `/v1/devops/iterations`
+      let url = `/v1/devops/${spaceId}/iterations`
       http
         .get(url)
         .then((res) => {
@@ -70,6 +70,19 @@ export default {
       let url = `/v1/devops/iterations/${iterationId}`
       http
         .get(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  deleteIteration(iterationId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/iterations/${iterationId}`
+      http
+        .delete(url)
         .then((res) => {
           resolve(res)
         })

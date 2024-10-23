@@ -78,6 +78,32 @@ export default {
         })
     })
   },
+  updatePassword(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/users/${data.userId}/password`
+      http
+        .put(url, data)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
+  resetPassword(data) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/users/${data.userId}/reset`
+      http
+        .put(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getUser(userId) {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/users/${userId}`

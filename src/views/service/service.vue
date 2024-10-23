@@ -28,7 +28,11 @@
     <div class="content">
       <el-table :data="serviceData" size="mini">
         <el-table-column prop="serviceName" label="服务名称"> </el-table-column>
-        <el-table-column prop="description" label="服务描述"> </el-table-column>
+        <el-table-column prop="description" label="服务描述">
+          <template slot-scope="scope">
+            <textView :text="scope.row.description" />
+          </template>
+        </el-table-column>
         <el-table-column prop="gitUrl" label="git地址"> </el-table-column>
         <el-table-column prop="priority" label="优先级">
           <template slot-scope="scope">
@@ -79,22 +83,8 @@
       @close="closeDialog"
       width="70%"
     >
-      <!-- <el-alert
-        type="warning"
-        center
-        show-icon
-        :closable="false"
-        v-if="notConfigGit"
-      >
-        <template slot="title">
-          创建服务需先配置环境信息
-          <el-link type="primary" @click="goEnv">前往配置>></el-link></template
-        >
-        notConfigGit
-      </el-alert> -->
       <el-form
         :model="serviceForm"
-        :disabled="!isEdit"
         :rules="rules"
         ref="serviceForm"
         size="mini"
@@ -123,7 +113,7 @@
         <el-form-item label="优先级" prop="gitUrl">
           <el-rate v-model="serviceForm.priority"></el-rate>
         </el-form-item>
-        <el-form-item label="成员列表">
+        <el-form-item v-if="isEdit" label="成员列表">
           <el-tag
             type="primary"
             class="tag-item"
@@ -140,12 +130,10 @@
               width="400"
               trigger="click"
             >
-              <el-autocomplete
-                v-model="selectedUser"
-                :fetch-suggestions="querySearchAsync"
-                placeholder="请输入用户名称"
-                @select="handleSelect"
-              ></el-autocomplete>
+              <userSearch
+                :user="selectedUser"
+                @chooseUser="handleSelect"
+              ></userSearch>
               <el-button
                 slot="reference"
                 type="text"
@@ -201,7 +189,7 @@
             >
               <el-input
                 type="text"
-                v-model="gitForm.owner"
+                v-model="gitOwner"
                 placeholder="请输入git拥有者"
               />
             </el-form-item>
@@ -222,6 +210,19 @@
             </template>
             <el-tabs v-model="activeName" type="border-card" class="k8s-config">
               <el-tab-pane label="基础配置" name="first">
+                <el-form-item label="工作负载名称" label-width="120px">
+                  <el-input
+                    v-model="deploymentName"
+                    placeholder="服务部署的deployment名称"
+                  />
+                </el-form-item>
+                <el-form-item label="负载副本数">
+                  <el-input-number
+                    :min="1"
+                    v-model="replicas"
+                    placeholder="工作负载部署个数,默认是1"
+                  />
+                </el-form-item>
                 <el-form-item label="环境变量">
                   <el-row
                     v-for="(env, index) in envList"
@@ -329,6 +330,8 @@
                 <el-form-item label="更新策略">
                   <el-select v-model="strategy" placeholder="选择更新策略">
                     <el-option label="暂停更新" value="Recreate"> </el-option>
+                    <el-option label="滚动更新" value="RollingUpdate">
+                    </el-option>
                   </el-select>
                 </el-form-item>
                 <el-form-item label="节点调度">
@@ -337,7 +340,9 @@
                     <el-radio label="label" disabled
                       >根据【标签选择器】选择节点</el-radio
                     >
-                    <el-radio label="rule">根据【节点亲和性】选择节点</el-radio>
+                    <el-radio label="rule" disabled
+                      >根据【节点亲和性】选择节点</el-radio
+                    >
                   </el-radio-group>
                   <div>
                     请选择标签:
@@ -397,7 +402,13 @@ import serviceApi from '../../http/Service'
 import envApi from '../../http/Environment'
 import systemApi from '../../http/System'
 import userApi from '../../http/User'
+import userSearch from '../../components/user-search.vue'
+import textView from '../../components/text-view.vue'
 export default {
+  components: {
+    userSearch,
+    textView,
+  },
   data() {
     return {
       activeName: 'first',
@@ -424,6 +435,7 @@ export default {
       envList: [{}],
       volumeList: [{}],
       portList: [{}],
+      deploymentName: '',
       showChooseNode: false,
       nodeList: [],
       deployEnvList: [],
@@ -431,19 +443,21 @@ export default {
       selectWay: '',
       selectNode: '',
       strategy: '',
+      replicas: 1,
       members: [],
       selectedUser: null,
       showPop: false,
       gitForm: {},
+      gitOwner: '',
     }
   },
   methods: {
     changeGit(type) {
       if (type == 'Gitlab') {
-        this.gitForm.owner = 'oauth2'
+        this.gitOwner = 'oauth2'
       }
-      if (type != 'Gitlab' && this.systemForm.owner == 'oauth2') {
-        this.gitForm.owner = ''
+      if (type != 'Gitlab' && this.gitOwner == 'oauth2') {
+        this.gitOwner = ''
       }
     },
     deleteMember(userId) {
@@ -505,19 +519,19 @@ export default {
     },
     getNodeList() {},
     delPort(index) {
-      if (index == 0) {
+      if (this.portList.length == 1 && index == 0) {
         return
       }
       this.portList.splice(index, 1)
     },
     delEnv(index) {
-      if (index == 0) {
+      if (this.envList.length == 1 && index == 0) {
         return
       }
       this.envList.splice(index, 1)
     },
     delVolume(index) {
-      if (index == 0) {
+      if (this.volumeList.length == 1 && index == 0) {
         return
       }
       this.volumeList.splice(index, 1)
@@ -544,7 +558,10 @@ export default {
       this.showServiceDialog = true
       this.serviceForm = JSON.parse(JSON.stringify(row))
       let config = row.serviceConfig
-      this.gitForm = config.gitAccessInfo
+      this.replicas = config.replicas
+      this.gitOwner = config.gitAccessInfo.owner
+      this.deploymentName = config.appName
+      this.gitForm = config.gitAccessInfo ? config.gitAccessInfo : {}
       if (!config) {
         return
       }
@@ -593,8 +610,16 @@ export default {
     closeDialog() {
       this.isEdit = false
       this.showServiceDialog = false
+      this.gitForm = {}
+      this.envList = [{}]
+      this.portList = [{}]
+      this.volumeList = [{}]
       this.serviceForm = {}
       this.selectedUser = ''
+      this.replicas = 1
+      this.deploymentName = ''
+      this.members = []
+      this.gitOwner = ''
     },
     pageChange(page) {
       this.getServices(page)
@@ -618,12 +643,15 @@ export default {
         let git = {}
         if (this.isConfigGit()) {
           git = this.gitForm
+          git.owner = this.gitOwner
         }
         let config = {
           gitAccessInfo: git,
           envParams: this.envList,
           ports: this.portList,
           volumes: this.volumeList,
+          appName: this.deploymentName,
+          replicas: this.replicas,
           nodeStrategy: {
             type: this.selectWay,
             value: this.selectNode,

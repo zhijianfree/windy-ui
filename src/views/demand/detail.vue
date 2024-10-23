@@ -23,14 +23,20 @@
           icon="el-icon-s-promotion"
           v-if="isEdit"
           type="primary"
-          @click="submitInfo"
+          @click="submitInfo('demandForm')"
           >提交</el-button
         >
       </div>
     </div>
     <el-row>
-      <el-col :span="14">
-        <el-form :model="demandForm" size="mini" label-width="80px">
+      <el-form
+        :model="demandForm"
+        ref="demandForm"
+        size="mini"
+        :rules="demandRules"
+        label-width="80px"
+      >
+        <el-col :span="14">
           <el-form-item label="需求ID">
             <span
               >{{ demandForm.demandId }}
@@ -63,43 +69,46 @@
             </el-input>
           </el-form-item>
           <el-form-item label="附件"> xxxx.doc </el-form-item>
-        </el-form>
-        <div class="comments-div">
-          <div>
-            <el-input
-              type="textarea"
-              :autosize="{ minRows: 4, maxRows: 20 }"
-              placeholder="请输入您对需求的讨论"
-              v-model="commentMsg"
-            >
-            </el-input>
-          </div>
-          <div class="commit-btn">
-            <el-button size="mini" type="primary" @click="addComment"
-              >添加评论</el-button
-            >
-          </div>
-        </div>
-        <div class="comment-list">
-          <div class="history" v-for="(item, index) in comments" :key="index">
-            <div class="user-div">
-              <span><i class="el-icon-s-custom" /></span> {{ item.userName }}
-              {{ item.createTime | dateFormat }}
+
+          <div class="comments-div">
+            <div>
+              <el-input
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 20 }"
+                placeholder="请输入您对需求的讨论"
+                v-model="commentMsg"
+              >
+              </el-input>
             </div>
-            <div class="history-content">
-              {{ item.comment }}
+            <div class="commit-btn">
+              <el-button size="mini" type="primary" @click="addComment"
+                >添加评论</el-button
+              >
             </div>
           </div>
-        </div>
-      </el-col>
-      <el-col :span="8">
-        <el-form :model="demandForm" label-width="120px" size="mini">
+          <div class="comment-list">
+            <div class="history" v-for="(item, index) in comments" :key="index">
+              <div class="user-div">
+                <span><i class="el-icon-s-custom" /></span> {{ item.userName }}
+                {{ item.createTime | dateFormat }}
+              </div>
+              <div class="history-content">
+                {{ item.comment }}
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <!-- <el-form :model="demandForm" label-width="120px" size="mini"> -->
           <el-form-item label="提出人">
             <span>{{ demandForm.proposerName }}</span>
           </el-form-item>
-          <el-form-item label="接受人">
+          <el-form-item label="接受人" prop="acceptor">
             <userSearch
-              :user="demandForm.acceptorName"
+              :disable="!isEdit"
+              :users="demandForm.acceptorUser"
+              :single="true"
+              @clearUser="clearUser"
               @chooseUser="selectUser"
             ></userSearch>
           </el-form-item>
@@ -155,8 +164,9 @@
             </el-select>
           </el-form-item>
           <el-form-item label="搁置天数"> 3 </el-form-item>
-        </el-form>
-      </el-col>
+          <!-- </el-form> -->
+        </el-col>
+      </el-form>
     </el-row>
   </div>
 </template>
@@ -164,7 +174,7 @@
 import Clipboard from 'clipboard'
 import DemandApi from '../../http/DemandApi'
 import CommentApi from '../../http/Comment'
-import userSearch from '../../components/user-serch.vue'
+import userSearch from '../../components/user-search.vue'
 export default {
   props: {
     demand: {
@@ -195,20 +205,52 @@ export default {
       isEdit: false,
       statusOptions: [],
       comments: [],
+      demandRules: {
+        acceptor: [
+          { required: true, validator: this.validAcceptor, trigger: 'change' },
+        ],
+      },
     }
   },
   methods: {
-    selectUser(item) {
-      this.demandForm.acceptor = item.userId
+    validAcceptor(rule, value, callback) {
+      console.log('触发回掉')
+      if (!this.demandForm.acceptor || !this.demandForm.acceptorName) {
+        callback(new Error('请选择需求负责人'))
+      } else {
+        callback()
+      }
     },
-    submitInfo() {
-      DemandApi.updateDemand(this.demandForm).then((res) => {
-        if (res.data) {
-          this.$message.success('更新成功')
-          this.isEdit = false
-        } else {
-          this.$message.error('更新失败')
+    selectUser(userList) {
+      console.log('dddsssss', userList)
+      this.demandForm.acceptor = userList[0].userId
+      this.demandForm.acceptorName = userList[0].name
+      this.demandForm.acceptorUser = userList
+      this.$nextTick(() => {
+        this.$refs.demandForm.validate() // 确保数据更新后再校验
+      })
+    },
+    clearUser() {
+      this.demandForm.acceptor = ''
+      this.demandForm.acceptorName = ''
+      this.demandForm.acceptorUser = []
+      this.$nextTick(() => {
+        this.$refs.demandForm.validate() // 确保数据更新后再校验
+      })
+    },
+    submitInfo(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false
         }
+        DemandApi.updateDemand(this.demandForm).then((res) => {
+          if (res.data) {
+            this.$message.success('更新成功')
+            this.isEdit = false
+          } else {
+            this.$message.error('更新失败')
+          }
+        })
       })
     },
     initCopy() {
@@ -229,6 +271,12 @@ export default {
       DemandApi.getDemandDetail(this.demandId).then((res) => {
         this.demandForm = res.data
         this.completeDate = new Date(this.demandForm.expectTime)
+        this.demandForm.acceptorUser = [
+          {
+            userId: this.demandForm.acceptor,
+            name: this.demandForm.acceptorName,
+          },
+        ]
       })
     },
     getstatusList() {

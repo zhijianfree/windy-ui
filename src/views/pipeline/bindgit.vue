@@ -2,7 +2,13 @@
   <div>
     <div>
       <div class="git">
-        <el-link type="primary" :underline="false">{{ gitUrl }}</el-link>
+        服务GIT地址:
+        <el-link
+          type="primary"
+          :underline="false"
+          @click="goRepository(gitUrl)"
+          >{{ gitUrl }}</el-link
+        >
       </div>
     </div>
 
@@ -89,7 +95,31 @@ export default {
       gitUrl: '',
     }
   },
+  watch: {
+    service: {
+      handler(val) {
+        console.log('service', val)
+        if (val) {
+          this.serviceId = val
+          this.getService()
+          this.getServiceBranch()
+        }
+      },
+    },
+    pipeline: {
+      handler(val) {
+        console.log('pipeline', val)
+        if (val) {
+          this.pipelineId = val
+          this.getBindBranches()
+        }
+      },
+    },
+  },
   methods: {
+    goRepository(gitUrl) {
+      window.open(gitUrl, '_blank')
+    },
     deleteBind(row) {
       gitBindApi.deleteCodeChange(this.pipelineId, row.bindId).then((res) => {
         if (res.data == 1) {

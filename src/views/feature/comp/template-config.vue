@@ -265,6 +265,7 @@ export default {
         { label: 'Integer', value: 'Integer' },
         { label: 'Float', value: 'Float' },
         { label: 'Double', value: 'Double' },
+        { label: 'Boolean', value: 'Boolean' },
       ],
       httpMethods: [
         { label: 'Post', value: 'Post' },

@@ -52,6 +52,19 @@ export default {
         })
     })
   },
+  deleteDemand(demandId) {
+    return new Promise((resolve, reject) => {
+      let url = `/v1/devops/demands/${demandId}`
+      http
+        .delete(url)
+        .then((res) => {
+          resolve(res)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  },
   getDemandTags() {
     return new Promise((resolve, reject) => {
       let url = `/v1/devops/demand/tags`

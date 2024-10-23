@@ -32,7 +32,13 @@
             ></el-input>
           </el-form-item>
         </el-form>
-        <div class="login-btn" @click="login">登录</div>
+        <el-button
+          class="login-btn"
+          @click="login"
+          :loading="false"
+          type="primary"
+          >登录</el-button
+        >
         <div class="bottom-line">-便捷一站式Devops平台-</div>
       </div>
     </div>
@@ -40,6 +46,7 @@
 </template>
 <script>
 import userApi from '../../http/User'
+import resourceApi from '../../http/Resource'
 import cookies from 'js-cookie'
 export default {
   data() {
@@ -48,15 +55,32 @@ export default {
     }
   },
   methods: {
+    getUserMenus(callback) {
+      resourceApi.getUserMenuList().then((res) => {
+        console.log(res)
+        let array = []
+        res.data.forEach((element) => {
+          array.push(element.content)
+        })
+
+        this.$store.commit('UPDATE_RBAC_LIST', array)
+        callback()
+      })
+    },
     login() {
       userApi.login(this.loginForm).then((res) => {
         if (res.data.token) {
-          let expires = new Date(new Date() * 1 + res.data.expireTime * 1000)
           cookies.set('token', res.data.token, {
-            expires: expires,
             path: '/',
           })
-          this.$router.push({ path: '/' })
+          let pathUri = '/#/'
+          if (this.$route.query.redirect) {
+            pathUri += this.$route.query.redirect
+          }
+          this.$store.commit('UPDATE_SERVICE_ID', '')
+          this.getUserMenus(() => {
+            window.location.href = window.location.origin + pathUri
+          })
         }
       })
     },
@@ -103,20 +127,8 @@ export default {
     }
 
     .login-btn {
-      margin: 10px 50px;
-      height: 35px;
-      line-height: 35px;
-      font-size: 14px;
-      text-align: center;
-      vertical-align: middle;
-      border-radius: 4px;
-      color: #fff;
-      background-color: #409eff;
-      cursor: pointer;
-
-      &:hover {
-        box-shadow: 1px 1px 2px #f2f6fc;
-      }
+      width: 80%;
+      margin-left: 60px;
     }
   }
 

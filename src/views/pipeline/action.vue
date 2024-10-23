@@ -31,7 +31,7 @@
         <!-- 表单查询结束 -->
         <!-- 节点表格显示开始 -->
         <div>
-          <el-table :data="nodeList" stripe style="width: 100%">
+          <el-table :data="nodeList" stripe size="mini" style="width: 100%">
             <el-table-column prop="nodeName" label="节点名称">
             </el-table-column>
             <el-table-column prop="description" label="描述"> </el-table-column>
@@ -99,7 +99,7 @@
         <!-- 表单查询结束 -->
         <!-- 执行点表格显示开始 -->
         <div>
-          <el-table :data="actionList" stripe style="width: 100%">
+          <el-table :data="actionList" stripe size="mini" style="width: 100%">
             <el-table-column prop="actionName" label="执行点名称">
             </el-table-column>
             <el-table-column prop="description" label="描述"> </el-table-column>

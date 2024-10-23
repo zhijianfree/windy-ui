@@ -227,9 +227,9 @@
                     size="mini"
                     border
                     row-key="id"
+                    default-expand-all
                     :tree-props="{
                       children: 'children',
-                      hasChildren: 'hasChildren',
                     }"
                     ><el-table-column
                       prop="paramKey"
@@ -268,7 +268,6 @@
                     size="mini"
                     :tree-props="{
                       children: 'children',
-                      hasChildren: 'hasChildren',
                     }"
                     ><el-table-column prop="paramKey" label="参数名称">
                     </el-table-column>
@@ -1043,6 +1042,10 @@ export default {
           e.children[0].hide = true
           e.children[0].freezed = true
         }
+
+        if (!e.objectName) {
+          e.objectName = ''
+        }
       })
       console.log('show paramData', this.paramData)
 
@@ -1202,9 +1205,10 @@ export default {
             this.bodyData.push(e)
           }
         })
+        console.log(this.bodyData)
         this.previewRes = JSON.parse(JSON.stringify(this.responseData))
-
         this.traverseTree(this.previewRes)
+        this.$forceUpdate()
       }
     },
     traverseTree(nodes) {
@@ -1279,6 +1283,7 @@ export default {
       this.uuid++
     },
     selectService() {
+      this.$store.commit('UPDATE_SERVICE_ID', this.serviceId)
       serviceApi.getApiList(this.serviceId).then((res) => {
         this.apiTreeData = this.buildTree(res.data)
         setTimeout(() => {
@@ -1349,7 +1354,9 @@ export default {
       this.serviceList = []
       serviceApi.getServices().then((res) => {
         this.serviceList = res.data
-        this.serviceId = this.serviceList[0].serviceId
+        if (!this.serviceId) {
+          this.serviceId = this.serviceList[0].serviceId
+        }
         this.selectService()
       })
     },
@@ -1366,6 +1373,7 @@ export default {
     },
   },
   created() {
+    this.serviceId = this.$store.state.serviceId
     this.getServices()
   },
   beforeDestroy() {
